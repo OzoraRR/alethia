@@ -47,11 +47,207 @@
     "safeNote": "SIMULASI AMAN · Tidak ada data nyata yang dikumpulkan",
     "phoneTime": "09:41",
     "phoneLabel": "SMS",
+    "flowLabel": "Alur simulasi",
+    "analystLabel": "CATATAN ANALIS",
+    "messageFooter": "Pesan contoh · tautan tidak aktif",
     "foundationLabel": "TAMPILAN MODUL",
     "foundationTitle": "Briefing simulasi siap untuk fase berikutnya",
     "foundationDescription": "Struktur halaman, ruang untuk tampilan ponsel, dan panel analisis sudah disiapkan tanpa menjalankan simulasi interaktif.",
     "nextPhase": "Simulator interaktif segera hadir",
-    "returnDashboard": "Kembali ke beranda"
+    "returnDashboard": "Kembali ke beranda",
+    "stageLabels": {
+      "briefing": "BRIEFING",
+      "receive": "RECEIVE",
+      "inspect": "INSPECT",
+      "verify": "VERIFY",
+      "decide": "DECIDE",
+      "reveal": "REVEAL",
+      "retry": "RETRY",
+      "complete": "COMPLETE"
+    },
+    "briefing": {
+      "label": "MODULE 01 · SMS PHISHING",
+      "title": "Courier message",
+      "description": "Belajar berhenti, memeriksa, dan memverifikasi sebelum membuka tautan pengiriman.",
+      "checkpointCount": "5 checkpoint · sekitar 3 menit",
+      "safeNotice": "SIMULASI AMAN · Tidak ada data nyata yang dikumpulkan",
+      "begin": "Mulai modul"
+    },
+    "scenarios": {
+      "primary": {
+        "senderName": "LacakKilat",
+        "senderMarker": "Identitas fiktif",
+        "senderNumber": "+62 811-0000-4821",
+        "timestamp": "Hari ini, 09.41",
+        "messageGreeting": "Paket Anda tertahan di pusat sortir.",
+        "messageUrgency": "Konfirmasi sebelum 18.00 agar paket tidak dikembalikan.",
+        "messageLink": "paket-lacak[.]id/konfirmasi",
+        "senderInspectionTitle": "Pengirim tidak terverifikasi",
+        "senderInspectionBody": "Nomor ini bukan kanal resmi yang dikenal dan tidak memberi jalur verifikasi mandiri.",
+        "linkInspectionTitle": "Domain tidak cocok",
+        "linkInspectionBody": "Domain memakai nama umum dan tidak cocok dengan aplikasi kurir resmi; tautan ditampilkan dalam bentuk aman.",
+        "signalSummary": "Pesan meminta tindakan cepat lewat rute yang dikendalikan pengirim."
+      },
+      "retry": {
+        "senderName": "AntarCepat Desk",
+        "senderMarker": "Identitas fiktif",
+        "senderNumber": "+62 821-0000-7392",
+        "timestamp": "Hari ini, 14.08",
+        "messageGreeting": "Pembaruan alamat diperlukan untuk pengiriman Anda.",
+        "messageUrgency": "Konfirmasi biaya penjadwalan ulang sebelum pukul 20.00.",
+        "messageLink": "antar-cepat[.]support/atur-ulang",
+        "senderInspectionTitle": "Nama pengirim tidak memberi verifikasi",
+        "senderInspectionBody": "Nama layanan yang terdengar resmi belum membuktikan bahwa pesan berasal dari kanal kurir.",
+        "linkInspectionTitle": "Alamat mengarah ke domain asing",
+        "linkInspectionBody": "Domain berbeda dari kanal resmi dan memakai permintaan biaya untuk mendorong respons cepat.",
+        "signalSummary": "Variasi ini mengganti cerita, tetapi tetap menggabungkan urgensi dan penyamaran layanan."
+      }
+    },
+    "receive": {
+      "title": "Terima pesan",
+      "description": "Baca pesan seperti biasa. Perhatikan tekanan yang mendorong keputusan cepat.",
+      "action": "Lanjutkan",
+      "analystNote": "Signal: urgensi. Mengapa penting: urgensi digunakan untuk mengurangi waktu memeriksa. Kebiasaan aman: berhenti sebelum merespons."
+    },
+    "inspect": {
+      "title": "Periksa sinyal",
+      "description": "Periksa setidaknya satu sinyal sebelum melanjutkan.",
+      "senderAction": "Periksa pengirim",
+      "linkAction": "Periksa tautan",
+      "inspected": "Sudah diperiksa",
+      "continue": "Lanjutkan",
+      "requirement": "Periksa pengirim atau tautan untuk membuka checkpoint berikutnya.",
+      "bothInspected": "Dua sinyal sudah diperiksa.",
+      "senderAnalystNote": "Signal: pengirim tidak terverifikasi. Kebiasaan aman: jangan gunakan identitas dalam pesan sebagai satu-satunya bukti.",
+      "linkAnalystNote": "Signal: domain tidak cocok. Kebiasaan aman: baca alamat secara perlahan dan verifikasi melalui kanal yang kamu buka sendiri."
+    },
+    "verify": {
+      "title": "Verifikasi secara mandiri",
+      "description": "Gunakan kanal yang kamu buka sendiri untuk memeriksa status pengiriman.",
+      "action": "Buka aplikasi kurir resmi",
+      "analystNote": "Memverifikasi melalui kanal yang kamu buka sendiri memutus kendali penyerang atas rute pemeriksaan.",
+      "sheetTitle": "Aplikasi kurir resmi · simulasi",
+      "sheetDescription": "Kamu membuka kanal dari perangkatmu sendiri. Tidak ada aplikasi nyata yang diluncurkan.",
+      "orderLabel": "PESANAN CONTOH",
+      "orderStatus": "Tidak ada masalah pengiriman",
+      "orderStatusDescription": "Pesanan contoh ini tidak memerlukan konfirmasi tambahan.",
+      "continue": "Kembali ke latihan"
+    },
+    "decide": {
+      "title": "Pilih respons",
+      "description": "Pilih respons terhadap pesan ini. Semua pilihan aman untuk dicoba.",
+      "analystNote": "Pilih tindakan yang paling sesuai dengan kebiasaan amanmu; analisis akan muncul setelah pilihan dibuat.",
+      "choices": {
+        "openLink": {
+          "label": "Buka tautan",
+          "description": "Ikuti tautan yang dikirim dalam pesan."
+        },
+        "verifyOfficial": {
+          "label": "Verifikasi lewat aplikasi resmi",
+          "description": "Periksa status pengiriman dari aplikasi yang kamu buka sendiri."
+        },
+        "reportDelete": {
+          "label": "Laporkan dan hapus pesan",
+          "description": "Hentikan percakapan dengan menghapus dan melaporkan pesan."
+        }
+      }
+    },
+    "console": {
+      "title": "ATTACKER VIEW · SIMULATION ONLY",
+      "targetSession": "TARGET / SESSION",
+      "targetValue": "LOCAL DEMO · DECISION RECORDED",
+      "decisionLabel": "USER DECISION",
+      "traceLabel": "CHRONOLOGICAL TRACE",
+      "traceWaiting": "Menunggu trace simulasi…",
+      "traceRunning": "Trace berjalan",
+      "finalStatus": "FINAL STATUS",
+      "unsafeStatus": "SIMULATED IMPACT",
+      "safeStatus": "SESSION BLOCKED",
+      "unsafeStatusDetail": "Rute simulasi berakhir sebelum transmisi data apa pun.",
+      "safeStatusDetail": "Rute yang dikendalikan penyerang berhasil dilewati.",
+      "traceUnsafe": [
+        "MESSAGE_DELIVERED",
+        "TARGET_OPENED_ROUTE",
+        "FAKE_PAGE_SERVED",
+        "DATA_REQUEST_PREPARED",
+        "NO_REAL_DATA_TRANSMITTED"
+      ],
+      "traceSafe": [
+        "MESSAGE_DELIVERED",
+        "INDEPENDENT_VERIFICATION_STARTED",
+        "ATTACKER_ROUTE_BYPASSED",
+        "SESSION_BLOCKED"
+      ],
+      "traceReport": [
+        "MESSAGE_DELIVERED",
+        "REPORT_AND_DELETE_SELECTED",
+        "ATTACKER_ROUTE_BYPASSED",
+        "SESSION_BLOCKED"
+      ]
+    },
+    "reveal": {
+      "description": "Sekarang lihat hubungan antara keputusanmu dan kemungkinan dampaknya.",
+      "attackerTitle": "Sudut pandang penyerang",
+      "simulatedLabel": "EVENT DESKRIPTIF · TIDAK ADA AKSI NYATA",
+      "selectedChoice": "Pilihanmu",
+      "notificationLabel": "Mengapa ini terjadi",
+      "viewAnalysis": "Lihat analisis",
+      "hideAnalysis": "Tutup analisis",
+      "analysisTitle": "Analisis singkat",
+      "safeChain": [
+        "Korban memverifikasi secara mandiri",
+        "Rute yang dikendalikan penyerang tidak digunakan",
+        "Tidak ada informasi yang terbuka",
+        "Pesan dapat dilaporkan dan dihapus"
+      ],
+      "unsafeChain": [
+        "Korban membuka tautan yang dikirim",
+        "Halaman pengiriman palsu ditampilkan",
+        "Penyerang mencoba mengumpulkan detail akun",
+        "Risiko pengambilalihan akun meningkat"
+      ],
+      "feedbackTitle": "Umpan balik",
+      "fields": {
+        "whatHappened": "Apa yang terjadi",
+        "signal": "Signal",
+        "technique": "Teknik",
+        "impact": "Dampak",
+        "saferResponse": "Respons yang lebih aman"
+      },
+      "unsafeFeedback": {
+        "whatHappened": "Pesan menggunakan batas waktu untuk menciptakan urgensi.",
+        "signal": "Domain tidak cocok dengan kanal kurir resmi.",
+        "technique": "Rekayasa sosial: urgensi ditambah penyamaran layanan.",
+        "impact": "Halaman palsu menyiapkan permintaan detail akun; tidak ada data nyata yang dikirim.",
+        "saferResponse": "Buka aplikasi kurir resmi sendiri, lalu periksa pengiriman."
+      },
+      "safeFeedback": {
+        "whatHappened": "Kamu menghentikan rute yang dikirim melalui pesan.",
+        "signal": "Pengirim dan domain tidak memberi jalur verifikasi yang tepercaya.",
+        "technique": "Rekayasa sosial: urgensi ditambah penyamaran layanan.",
+        "impact": "Rute penyerang dilewati dan sesi diblokir; tidak ada informasi yang terbuka.",
+        "saferResponse": "Pertahankan kebiasaan membuka kanal resmi sendiri sebelum bertindak."
+      },
+      "retry": "Coba variasi lain",
+      "retryNote": "Variasi baru menguji kebiasaan yang sama."
+    },
+    "retryStep": {
+      "title": "Coba variasi lain",
+      "description": "Pretext dan kata-katanya berubah, tetapi sinyalnya tetap perlu diperiksa.",
+      "question": "Apa langkah aman berikutnya?",
+      "inspectPrompt": "Periksa satu sinyal sebelum memilih.",
+      "choiceRequirement": "Periksa pengirim atau tautan sebelum memilih respons.",
+      "helper": "Periksa pengirim atau tautan, lalu verifikasi secara mandiri.",
+      "analystNote": "Variasi ini tidak mengubah prinsip: jangan biarkan pesan menentukan rute pemeriksaanmu."
+    },
+    "complete": {
+      "title": "Latihan selesai",
+      "description": "Kamu sudah mencoba variasi kedua dari prinsip sender dan link verification.",
+      "skillUpdate": "Keterampilan diperbarui: Sender and Link Verification",
+      "mastery": "Status mastery: Mengenal",
+      "support": "Keputusan aman adalah kebiasaan yang bisa dilatih, bukan ujian sekali jadi.",
+      "backHome": "Kembali ke beranda"
+    }
   },
   "training": {
     "eyebrow": "TRAINING LIBRARY",
