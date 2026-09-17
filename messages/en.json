@@ -19,6 +19,31 @@
     "insights": "Practice Insights",
     "profile": "Profile"
   },
+  "progress": {
+    "skillName": "Sender and Link Verification",
+    "masteryStates": {
+      "not_started": "Not started",
+      "familiar": "Familiar",
+      "skilled": "Skilled",
+      "needs_practice": "Needs reinforcement"
+    },
+    "day": "day",
+    "days": "days",
+    "freezeRemaining": "freeze remaining",
+    "habits": {
+      "inspect": "Inspect",
+      "verify": "Verify",
+      "report": "Report"
+    },
+    "noHabits": "Not yet",
+    "retryResults": {
+      "safe": "Safer response",
+      "unsafe": "Needs reinforcement",
+      "none": "Not available"
+    },
+    "firstBadge": "First Practice",
+    "firstBadgeDescription": "Completed the first Courier SMS practice."
+  },
   "dashboard": {
     "eyebrow": "OPERATOR HOME",
     "greeting": "Welcome back",
@@ -30,7 +55,8 @@
     "checkpointCount": "5 checkpoints · about 3 minutes",
     "startPractice": "Start practice",
     "progressLabel": "Module progress",
-    "progressValue": "Foundation ready",
+    "progressValue": "Not completed",
+    "progressCompleted": "Completed",
     "skillSummary": "Skill summary",
     "skillName": "Sender and Link Verification",
     "skillStatus": "Not started",
@@ -244,6 +270,7 @@
       "title": "Practice complete",
       "description": "You tried a second variation of the sender and link verification principle.",
       "skillUpdate": "Skill updated: Sender and Link Verification",
+      "masteryLabel": "Mastery status",
       "mastery": "Mastery status: Familiar",
       "support": "Safer decisions are a habit you can practise, not a one-time test.",
       "backHome": "Back to dashboard"
@@ -274,6 +301,8 @@
     "habitsPractisedValue": "Not yet",
     "transferCheck": "Last transfer check",
     "transferCheckValue": "Not available",
+    "currentMastery": "Current mastery",
+    "lastRetry": "Last retry result",
     "support": "These insights show practice, not a judgement of you.",
     "habitsLabel": "Safer habits",
     "habitsDescription": "Inspect · Verify · Report"
@@ -290,6 +319,7 @@
     "freeze": "Streak freeze",
     "freezeValue": "1 remaining",
     "badges": "Badges",
+    "badgeEarned": "First practice completed.",
     "badgeValue": "Your first badge will appear after practice",
     "language": "Language",
     "indonesian": "Bahasa Indonesia",
