@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
+import { DashboardModuleStatus, DashboardProgress } from "@/features/progress/progress-views";
 import { getMessages } from "@/lib/i18n";
 
 export default function DashboardPage() {
@@ -33,7 +34,7 @@ export default function DashboardPage() {
               <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3 font-mono text-[11px] tracking-[0.08em] text-muted">
                 <span>{dashboard.checkpointCount}</span>
                 <span className="h-1 w-1 rounded-full bg-signal" />
-                <span>{dashboard.progressValue}</span>
+                <DashboardModuleStatus />
               </div>
 
               <Link
@@ -46,33 +47,9 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <aside className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
-            <section className="border border-white/[0.08] bg-navy-900/70 p-6">
-              <p className="font-mono text-[11px] tracking-[0.18em] text-muted">{dashboard.skillSummary}</p>
-              <div className="mt-8 flex items-end justify-between gap-4">
-                <p className="max-w-[15rem] text-lg font-medium leading-7 text-ice">{dashboard.skillName}</p>
-                <span className="shrink-0 font-mono text-[10px] text-warning">{dashboard.skillStatus}</span>
-              </div>
-              <div className="mt-5 h-1 bg-navy-700">
-                <div className="h-full w-0 bg-signal" />
-              </div>
-            </section>
-
-            <section className="border border-white/[0.08] bg-navy-900/70 p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="font-mono text-[11px] tracking-[0.18em] text-muted">{dashboard.streak}</p>
-                  <p className="mt-4 text-3xl font-semibold tracking-tight text-ice">{dashboard.streakValue}</p>
-                </div>
-                <span aria-hidden="true" className="text-2xl text-signal">◌</span>
-              </div>
-              <p className="mt-5 font-mono text-[11px] text-muted">{dashboard.freeze}</p>
-              <p className="mt-3 text-xs leading-5 text-muted">{dashboard.masteryNote}</p>
-            </section>
-          </aside>
+          <DashboardProgress />
         </div>
       </div>
     </AppShell>
   );
 }
-

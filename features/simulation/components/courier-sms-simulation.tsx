@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
+import { recordCourierSmsCompletion, type PracticeProgress } from "@/features/progress/progress";
 import { getMessages, type Messages } from "@/lib/i18n";
 import { courierScenarios, type CourierScenarioCopy } from "../scenario-data";
 import {
@@ -36,9 +37,20 @@ export function CourierSmsSimulation() {
   const messages = getMessages();
   const simulation = messages.simulation;
   const [state, dispatch] = useReducer(simulationReducer, initialSimulationState);
+  const completionRecorded = useRef(false);
+  const [completionProgress, setCompletionProgress] = useState<PracticeProgress | null>(null);
   const scenario = state.stage === "retry" ? courierScenarios.retry : courierScenarios.primary;
   const scenarioCopy = simulation.scenarios[scenario.copyKey];
   const showAttackerPov = state.stage === "reveal";
+
+  useEffect(() => {
+    if (state.stage !== "complete" || state.retryDecision === null || completionRecorded.current) {
+      return;
+    }
+
+    completionRecorded.current = true;
+    setCompletionProgress(recordCourierSmsCompletion({ retryDecision: state.retryDecision }));
+  }, [state.retryDecision, state.stage]);
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
@@ -58,7 +70,7 @@ export function CourierSmsSimulation() {
       {state.stage === "briefing" ? (
         <BriefingPanel simulation={simulation} onBegin={() => dispatch({ type: "start_module" })} />
       ) : state.stage === "complete" ? (
-        <CompletionPanel simulation={simulation} />
+        <CompletionPanel progress={completionProgress} simulation={simulation} />
       ) : (
         <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(17rem,0.72fr)_minmax(0,1.28fr)] lg:items-start">
           <PhoneSurface scenario={scenarioCopy} simulation={simulation} />
@@ -673,7 +685,12 @@ function TrustedChannelSheet({ simulation, onConfirm }: { simulation: Simulation
   );
 }
 
-function CompletionPanel({ simulation }: { simulation: SimulationMessages }) {
+function CompletionPanel({ progress, simulation }: { progress: PracticeProgress | null; simulation: SimulationMessages }) {
+  const messages = getMessages();
+  const mastery = progress
+    ? `${simulation.complete.masteryLabel}: ${messages.progress.masteryStates[progress.mastery]}`
+    : simulation.complete.mastery;
+
   return (
     <section className="mt-8 border border-signal/40 bg-navy-900 p-6 shadow-panel sm:p-10">
       <div className="flex h-12 w-12 items-center justify-center border border-signal bg-signal/10 font-mono text-xl text-signal">✓</div>
@@ -685,7 +702,7 @@ function CompletionPanel({ simulation }: { simulation: SimulationMessages }) {
       <div className="mt-10 grid gap-4 sm:grid-cols-2">
         <div className="border border-white/[0.08] bg-navy-950/50 p-5">
           <p className="font-mono text-[10px] tracking-[0.12em] text-muted">{simulation.complete.skillUpdate}</p>
-          <p className="mt-4 font-mono text-sm text-signal">{simulation.complete.mastery}</p>
+          <p className="mt-4 font-mono text-sm text-signal">{mastery}</p>
         </div>
         <p className="border border-white/[0.08] bg-navy-950/50 p-5 text-sm leading-6 text-muted">{simulation.complete.support}</p>
       </div>

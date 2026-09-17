@@ -19,6 +19,31 @@
     "insights": "Insight Latihan",
     "profile": "Profil"
   },
+  "progress": {
+    "skillName": "Sender and Link Verification",
+    "masteryStates": {
+      "not_started": "Belum dipelajari",
+      "familiar": "Mengenal",
+      "skilled": "Terampil",
+      "needs_practice": "Perlu penguatan"
+    },
+    "day": "hari",
+    "days": "hari",
+    "freezeRemaining": "freeze tersisa",
+    "habits": {
+      "inspect": "Inspect",
+      "verify": "Verify",
+      "report": "Report"
+    },
+    "noHabits": "Belum ada",
+    "retryResults": {
+      "safe": "Respons lebih aman",
+      "unsafe": "Perlu penguatan",
+      "none": "Belum tersedia"
+    },
+    "firstBadge": "First Practice",
+    "firstBadgeDescription": "Menyelesaikan latihan Courier SMS pertama."
+  },
   "dashboard": {
     "eyebrow": "OPERATOR HOME",
     "greeting": "Selamat datang kembali",
@@ -30,7 +55,8 @@
     "checkpointCount": "5 checkpoint · sekitar 3 menit",
     "startPractice": "Mulai latihan",
     "progressLabel": "Progres modul",
-    "progressValue": "Fondasi siap",
+    "progressValue": "Belum selesai",
+    "progressCompleted": "Selesai",
     "skillSummary": "Ringkasan keterampilan",
     "skillName": "Sender and Link Verification",
     "skillStatus": "Belum dipelajari",
@@ -244,6 +270,7 @@
       "title": "Latihan selesai",
       "description": "Kamu sudah mencoba variasi kedua dari prinsip sender dan link verification.",
       "skillUpdate": "Keterampilan diperbarui: Sender and Link Verification",
+      "masteryLabel": "Status mastery",
       "mastery": "Status mastery: Mengenal",
       "support": "Keputusan aman adalah kebiasaan yang bisa dilatih, bukan ujian sekali jadi.",
       "backHome": "Kembali ke beranda"
@@ -274,6 +301,8 @@
     "habitsPractisedValue": "Belum ada",
     "transferCheck": "Pengecekan transfer terakhir",
     "transferCheckValue": "Belum tersedia",
+    "currentMastery": "Mastery saat ini",
+    "lastRetry": "Hasil retry terakhir",
     "support": "Insight ini membantu melihat latihan, bukan menilai dirimu.",
     "habitsLabel": "Kebiasaan aman",
     "habitsDescription": "Inspect · Verify · Report"
@@ -290,6 +319,7 @@
     "freeze": "Streak freeze",
     "freezeValue": "1 tersisa",
     "badges": "Badge",
+    "badgeEarned": "Latihan pertama selesai.",
     "badgeValue": "Badge pertama akan muncul setelah latihan",
     "language": "Bahasa",
     "indonesian": "Bahasa Indonesia",
