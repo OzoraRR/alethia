@@ -1,0 +1,103 @@
+{
+  "brand": {
+    "name": "Alethia",
+    "descriptor": "Latihan keamanan yang humanis"
+  },
+  "common": {
+    "primaryNavigation": "Navigasi utama",
+    "foundation": "FONDASI PRODUK",
+    "simulationOnly": "SIMULASI AMAN",
+    "noRealData": "Tidak ada data nyata yang dikumpulkan",
+    "comingSoon": "Segera hadir",
+    "available": "Tersedia",
+    "backHome": "Kembali ke beranda"
+  },
+  "nav": {
+    "dashboard": "Beranda",
+    "simulation": "Simulasi",
+    "training": "Pelatihan",
+    "insights": "Insight Latihan",
+    "profile": "Profil"
+  },
+  "dashboard": {
+    "eyebrow": "OPERATOR HOME",
+    "greeting": "Selamat datang kembali",
+    "summary": "Satu latihan singkat untuk membangun kebiasaan berhenti, memeriksa, dan memverifikasi.",
+    "currentChallenge": "Tantangan saat ini",
+    "moduleNumber": "MODUL 01",
+    "moduleTitle": "Courier SMS Phishing",
+    "moduleDescription": "Kenali tekanan dalam pesan pengiriman dan pilih langkah aman berikutnya.",
+    "checkpointCount": "5 checkpoint · sekitar 3 menit",
+    "startPractice": "Mulai latihan",
+    "progressLabel": "Progres modul",
+    "progressValue": "Fondasi siap",
+    "skillSummary": "Ringkasan keterampilan",
+    "skillName": "Sender and Link Verification",
+    "skillStatus": "Belum dipelajari",
+    "streak": "Streak latihan",
+    "streakValue": "0 hari",
+    "freeze": "1 freeze tersisa",
+    "masteryNote": "Mastery tidak turun saat streak terputus."
+  },
+  "simulation": {
+    "eyebrow": "MODUL 01 · SMS PHISHING",
+    "title": "Courier message",
+    "description": "Belajar berhenti, memeriksa, dan memverifikasi sebelum membuka tautan pengiriman.",
+    "checkpointCount": "5 checkpoint · sekitar 3 menit",
+    "safeNote": "SIMULASI AMAN · Tidak ada data nyata yang dikumpulkan",
+    "phoneTime": "09:41",
+    "phoneLabel": "SMS",
+    "foundationLabel": "TAMPILAN MODUL",
+    "foundationTitle": "Briefing simulasi siap untuk fase berikutnya",
+    "foundationDescription": "Struktur halaman, ruang untuk tampilan ponsel, dan panel analisis sudah disiapkan tanpa menjalankan simulasi interaktif.",
+    "nextPhase": "Simulator interaktif segera hadir",
+    "returnDashboard": "Kembali ke beranda"
+  },
+  "training": {
+    "eyebrow": "TRAINING LIBRARY",
+    "title": "Learn it. Do it.",
+    "description": "Latihan singkat yang menghubungkan keputusan sehari-hari dengan kebiasaan aman.",
+    "active": "Aktif",
+    "available": "Tersedia di fondasi",
+    "moduleNumber": "MODUL 01",
+    "courierTitle": "Courier SMS Phishing",
+    "courierDescription": "Berhenti sejenak saat menerima pesan pengiriman yang mendesak.",
+    "futureSmsTitle": "Signal lainnya",
+    "futureSmsDescription": "Variasi latihan untuk memperkuat pemeriksaan pengirim dan tautan.",
+    "futureModuleNumber": "02",
+    "openModule": "Buka modul",
+    "soon": "Segera hadir"
+  },
+  "insights": {
+    "eyebrow": "PRACTICE INSIGHTS",
+    "title": "Insight Latihan",
+    "description": "Lihat kebiasaan yang sedang dilatih, tanpa skor yang menghakimi.",
+    "modulesCompleted": "Modul selesai",
+    "modulesCompletedValue": "0",
+    "habitsPractised": "Kebiasaan dipraktikkan",
+    "habitsPractisedValue": "Belum ada",
+    "transferCheck": "Pengecekan transfer terakhir",
+    "transferCheckValue": "Belum tersedia",
+    "support": "Insight ini membantu melihat latihan, bukan menilai dirimu.",
+    "habitsLabel": "Kebiasaan aman",
+    "habitsDescription": "Inspect · Verify · Report"
+  },
+  "profile": {
+    "eyebrow": "OPERATOR PROFILE",
+    "title": "Profil",
+    "description": "Atur preferensi latihan dan lihat perkembangan keterampilanmu.",
+    "mastery": "Mastery keterampilan",
+    "skillName": "Sender and Link Verification",
+    "masteryStatus": "Belum dipelajari",
+    "streak": "Streak latihan",
+    "streakValue": "0 hari",
+    "freeze": "Streak freeze",
+    "freezeValue": "1 tersisa",
+    "badges": "Badge",
+    "badgeValue": "Badge pertama akan muncul setelah latihan",
+    "language": "Bahasa",
+    "indonesian": "Bahasa Indonesia",
+    "english": "English",
+    "languageNote": "English tersedia sebagai struktur locale berikutnya."
+  }
+}

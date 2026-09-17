@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy-950: #050b14;
+  --navy-900: #091321;
+  --navy-850: #0d1a2b;
+  --navy-800: #12243a;
+  --navy-700: #1b3550;
+  --signal: #a6e86b;
+  --signal-dim: #31542d;
+  --ice: #e6edf4;
+  --muted: #8da0b4;
+  --warning: #f2c879;
+  --font-body: "Inter", "Segoe UI", Arial, sans-serif;
+  --font-mono: "Fantasque Sans Mono", "SFMono-Regular", Consolas, monospace;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: var(--navy-950);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 75% -10%, rgba(40, 83, 124, 0.22), transparent 38rem),
+    var(--navy-950);
+  color: var(--ice);
+  font-family: var(--font-body);
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+a,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--signal);
+  color: var(--navy-950);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+

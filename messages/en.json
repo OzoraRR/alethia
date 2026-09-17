@@ -1,0 +1,103 @@
+{
+  "brand": {
+    "name": "Alethia",
+    "descriptor": "Human-centred security practice"
+  },
+  "common": {
+    "primaryNavigation": "Primary navigation",
+    "foundation": "PRODUCT FOUNDATION",
+    "simulationOnly": "SAFE SIMULATION",
+    "noRealData": "No real data is collected",
+    "comingSoon": "Coming soon",
+    "available": "Available",
+    "backHome": "Back to dashboard"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "simulation": "Simulation",
+    "training": "Training",
+    "insights": "Practice Insights",
+    "profile": "Profile"
+  },
+  "dashboard": {
+    "eyebrow": "OPERATOR HOME",
+    "greeting": "Welcome back",
+    "summary": "One short practice to build the habit of pausing, inspecting, and verifying.",
+    "currentChallenge": "Current challenge",
+    "moduleNumber": "MODULE 01",
+    "moduleTitle": "Courier SMS Phishing",
+    "moduleDescription": "Recognise pressure in a delivery message and choose the next safe step.",
+    "checkpointCount": "5 checkpoints · about 3 minutes",
+    "startPractice": "Start practice",
+    "progressLabel": "Module progress",
+    "progressValue": "Foundation ready",
+    "skillSummary": "Skill summary",
+    "skillName": "Sender and Link Verification",
+    "skillStatus": "Not started",
+    "streak": "Practice streak",
+    "streakValue": "0 days",
+    "freeze": "1 freeze remaining",
+    "masteryNote": "Mastery does not drop when a streak breaks."
+  },
+  "simulation": {
+    "eyebrow": "MODULE 01 · SMS PHISHING",
+    "title": "Courier message",
+    "description": "Learn to pause, inspect, and verify before opening a delivery link.",
+    "checkpointCount": "5 checkpoints · about 3 minutes",
+    "safeNote": "SAFE SIMULATION · No real data is collected",
+    "phoneTime": "09:41",
+    "phoneLabel": "SMS",
+    "foundationLabel": "MODULE VIEW",
+    "foundationTitle": "Simulation briefing is ready for the next phase",
+    "foundationDescription": "The page structure, phone surface, and analysis panel space are prepared without running the interactive simulation.",
+    "nextPhase": "Interactive simulator coming soon",
+    "returnDashboard": "Back to dashboard"
+  },
+  "training": {
+    "eyebrow": "TRAINING LIBRARY",
+    "title": "Learn it. Do it.",
+    "description": "Short practices that connect everyday decisions with safer habits.",
+    "active": "Active",
+    "available": "Available in foundation",
+    "moduleNumber": "MODULE 01",
+    "courierTitle": "Courier SMS Phishing",
+    "courierDescription": "Pause when a delivery message creates pressure to act quickly.",
+    "futureSmsTitle": "More signals",
+    "futureSmsDescription": "Practice variations to strengthen sender and link inspection.",
+    "futureModuleNumber": "02",
+    "openModule": "Open module",
+    "soon": "Coming soon"
+  },
+  "insights": {
+    "eyebrow": "PRACTICE INSIGHTS",
+    "title": "Practice Insights",
+    "description": "See the habits you are practising, without judgemental scores.",
+    "modulesCompleted": "Modules completed",
+    "modulesCompletedValue": "0",
+    "habitsPractised": "Habits practised",
+    "habitsPractisedValue": "Not yet",
+    "transferCheck": "Last transfer check",
+    "transferCheckValue": "Not available",
+    "support": "These insights show practice, not a judgement of you.",
+    "habitsLabel": "Safer habits",
+    "habitsDescription": "Inspect · Verify · Report"
+  },
+  "profile": {
+    "eyebrow": "OPERATOR PROFILE",
+    "title": "Profile",
+    "description": "Set practice preferences and see your skill progress.",
+    "mastery": "Skill mastery",
+    "skillName": "Sender and Link Verification",
+    "masteryStatus": "Not started",
+    "streak": "Practice streak",
+    "streakValue": "0 days",
+    "freeze": "Streak freeze",
+    "freezeValue": "1 remaining",
+    "badges": "Badges",
+    "badgeValue": "Your first badge will appear after practice",
+    "language": "Language",
+    "indonesian": "Bahasa Indonesia",
+    "english": "English",
+    "languageNote": "English is available as the next locale structure."
+  }
+}
