@@ -68,8 +68,8 @@
   "simulation": {
     "eyebrow": "MODULE 01 · SMS PHISHING",
     "title": "Courier message",
-    "description": "Learn to pause, inspect, and verify before opening a delivery link.",
-    "checkpointCount": "5 checkpoints · about 3 minutes",
+    "description": "Imagine you are waiting for a parcel and open this SMS among other notifications. It is designed to make you act before you have time to check.",
+    "checkpointCount": "5 stages · about 3 minutes",
     "safeNote": "SAFE SIMULATION · No real data is collected",
     "phoneTime": "09:41",
     "phoneLabel": "SMS",
@@ -91,10 +91,21 @@
       "retry": "RETRY",
       "complete": "COMPLETE"
     },
+    "checkpoints": {
+      "receive": "Message arrives",
+      "inspect": "Inspect",
+      "verify": "Verify",
+      "decide": "Choose a response",
+      "understand": "See the outcome"
+    },
+    "devices": {
+      "victim": "VICTIM · SMS",
+      "attacker": "ATTACKER · OPERATOR DEVICE"
+    },
     "briefing": {
       "label": "MODULE 01 · SMS PHISHING",
       "title": "Courier message",
-      "description": "Learn to pause, inspect, and verify before opening a delivery link.",
+      "description": "Imagine you are waiting for a parcel and open this SMS among other notifications. It is designed to make you act before you have time to check.",
       "checkpointCount": "5 checkpoints · about 3 minutes",
       "safeNotice": "SAFE SIMULATION · No real data is collected",
       "begin": "Begin module"
@@ -130,58 +141,108 @@
       }
     },
     "receive": {
-      "title": "Receive the message",
-      "description": "Read the message normally. Notice the pressure that pushes for a quick decision.",
-      "action": "Continue",
-      "analystNote": "Signal: urgency. Why it matters: urgency is used to reduce time for checking. Safe habit: pause before responding."
+      "title": "Message arrives",
+      "description": "The message looks like a normal delivery update.",
+      "action": "Inspect message",
+      "analystNote": "Time pressure is used to make the target act quickly."
     },
     "inspect": {
-      "title": "Inspect the signals",
-      "description": "Inspect at least one signal before continuing.",
+      "title": "Inspect sender and link",
+      "description": "Open the available details before choosing a response.",
       "senderAction": "Inspect sender",
       "linkAction": "Inspect link",
       "inspected": "Inspected",
       "continue": "Continue",
-      "requirement": "Inspect the sender or link to unlock the next checkpoint.",
-      "bothInspected": "Both signals inspected.",
-      "senderAnalystNote": "Signal: sender is not verified. Safe habit: do not use an identity in the message as your only proof.",
-      "linkAnalystNote": "Signal: domain mismatch. Safe habit: read the address slowly and verify through a channel you open yourself."
+      "requirement": "Choose the sender or link to inspect its details.",
+      "bothInspected": "Message details inspected.",
+      "analystNote": "The sender name looks official, but the number and domain do not offer a trusted verification route.",
+      "senderAnalystNote": "A sender name is not proof that this channel is official.",
+      "linkAnalystNote": "The domain does not match an official courier channel."
     },
     "verify": {
-      "title": "Verify independently",
-      "description": "Use a channel you open yourself to check the delivery status.",
+      "title": "Verify through an official channel",
+      "description": "Open the simulated courier app from this device.",
       "action": "Open the official courier app",
       "analystNote": "Verifying through a channel you open yourself breaks the attacker’s control of the checking route.",
       "sheetTitle": "Official courier app · simulation",
-      "sheetDescription": "You opened the channel from your own device. No real app is launched.",
+      "sheetDescription": "No real app is launched.",
       "orderLabel": "MOCK ORDER",
-      "orderStatus": "No delivery issue",
-      "orderStatusDescription": "This mock order does not require any additional confirmation.",
-      "continue": "Return to practice"
+      "orderStatus": "No parcel was found with that tracking number.",
+      "orderStatusDescription": "The earlier message gave no proof that it truly came from a courier.",
+      "continue": "Return to SMS",
+      "appTitle": "NATIONAL COURIER",
+      "appSimulation": "SIMULATION",
+      "trackTitle": "Track parcel",
+      "trackingPlaceholder": "Enter tracking number",
+      "search": "Search sample tracking",
+      "searchResultLabel": "SEARCH RESULT"
     },
     "decide": {
       "title": "Choose a response",
-      "description": "Choose how to respond to this message. Every choice is safe to try.",
-      "analystNote": "Choose the action that best fits your safer habit; the analysis will appear after you choose.",
+      "description": "Your action determines whether the attacker route advances or is interrupted.",
+      "analystNote": "Choose one action to see its simulated consequence.",
       "choices": {
         "openLink": {
           "label": "Open the link",
           "description": "Follow the link sent in the message."
         },
-        "verifyOfficial": {
-          "label": "Verify through the official app",
-          "description": "Check delivery status from an app you opened yourself."
-        },
-        "reportDelete": {
+      "verifyOfficial": {
+        "label": "Verify through the official app",
+        "description": "Check delivery status from an app you opened yourself."
+      },
+      "reportDelete": {
           "label": "Report and delete the message",
           "description": "End the exchange by deleting and reporting the message."
         }
       }
     },
     "console": {
+      "campaignTitle": "COURIER CAMPAIGN // ACTIVE",
+    "campaignLabel": "CAMPAIGN",
+    "campaignValue": "07",
+    "roundPrimary": "ROUND 01",
+    "roundRetry": "ROUND 02",
+      "targetLabel": "TARGET",
+      "objectiveLabel": "OBJECTIVE",
+      "objective": "Make the target act before checking.",
+    "tacticLabel": "TACTIC",
+    "tactic": "Courier impersonation + time pressure.",
+    "retryTactic": "Address-change pretext + fee pressure.",
+      "liveLogLabel": "LIVE EVENT LOG",
+      "nextActionLabel": "NEXT SIMULATED ACTION",
+      "nextActionWaiting": "Wait for the target to open the message.",
+      "nextActionInspect": "Assess the likely target response.",
+      "nextActionDecide": "Wait for the target to choose a response.",
+      "nextActionVerify": "Monitor official-channel verification.",
+      "nextActionRetry": "Wait for the second-variant response.",
+      "nextActionComplete": "No real action is taken.",
+    "statusWaiting": "WAITING",
+    "statusRisk": "RISK INCREASING",
+    "statusObserved": "OBSERVED",
+    "statusDeclining": "CONFIDENCE DECLINING",
+    "statusRetry": "VARIANT ACTIVE",
+    "interruptedStatus": "INTERRUPTED",
+      "initialEvents": [
+        "LURE DELIVERED",
+        "TARGET STATE: UNREAD",
+      "CAMPAIGN STATUS: WAITING"
+    ],
+    "retryInitialEvents": [
+      "VARIANT 02 DELIVERED",
+      "TARGET STATE: UNREAD",
+      "CAMPAIGN STATUS: VARIANT ACTIVE"
+    ],
+      "messageOpened": "TARGET VIEWED MESSAGE",
+      "senderInspected": "TARGET INSPECTING SENDER",
+      "responseDelay": "RESPONSE DELAY DETECTED",
+    "linkInspected": "TARGET INSPECTING ROUTE",
+    "domainMismatch": "DOMAIN MISMATCH CONFIRMED",
+      "trustedCheckDetected": "TRUSTED CHANNEL CHECK DETECTED",
+      "trackingNotFound": "TRACKING ID NOT FOUND",
+      "confidenceDeclining": "CAMPAIGN CONFIDENCE: DECLINING",
       "title": "ATTACKER VIEW · SIMULATION ONLY",
       "targetSession": "TARGET / SESSION",
-      "targetValue": "LOCAL DEMO · DECISION RECORDED",
+      "targetValue": "SIM-01",
       "decisionLabel": "USER DECISION",
       "traceLabel": "CHRONOLOGICAL TRACE",
       "traceWaiting": "Waiting for simulation trace…",
@@ -204,12 +265,12 @@
         "ATTACKER_ROUTE_BYPASSED",
         "SESSION_BLOCKED"
       ],
-      "traceReport": [
-        "MESSAGE_DELIVERED",
-        "REPORT_AND_DELETE_SELECTED",
-        "ATTACKER_ROUTE_BYPASSED",
-        "SESSION_BLOCKED"
-      ]
+    "traceReport": [
+      "MESSAGE_DELIVERED",
+      "REPORT_AND_DELETE_SELECTED",
+      "ATTACKER_ROUTE_BYPASSED",
+      "SESSION_BLOCKED"
+    ]
     },
     "reveal": {
       "description": "Now see the connection between your decision and its possible impact.",
@@ -233,29 +294,44 @@
         "Account takeover risk increases"
       ],
       "feedbackTitle": "Feedback",
-      "fields": {
-        "whatHappened": "What happened",
-        "signal": "Signal",
-        "technique": "Technique",
-        "impact": "Impact",
-        "saferResponse": "Safer response"
+    "fields": {
+      "whatHappened": "What happened",
+      "attackerObjective": "Attacker objective",
+      "technique": "Technique",
+      "saferResponse": "Safer response"
       },
       "unsafeFeedback": {
-        "whatHappened": "The message used a deadline to create urgency.",
-        "signal": "The domain does not match an official courier channel.",
-        "technique": "Social engineering: urgency plus service impersonation.",
-        "impact": "The fake page prepared an account-detail request; no real data was sent.",
-        "saferResponse": "Open the official courier app yourself, then check the delivery."
+      "whatHappened": "The message used a deadline to create urgency.",
+      "attackerObjective": "Move the target from the message to an attacker-controlled page.",
+      "technique": "Social engineering: urgency plus service impersonation.",
+      "saferResponse": "Open the official courier app yourself, then check the delivery."
       },
       "safeFeedback": {
-        "whatHappened": "You stopped the route sent through the message.",
-        "signal": "The sender and domain did not provide a trusted route for verification.",
-        "technique": "Social engineering: urgency plus service impersonation.",
-        "impact": "The attacker route was bypassed and the session blocked; no information was exposed.",
-        "saferResponse": "Keep opening the official channel yourself before acting."
+      "whatHappened": "You stopped the route sent through the message.",
+      "attackerObjective": "Keep the target inside the supplied route before it can be checked independently.",
+      "technique": "Social engineering: urgency plus service impersonation.",
+      "saferResponse": "Keep opening the official channel yourself before acting."
       },
       "retry": "Try another variation",
+      "finish": "Finish practice",
       "retryNote": "The new variation tests the same habit."
+    },
+    "outcomes": {
+      "simulatedPage": "DELIVERY PAGE · SIMULATION",
+      "deliveryPortal": "Confirm delivery",
+      "noDataField": "No data is requested or transmitted.",
+      "openLink": {
+        "detail": "You entered a simulated page controlled by the attacker.",
+        "summary": "No real data was sent, but the attack route advanced."
+      },
+      "verifyOfficial": {
+        "detail": "You interrupted the attack route before it could direct you to an attacker-controlled page.",
+        "summary": "The official channel did not find the claimed parcel."
+    },
+      "reportDelete": {
+        "detail": "The message was marked and the exchange ended.",
+        "summary": "The attacker route was interrupted before the target was directed elsewhere."
+      }
     },
     "retryStep": {
       "title": "Try another variation",

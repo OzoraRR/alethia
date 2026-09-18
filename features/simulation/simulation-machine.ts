@@ -19,7 +19,8 @@ export type SimulationAction =
   | { type: "select_decision"; decision: Decision }
   | { type: "start_retry" }
   | { type: "inspect_retry_signal"; signal: InspectionSignal }
-  | { type: "select_retry_decision"; decision: Decision };
+  | { type: "select_retry_decision"; decision: Decision }
+  | { type: "complete_module" };
 
 export const initialSimulationState: SimulationState = {
   stage: "briefing",
@@ -63,7 +64,7 @@ export function simulationReducer(
         ? { ...state, stage: "reveal", decision: action.decision }
         : state;
     case "start_retry":
-      return state.stage === "reveal"
+      return state.stage === "reveal" && state.retryDecision === null
         ? { ...state, stage: "retry", retryDecision: null, retryInspectedSignals: [] }
         : state;
     case "inspect_retry_signal":
@@ -77,7 +78,11 @@ export function simulationReducer(
       };
     case "select_retry_decision":
       return state.stage === "retry" && state.retryInspectedSignals.length > 0
-        ? { ...state, stage: "complete", retryDecision: action.decision }
+        ? { ...state, stage: "reveal", retryDecision: action.decision }
+        : state;
+    case "complete_module":
+      return state.stage === "reveal" && state.retryDecision !== null
+        ? { ...state, stage: "complete" }
         : state;
     default:
       return state;

@@ -12,840 +12,339 @@ import {
 } from "@/features/progress/supabase-persistence";
 import { getMessages, type Messages } from "@/lib/i18n";
 import { courierScenarios, type CourierScenarioCopy } from "../scenario-data";
-import {
-  initialSimulationState,
-  simulationReducer,
-  type SimulationAction,
-  type SimulationState,
-} from "../simulation-machine";
-import { simulationStages, type Decision, type SimulationStage } from "../types";
+import { initialSimulationState, simulationReducer, type SimulationState } from "../simulation-machine";
+import { type Decision, type SimulationStage } from "../types";
 
 type SimulationMessages = Messages["simulation"];
 type ScenarioCopy = SimulationMessages["scenarios"][CourierScenarioCopy];
 type ChoiceKey = "openLink" | "verifyOfficial" | "reportDelete";
 
-const decisionOptions: ReadonlyArray<{
-  choiceKey: ChoiceKey;
-  decision: Decision;
-  marker: string;
-}> = [
+const decisionOptions: ReadonlyArray<{ choiceKey: ChoiceKey; decision: Decision; marker: string }> = [
   { choiceKey: "openLink", decision: "open_link", marker: "↗" },
   { choiceKey: "verifyOfficial", decision: "verify_official_channel", marker: "✓" },
   { choiceKey: "reportDelete", decision: "report_delete", marker: "×" },
 ];
 
+const learnerCheckpointKeys = ["receive", "inspect", "verify", "decide", "understand"] as const;
+const learnerCheckpointIndex: Record<SimulationStage, number> = {
+  briefing: 0, receive: 0, inspect: 1, verify: 2, decide: 3, reveal: 4, retry: 3, complete: 4,
+};
 const choiceKeyByDecision: Record<Decision, ChoiceKey> = {
-  open_link: "openLink",
-  verify_official_channel: "verifyOfficial",
-  report_delete: "reportDelete",
+  open_link: "openLink", verify_official_channel: "verifyOfficial", report_delete: "reportDelete",
 };
 
 export function CourierSmsSimulation() {
-  const messages = getMessages();
-  const simulation = messages.simulation;
+  const simulation = getMessages().simulation;
   const [state, dispatch] = useReducer(simulationReducer, initialSimulationState);
+  const [verificationChecked, setVerificationChecked] = useState(false);
   const completionRecorded = useRef(false);
   const hasStartedRef = useRef(false);
   const attemptIdRef = useRef<string | null>(null);
   const attemptPromiseRef = useRef<Promise<string | null> | null>(null);
   const recordedEventKeysRef = useRef(new Set<string>());
   const [completionProgress, setCompletionProgress] = useState<PracticeProgress | null>(null);
-  const scenario = state.stage === "retry" ? courierScenarios.retry : courierScenarios.primary;
-  const scenarioCopy = simulation.scenarios[scenario.copyKey];
-  const showAttackerPov = state.stage === "reveal";
+  const isRetryScenario = state.stage === "retry" || state.retryDecision !== null || state.stage === "complete";
+  const scenario = simulation.scenarios[(isRetryScenario ? courierScenarios.retry : courierScenarios.primary).copyKey];
+  const activeDecision = state.stage === "reveal" || state.stage === "complete"
+    ? state.retryDecision ?? state.decision
+    : null;
 
   const ensureAttempt = useCallback(() => {
     if (!attemptPromiseRef.current) {
-      attemptPromiseRef.current = startPracticeAttempt()
-        .then((attemptId) => {
-          attemptIdRef.current = attemptId;
-          return attemptId;
-        })
-        .catch(() => null);
+      attemptPromiseRef.current = startPracticeAttempt().then((attemptId) => {
+        attemptIdRef.current = attemptId;
+        return attemptId;
+      }).catch(() => null);
     }
-
     return attemptPromiseRef.current;
   }, []);
 
-  const recordEvent = useCallback(
-    (
-      key: string,
-      eventType: PracticeEventType,
-      stage: SimulationStage,
-      metadata?: PracticeEventMetadata,
-    ) => {
-      if (recordedEventKeysRef.current.has(key)) {
-        return;
-      }
+  const recordEvent = useCallback((key: string, eventType: PracticeEventType, stage: SimulationStage, metadata?: PracticeEventMetadata) => {
+    if (recordedEventKeysRef.current.has(key)) return;
+    recordedEventKeysRef.current.add(key);
+    void ensureAttempt().then((attemptId) => persistPracticeEvent({ attemptId, eventType, stage, metadata })).catch(() => undefined);
+  }, [ensureAttempt]);
 
-      recordedEventKeysRef.current.add(key);
-      void ensureAttempt().then((attemptId) =>
-        persistPracticeEvent({ attemptId, eventType, stage, metadata }),
-      ).catch(() => undefined);
-    },
-    [ensureAttempt],
-  );
+  const inspectSignal = (signal: "sender" | "link", retry = false) => {
+    recordEvent(`${retry ? "retry-" : ""}inspect:${signal}`, signal === "sender" ? "sender_inspected" : "link_inspected", retry ? "retry" : "inspect", { signal });
+    dispatch(retry ? { type: "inspect_retry_signal", signal } : { type: "inspect_signal", signal });
+  };
 
-  const beginModule = () => {
+  useEffect(() => {
+    if (hasStartedRef.current && state.stage !== "briefing") {
+      recordEvent(`stage:${state.stage}:${state.retryDecision ?? "primary"}`, "stage_viewed", state.stage);
+    }
+  }, [recordEvent, state.retryDecision, state.stage]);
+
+  useEffect(() => {
+    if (state.stage === "reveal" && activeDecision) {
+      const metadata = { choice: activeDecision };
+      const round = state.retryDecision ? "retry" : "primary";
+      recordEvent(`attacker-pov:${activeDecision}:${round}`, "attacker_pov_viewed", "reveal", metadata);
+      recordEvent(`feedback:${activeDecision}:${round}`, "feedback_viewed", "reveal", metadata);
+    }
+  }, [activeDecision, recordEvent, state.retryDecision, state.stage]);
+
+  useEffect(() => {
+    if (state.stage !== "complete" || state.retryDecision === null || completionRecorded.current) return;
+    completionRecorded.current = true;
+    const outcome = state.retryDecision === "open_link" ? "unsafe" : "safe";
+    recordEvent("module_completed", "module_completed", "complete", { outcome });
+    const nextProgress = recordCourierSmsCompletion({ retryDecision: state.retryDecision, attemptId: attemptIdRef.current });
+    setCompletionProgress(nextProgress);
+    if (!attemptIdRef.current) {
+      void ensureAttempt().then((attemptId) => attemptId ? persistProgressSnapshot({ progress: nextProgress, attemptId }) : undefined).catch(() => undefined);
+    }
+  }, [ensureAttempt, recordEvent, state.retryDecision, state.stage]);
+
+  const startModule = () => {
     hasStartedRef.current = true;
     recordEvent("module_started", "module_started", "briefing");
     dispatch({ type: "start_module" });
   };
-
-  const inspectSignal = (signal: "sender" | "link") => {
-    const eventType: PracticeEventType = signal === "sender" ? "sender_inspected" : "link_inspected";
-    recordEvent(`inspect:${signal}`, eventType, "inspect", { signal });
-    dispatch({ type: "inspect_signal", signal });
-  };
-
-  const inspectRetrySignal = (signal: "sender" | "link") => {
-    const eventType: PracticeEventType = signal === "sender" ? "sender_inspected" : "link_inspected";
-    recordEvent(`retry-inspect:${signal}`, eventType, "retry", { signal });
-    dispatch({ type: "inspect_retry_signal", signal });
-  };
-
-  const confirmVerification = () => {
-    recordEvent("official_channel_verified", "official_channel_verified", "verify", { channel: "official_app" });
-    dispatch({ type: "confirm_verification" });
-  };
-
-  const selectDecision = (decision: Decision) => {
+  const selectPrimaryDecision = (decision: Decision) => {
     recordEvent("decision:primary", "decision_selected", "decide", { choice: decision });
     dispatch({ type: "select_decision", decision });
   };
-
-  const startRetry = () => {
-    recordEvent("retry_started", "retry_started", "reveal", { variant: "retry" });
-    dispatch({ type: "start_retry" });
-  };
-
   const selectRetryDecision = (decision: Decision) => {
     recordEvent("decision:retry", "decision_selected", "retry", { choice: decision });
     dispatch({ type: "select_retry_decision", decision });
   };
-
-  useEffect(() => {
-    if (!hasStartedRef.current || state.stage === "briefing") {
+  const openTrustedChannel = () => {
+    setVerificationChecked(false);
+    dispatch({ type: "open_trusted_channel" });
+  };
+  const checkTrustedChannel = () => {
+    setVerificationChecked(true);
+    recordEvent("official_channel_verified", "official_channel_verified", "verify", { channel: "official_app" });
+  };
+  const advanceOutcome = () => {
+    if (state.retryDecision) {
+      dispatch({ type: "complete_module" });
       return;
     }
-
-    recordEvent(`stage:${state.stage}`, "stage_viewed", state.stage);
-  }, [recordEvent, state.stage]);
-
-  useEffect(() => {
-    if (state.stage !== "reveal" || state.decision === null) {
-      return;
-    }
-
-    const metadata = { choice: state.decision };
-    recordEvent("attacker_pov_viewed", "attacker_pov_viewed", "reveal", metadata);
-    recordEvent("feedback_viewed", "feedback_viewed", "reveal", metadata);
-  }, [recordEvent, state.decision, state.stage]);
-
-  useEffect(() => {
-    if (state.stage !== "complete" || state.retryDecision === null || completionRecorded.current) {
-      return;
-    }
-
-    completionRecorded.current = true;
-    const outcome = state.retryDecision === "open_link" ? "unsafe" : "safe";
-    recordEvent("module_completed", "module_completed", "complete", { outcome });
-    const attemptId = attemptIdRef.current;
-    const nextProgress = recordCourierSmsCompletion({ retryDecision: state.retryDecision, attemptId });
-    setCompletionProgress(nextProgress);
-    if (!attemptId) {
-      void ensureAttempt().then((resolvedAttemptId) => {
-        if (resolvedAttemptId) {
-          return persistProgressSnapshot({ progress: nextProgress, attemptId: resolvedAttemptId });
-        }
-
-        return undefined;
-      }).catch(() => undefined);
-    }
-  }, [ensureAttempt, recordEvent, state.retryDecision, state.stage]);
+    setVerificationChecked(false);
+    recordEvent("retry_started", "retry_started", "reveal", { variant: "retry" });
+    dispatch({ type: "start_retry" });
+  };
 
   return (
-    <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
-      <header className="flex flex-wrap items-start justify-between gap-6">
+    <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
+      <header className="flex flex-wrap items-start justify-between gap-5">
         <div className="max-w-2xl">
-          <p className="font-mono text-[11px] tracking-[0.2em] text-signal">{simulation.briefing.label}</p>
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-ice sm:text-5xl">{simulation.briefing.title}</h1>
-          <p className="mt-4 max-w-xl text-base leading-7 text-muted">{simulation.briefing.description}</p>
+          <p className="font-mono text-xs tracking-[0.1em] text-signal">{simulation.briefing.label}</p>
+          <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-ice sm:text-4xl">{simulation.briefing.title}</h1>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-muted sm:text-base">{simulation.briefing.description}</p>
         </div>
-        <p className="border border-signal/30 px-3 py-2 font-mono text-[10px] tracking-[0.14em] text-signal">
-          {simulation.safeNote}
-        </p>
+        <p className="border border-signal/30 px-3 py-2 font-mono text-xs text-signal">{simulation.safeNote}</p>
       </header>
 
       <StageProgress activeStage={state.stage} simulation={simulation} />
 
-      {state.stage === "briefing" ? (
-        <BriefingPanel simulation={simulation} onBegin={beginModule} />
-      ) : state.stage === "complete" ? (
-        <CompletionPanel progress={completionProgress} simulation={simulation} />
-      ) : (
-        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(17rem,0.72fr)_minmax(0,1.28fr)] lg:items-start">
-          <PhoneSurface scenario={scenarioCopy} simulation={simulation} />
-          {showAttackerPov ? (
-            <AttackerConsole
-              decision={state.decision ?? "open_link"}
+      {state.stage === "briefing" ? <BriefingPanel simulation={simulation} onBegin={startModule} /> : (
+        <>
+          <div className="relative mt-7 grid gap-7 lg:grid-cols-2 lg:gap-12">
+            <span aria-hidden="true" className="absolute left-1/2 top-1/2 hidden h-px w-12 -translate-x-1/2 bg-signal/30 lg:block" />
+            <VictimDevice
+              activeDecision={activeDecision}
+              onCheckTrustedChannel={checkTrustedChannel}
+              onContinueInspect={() => dispatch({ type: "continue_inspect" })}
+              onContinueReceive={() => dispatch({ type: "continue_receive" })}
+              onConfirmTrustedChannel={() => dispatch({ type: "confirm_verification" })}
+              onInspectSignal={(signal) => inspectSignal(signal, state.stage === "retry")}
+              onOpenTrustedChannel={openTrustedChannel}
+              onSelectDecision={state.stage === "retry" ? selectRetryDecision : selectPrimaryDecision}
+              scenario={scenario}
               simulation={simulation}
-              onRetry={startRetry}
-            />
-          ) : state.stage === "retry" ? (
-            <RetryPanel
               state={state}
-              scenario={scenarioCopy}
-              simulation={simulation}
-              onInspectSignal={inspectRetrySignal}
-              onSelectDecision={selectRetryDecision}
+              verificationChecked={verificationChecked}
             />
-          ) : (
-            <StagePanel
+            <AttackerDevice
+              decision={activeDecision}
+              isRetryOutcome={isRetryScenario}
+              onAdvanceOutcome={advanceOutcome}
+              simulation={simulation}
               state={state}
-              scenario={scenarioCopy}
-              simulation={simulation}
-              dispatch={dispatch}
-              onInspectSignal={inspectSignal}
-              onSelectDecision={selectDecision}
-              onOpenTrustedChannel={() => dispatch({ type: "open_trusted_channel" })}
+              verificationChecked={verificationChecked}
             />
-          )}
-        </div>
+          </div>
+          {state.stage === "complete" ? <CompletionSummary progress={completionProgress} simulation={simulation} /> : null}
+        </>
       )}
-
-      {state.verificationOpen ? (
-        <TrustedChannelSheet
-          simulation={simulation}
-          onConfirm={confirmVerification}
-        />
-      ) : null}
     </div>
   );
 }
 
 function StageProgress({ activeStage, simulation }: { activeStage: SimulationStage; simulation: SimulationMessages }) {
-  const activeIndex = simulationStages.indexOf(activeStage);
-
+  const activeIndex = learnerCheckpointIndex[activeStage];
   return (
-    <ol className="mt-10 flex gap-2 overflow-x-auto pb-2" aria-label={simulation.flowLabel}>
-      {simulationStages.map((stage, index) => {
-        const isActive = stage === activeStage;
+    <ol className="mt-7 grid grid-cols-5 border-y border-white/[0.08]" aria-label={simulation.flowLabel}>
+      {learnerCheckpointKeys.map((checkpoint, index) => {
+        const isActive = index === activeIndex;
         const isComplete = index < activeIndex;
-
-        return (
-          <li
-            key={stage}
-            aria-current={isActive ? "step" : undefined}
-            className={`flex min-w-max items-center gap-2 border px-3 py-2 font-mono text-[10px] tracking-[0.12em] ${
-              isActive
-                ? "border-signal/60 bg-signal/[0.08] text-signal"
-                : isComplete
-                  ? "border-navy-700 text-ice"
-                  : "border-white/[0.08] text-muted"
-            }`}
-          >
-            <span aria-hidden="true" className="text-[9px]">
-              {isComplete ? "✓" : String(index + 1).padStart(2, "0")}
-            </span>
-            <span>{simulation.stageLabels[stage]}</span>
-          </li>
-        );
+        return <li key={checkpoint} aria-current={isActive ? "step" : undefined} className={`min-w-0 border-b-2 px-2 py-3 font-mono text-[11px] leading-4 sm:px-3 ${isActive ? "border-signal text-signal" : isComplete ? "border-ice/50 text-ice" : "border-transparent text-muted"}`}>
+          <span className="hidden sm:inline">{isComplete ? "✓ " : `${index + 1} `}</span>{simulation.checkpoints[checkpoint]}
+        </li>;
       })}
     </ol>
   );
 }
 
 function BriefingPanel({ simulation, onBegin }: { simulation: SimulationMessages; onBegin: () => void }) {
-  return (
-    <section className="mt-8 border border-signal/40 bg-navy-900 p-6 shadow-panel sm:p-10">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="font-mono text-[11px] tracking-[0.18em] text-signal">{simulation.briefing.label}</p>
-        <span className="font-mono text-[10px] tracking-[0.12em] text-muted">{simulation.briefing.checkpointCount}</span>
-      </div>
-      <div className="mt-16 max-w-2xl">
-        <h2 className="text-3xl font-semibold tracking-tight text-ice sm:text-4xl">{simulation.briefing.title}</h2>
-        <p className="mt-4 max-w-xl text-base leading-7 text-muted">{simulation.briefing.description}</p>
-      </div>
-      <div className="mt-12 flex flex-wrap items-center gap-5 border-t border-white/[0.08] pt-6">
-        <button
-          className="inline-flex min-h-11 items-center justify-center border border-signal bg-signal px-5 font-mono text-xs font-bold tracking-[0.1em] text-navy-950 transition hover:bg-signal/90"
-          type="button"
-          onClick={onBegin}
-        >
-          {simulation.briefing.begin}
-          <span aria-hidden="true" className="ml-4 text-base">→</span>
-        </button>
-        <span className="font-mono text-[10px] tracking-[0.1em] text-muted">{simulation.briefing.safeNotice}</span>
-      </div>
-    </section>
-  );
+  return <section className="mt-6 flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-6"><span className="font-mono text-xs text-muted">{simulation.briefing.checkpointCount}</span><DeviceAction onClick={onBegin}>{simulation.briefing.begin}</DeviceAction></section>;
 }
 
-function PhoneSurface({ scenario, simulation }: { scenario: ScenarioCopy; simulation: SimulationMessages }) {
-  return (
-    <section className="border border-navy-700 bg-navy-900 p-4 sm:p-8" aria-label={scenario.senderName}>
-      <div className="mx-auto w-full max-w-[22rem] rounded-[2.25rem] border-[7px] border-navy-700 bg-navy-950 p-2 shadow-panel">
-        <div className="overflow-hidden rounded-[1.65rem] border border-white/[0.08] bg-navy-950">
-          <div className="flex justify-center pt-2">
-            <span aria-hidden="true" className="h-1.5 w-16 rounded-full bg-navy-700" />
-          </div>
-          <div className="flex items-center justify-between px-4 py-3 font-mono text-[9px] text-muted">
-            <span>{simulation.phoneTime}</span>
-            <span className="text-signal">{simulation.phoneLabel}</span>
-          </div>
-          <div className="border-y border-white/[0.08] px-4 py-4">
-            <div className="flex items-center gap-3">
-              <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-full bg-signal/15 font-mono text-xs text-signal">
-                {scenario.senderName.slice(0, 1)}
-              </span>
-              <div className="min-w-0">
-                <p className="truncate font-mono text-xs font-bold text-ice">{scenario.senderName}</p>
-                <p className="mt-1 font-mono text-[10px] text-muted">{scenario.senderNumber}</p>
-              </div>
-            </div>
-            <span className="mt-3 inline-flex border border-warning/30 px-2 py-1 font-mono text-[9px] tracking-[0.08em] text-warning">
-              {scenario.senderMarker}
-            </span>
-          </div>
-          <div className="min-h-[21rem] space-y-4 bg-navy-900/40 px-4 py-6">
-            <p className="text-center font-mono text-[9px] tracking-[0.12em] text-muted">{scenario.timestamp}</p>
-            <div className="max-w-[90%] rounded-2xl rounded-tl-sm border border-navy-700 bg-navy-850 p-4 text-sm leading-6 text-ice">
-              <p>{scenario.messageGreeting}</p>
-              <p className="mt-3">{scenario.messageUrgency}</p>
-              <p className="mt-4 break-words border-t border-white/[0.08] pt-3 font-mono text-[11px] text-signal">
-                {scenario.messageLink}
-              </p>
-            </div>
-            <p className="text-center font-mono text-[9px] tracking-[0.1em] text-muted">{simulation.messageFooter}</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function StagePanel({
-  state,
-  scenario,
-  simulation,
-  dispatch,
-  onInspectSignal,
-  onSelectDecision,
-  onOpenTrustedChannel,
-}: {
-  state: SimulationState;
-  scenario: ScenarioCopy;
-  simulation: SimulationMessages;
-  dispatch: React.Dispatch<SimulationAction>;
+function VictimDevice({ activeDecision, onCheckTrustedChannel, onContinueInspect, onContinueReceive, onConfirmTrustedChannel, onInspectSignal, onOpenTrustedChannel, onSelectDecision, scenario, simulation, state, verificationChecked }: {
+  activeDecision: Decision | null;
+  onCheckTrustedChannel: () => void;
+  onContinueInspect: () => void;
+  onContinueReceive: () => void;
+  onConfirmTrustedChannel: () => void;
   onInspectSignal: (signal: "sender" | "link") => void;
-  onSelectDecision: (decision: Decision) => void;
   onOpenTrustedChannel: () => void;
-}) {
-  if (state.stage === "receive") {
-    return (
-      <PanelFrame stage="receive" title={simulation.receive.title} simulation={simulation}>
-        <p className="leading-7 text-muted">{simulation.receive.description}</p>
-        <AnalystNote>{simulation.receive.analystNote}</AnalystNote>
-        <PanelAction onClick={() => dispatch({ type: "continue_receive" })}>{simulation.receive.action}</PanelAction>
-      </PanelFrame>
-    );
-  }
-
-  if (state.stage === "inspect") {
-    return <InspectPanel state={state} scenario={scenario} simulation={simulation} dispatch={dispatch} onInspectSignal={onInspectSignal} />;
-  }
-
-  if (state.stage === "verify") {
-    return (
-      <PanelFrame stage="verify" title={simulation.verify.title} simulation={simulation}>
-        <p className="leading-7 text-muted">{simulation.verify.description}</p>
-        <AnalystNote>{simulation.verify.analystNote}</AnalystNote>
-        <PanelAction onClick={onOpenTrustedChannel}>{simulation.verify.action}</PanelAction>
-      </PanelFrame>
-    );
-  }
-
-  return (
-    <PanelFrame stage="decide" title={simulation.decide.title} simulation={simulation}>
-      <p className="leading-7 text-muted">{simulation.decide.description}</p>
-      <AnalystNote>{simulation.decide.analystNote}</AnalystNote>
-      <DecisionChoices
-        choices={simulation.decide.choices}
-        onSelect={onSelectDecision}
-      />
-    </PanelFrame>
-  );
-}
-
-function InspectPanel({
-  state,
-  scenario,
-  simulation,
-  dispatch,
-  onInspectSignal,
-}: {
-  state: SimulationState;
-  scenario: ScenarioCopy;
-  simulation: SimulationMessages;
-  dispatch: React.Dispatch<SimulationAction>;
-  onInspectSignal: (signal: "sender" | "link") => void;
-}) {
-  const hasSender = state.inspectedSignals.includes("sender");
-  const hasLink = state.inspectedSignals.includes("link");
-  const note = hasSender && hasLink
-    ? simulation.inspect.bothInspected
-    : hasSender
-      ? simulation.inspect.senderAnalystNote
-      : hasLink
-        ? simulation.inspect.linkAnalystNote
-        : simulation.inspect.requirement;
-
-  return (
-    <PanelFrame stage="inspect" title={simulation.inspect.title} simulation={simulation}>
-      <p className="leading-7 text-muted">{simulation.inspect.description}</p>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-        <InspectionButton
-          inspected={hasSender}
-          label={simulation.inspect.senderAction}
-          status={simulation.inspect.inspected}
-          onClick={() => onInspectSignal("sender")}
-        />
-        <InspectionButton
-          inspected={hasLink}
-          label={simulation.inspect.linkAction}
-          status={simulation.inspect.inspected}
-          onClick={() => onInspectSignal("link")}
-        />
-      </div>
-      <div className="space-y-3">
-        {state.inspectedSignals.includes("sender") ? (
-          <InspectionResult title={scenario.senderInspectionTitle} body={scenario.senderInspectionBody} />
-        ) : null}
-        {state.inspectedSignals.includes("link") ? (
-          <InspectionResult title={scenario.linkInspectionTitle} body={scenario.linkInspectionBody} />
-        ) : null}
-      </div>
-      <AnalystNote>{note}</AnalystNote>
-      <PanelAction
-        disabled={state.inspectedSignals.length === 0}
-        onClick={() => dispatch({ type: "continue_inspect" })}
-      >
-        {simulation.inspect.continue}
-      </PanelAction>
-    </PanelFrame>
-  );
-}
-
-function RetryPanel({
-  state,
-  scenario,
-  simulation,
-  onInspectSignal,
-  onSelectDecision,
-}: {
-  state: SimulationState;
-  scenario: ScenarioCopy;
-  simulation: SimulationMessages;
-  onInspectSignal: (signal: "sender" | "link") => void;
   onSelectDecision: (decision: Decision) => void;
+  scenario: ScenarioCopy;
+  simulation: SimulationMessages;
+  state: SimulationState;
+  verificationChecked: boolean;
 }) {
-  const hasSender = state.retryInspectedSignals.includes("sender");
-  const hasLink = state.retryInspectedSignals.includes("link");
-  const canChoose = state.retryInspectedSignals.length > 0;
-  const note = canChoose ? simulation.retryStep.analystNote : simulation.retryStep.choiceRequirement;
+  const isRetry = state.stage === "retry";
+  const inspectedSignals = isRetry ? state.retryInspectedSignals : state.inspectedSignals;
+  const hasSender = inspectedSignals.includes("sender");
+  const hasLink = inspectedSignals.includes("link");
+  const isOutcome = state.stage === "reveal" || state.stage === "complete";
 
   return (
-    <PanelFrame stage="retry" title={simulation.retryStep.title} simulation={simulation}>
-      <p className="leading-7 text-muted">{simulation.retryStep.description}</p>
-      <p className="font-mono text-[11px] tracking-[0.08em] text-ice">{simulation.retryStep.inspectPrompt}</p>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-        <InspectionButton
-          inspected={hasSender}
-          label={simulation.inspect.senderAction}
-          status={simulation.inspect.inspected}
-          onClick={() => onInspectSignal("sender")}
-        />
-        <InspectionButton
-          inspected={hasLink}
-          label={simulation.inspect.linkAction}
-          status={simulation.inspect.inspected}
-          onClick={() => onInspectSignal("link")}
-        />
-      </div>
-      <div className="space-y-3">
-        {hasSender ? <InspectionResult title={scenario.senderInspectionTitle} body={scenario.senderInspectionBody} /> : null}
-        {hasLink ? <InspectionResult title={scenario.linkInspectionTitle} body={scenario.linkInspectionBody} /> : null}
-      </div>
-      <AnalystNote>{note}</AnalystNote>
-      <div className="border-t border-white/[0.08] pt-5">
-        <p className="font-mono text-[11px] tracking-[0.08em] text-ice">{simulation.retryStep.question}</p>
-        <p className="mt-2 text-sm leading-6 text-muted">{simulation.retryStep.helper}</p>
-        <div className="mt-4">
-          <DecisionChoices
-            choices={simulation.decide.choices}
-            disabled={!canChoose}
-            onSelect={onSelectDecision}
-          />
+    <section className="mx-auto w-full max-w-[25rem]" aria-label={simulation.devices.victim}>
+      <p className="mb-3 font-mono text-xs tracking-[0.1em] text-muted">{simulation.devices.victim}</p>
+      <div className="rounded-[2.2rem] border-[7px] border-navy-700 bg-navy-950 p-2 shadow-panel">
+        <div className="min-h-[39rem] overflow-hidden rounded-[1.65rem] border border-white/[0.08] bg-navy-950">
+          {state.verificationOpen ? <TrustedCourierApp checked={verificationChecked} onCheck={onCheckTrustedChannel} onConfirm={onConfirmTrustedChannel} simulation={simulation} /> : isOutcome && activeDecision ? <VictimOutcome decision={activeDecision} simulation={simulation} /> : (
+            <>
+              <SmsHeader scenario={scenario} simulation={simulation} />
+              <div className="min-h-[24rem] space-y-4 bg-navy-900/40 px-4 py-6"><p className="text-center font-mono text-[10px] text-muted">{scenario.timestamp}</p><MessageBubble scenario={scenario} simulation={simulation} /></div>
+              <div className="border-t border-white/[0.08] bg-navy-950 p-4">
+                {state.stage === "receive" ? <DeviceAction onClick={onContinueReceive}>{simulation.receive.action}</DeviceAction> : null}
+                {state.stage === "inspect" || state.stage === "retry" ? <InspectionControls hasLink={hasLink} hasSender={hasSender} isRetry={isRetry} onContinue={onContinueInspect} onInspect={onInspectSignal} onSelectDecision={onSelectDecision} scenario={scenario} simulation={simulation} /> : null}
+                {state.stage === "verify" ? <div className="space-y-3"><p className="text-sm leading-6 text-muted">{simulation.verify.description}</p><DeviceAction onClick={onOpenTrustedChannel}>{simulation.verify.action}</DeviceAction></div> : null}
+                {state.stage === "decide" ? <DecisionChoices choices={simulation.decide.choices} onSelect={onSelectDecision} /> : null}
+              </div>
+            </>
+          )}
         </div>
       </div>
-    </PanelFrame>
-  );
-}
-
-function PanelFrame({
-  children,
-  stage,
-  title,
-  simulation,
-}: {
-  children: React.ReactNode;
-  stage: Exclude<SimulationStage, "briefing" | "reveal" | "complete">;
-  title: string;
-  simulation: SimulationMessages;
-}) {
-  return (
-    <section className="border border-white/[0.08] bg-navy-900/70 p-6 sm:p-8">
-      <div className="flex items-center justify-between gap-4">
-        <p className="font-mono text-[11px] tracking-[0.18em] text-muted">{simulation.analystLabel}</p>
-        <span className="font-mono text-[10px] tracking-[0.14em] text-signal">{simulation.stageLabels[stage]}</span>
-      </div>
-      <h2 className="mt-8 text-2xl font-semibold tracking-tight text-ice sm:text-3xl">{title}</h2>
-      <div className="mt-6 space-y-5">{children}</div>
     </section>
   );
 }
 
-function AnalystNote({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="border-l-2 border-signal/50 bg-navy-950/60 p-4">
-      <p className="font-mono text-[11px] leading-5 text-muted">{children}</p>
-    </div>
-  );
+function SmsHeader({ scenario, simulation }: { scenario: ScenarioCopy; simulation: SimulationMessages }) {
+  return <><div className="flex justify-center pt-2"><span aria-hidden="true" className="h-1.5 w-16 rounded-full bg-navy-700" /></div><div className="flex items-center justify-between px-4 py-3 font-mono text-[10px] text-muted"><span>{simulation.phoneTime}</span><span className="text-signal">{simulation.phoneLabel}</span></div><div className="border-y border-white/[0.08] px-4 py-4"><div className="flex items-center gap-3"><span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-full bg-signal/15 font-mono text-xs text-signal">{scenario.senderName.slice(0, 1)}</span><div className="min-w-0"><p className="truncate font-mono text-xs font-bold text-ice">{scenario.senderName}</p><p className="mt-1 font-mono text-[10px] text-muted">{scenario.senderNumber}</p></div></div><span className="mt-3 inline-flex border border-warning/30 px-2 py-1 font-mono text-[10px] text-warning">{scenario.senderMarker}</span></div></>;
 }
 
-function PanelAction({ children, disabled = false, onClick }: { children: React.ReactNode; disabled?: boolean; onClick: () => void }) {
-  return (
-    <button
-      className="inline-flex min-h-11 items-center justify-center self-start border border-signal bg-signal px-5 font-mono text-xs font-bold tracking-[0.1em] text-navy-950 transition hover:bg-signal/90 disabled:cursor-not-allowed disabled:border-navy-700 disabled:bg-navy-800 disabled:text-muted"
-      disabled={disabled}
-      type="button"
-      onClick={onClick}
-    >
-      {children}
-      <span aria-hidden="true" className="ml-4 text-base">→</span>
-    </button>
-  );
+function MessageBubble({ scenario, simulation }: { scenario: ScenarioCopy; simulation: SimulationMessages }) {
+  return <><div className="max-w-[92%] rounded-2xl rounded-tl-sm border border-navy-700 bg-navy-850 p-4 text-sm leading-6 text-ice"><p>{scenario.messageGreeting}</p><p className="mt-3">{scenario.messageUrgency}</p><p className="mt-4 break-words border-t border-white/[0.08] pt-3 font-mono text-xs text-signal">{scenario.messageLink}</p></div><p className="text-center font-mono text-[10px] text-muted">{simulation.messageFooter}</p></>;
 }
 
-function InspectionButton({ inspected, label, status, onClick }: { inspected: boolean; label: string; status: string; onClick: () => void }) {
-  return (
-    <button
-      aria-pressed={inspected}
-      className="flex min-h-14 items-center gap-3 border border-white/[0.1] bg-navy-950/60 px-4 text-left transition hover:border-signal/50 disabled:cursor-default disabled:border-signal/40"
-      disabled={inspected}
-      type="button"
-      onClick={onClick}
-    >
-      <span aria-hidden="true" className={`flex h-7 w-7 shrink-0 items-center justify-center border font-mono text-xs ${inspected ? "border-signal bg-signal/10 text-signal" : "border-navy-700 text-muted"}`}>
-        {inspected ? "✓" : "?"}
-      </span>
-      <span className="min-w-0">
-        <span className="block font-mono text-xs text-ice">{inspected ? status : label}</span>
-        <span className="mt-1 block font-mono text-[10px] text-muted">{inspected ? status : ""}</span>
-      </span>
-    </button>
-  );
-}
-
-function InspectionResult({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="border border-navy-700 bg-navy-950/60 p-4">
-      <p className="font-mono text-xs text-signal">{title}</p>
-      <p className="mt-2 text-sm leading-6 text-muted">{body}</p>
-    </div>
-  );
-}
-
-function DecisionChoices({
-  choices,
-  disabled = false,
-  onSelect,
-}: {
-  choices: SimulationMessages["decide"]["choices"];
-  disabled?: boolean;
-  onSelect: (decision: Decision) => void;
+function InspectionControls({ hasLink, hasSender, isRetry, onContinue, onInspect, onSelectDecision, scenario, simulation }: {
+  hasLink: boolean; hasSender: boolean; isRetry: boolean; onContinue: () => void; onInspect: (signal: "sender" | "link") => void; onSelectDecision: (decision: Decision) => void; scenario: ScenarioCopy; simulation: SimulationMessages;
 }) {
-  return (
-    <div className="grid gap-3">
-      {decisionOptions.map((option) => {
-        const choice = choices[option.choiceKey];
-
-        return (
-          <button
-            key={option.decision}
-            className="flex min-h-16 items-center gap-4 border border-white/[0.1] bg-navy-950/60 px-4 py-3 text-left transition hover:border-signal/60 hover:bg-navy-850 disabled:cursor-not-allowed disabled:opacity-45"
-            disabled={disabled}
-            type="button"
-            onClick={() => onSelect(option.decision)}
-          >
-            <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center border border-navy-700 font-mono text-sm text-ice">
-              {option.marker}
-            </span>
-            <span>
-              <span className="block font-mono text-xs text-ice">{choice.label}</span>
-              <span className="mt-1 block text-xs leading-5 text-muted">{choice.description}</span>
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
+  const canContinue = hasSender || hasLink;
+  return <div className="space-y-3"><p className="font-mono text-xs text-ice">{isRetry ? simulation.retryStep.inspectPrompt : simulation.inspect.title}</p><div className="grid gap-2 sm:grid-cols-2"><InspectButton active={hasSender} label={simulation.inspect.senderAction} onClick={() => onInspect("sender")} /><InspectButton active={hasLink} label={simulation.inspect.linkAction} onClick={() => onInspect("link")} /></div>{hasSender ? <div className="border-l-2 border-warning/50 pl-3"><p className="font-mono text-[11px] text-warning">{scenario.senderInspectionTitle}</p><p className="mt-1 text-xs leading-5 text-muted">{scenario.senderInspectionBody}</p></div> : null}{hasLink ? <div className="border-l-2 border-warning/50 pl-3"><p className="font-mono text-[11px] text-warning">{scenario.linkInspectionTitle}</p><p className="mt-1 text-xs leading-5 text-muted">{scenario.linkInspectionBody}</p></div> : null}<p className="text-xs leading-5 text-muted">{canContinue ? scenario.signalSummary : simulation.inspect.requirement}</p>{isRetry ? <div className="border-t border-white/[0.08] pt-3"><p className="mb-3 font-mono text-xs text-ice">{simulation.retryStep.question}</p><DecisionChoices choices={simulation.decide.choices} disabled={!canContinue} onSelect={onSelectDecision} /></div> : <DeviceAction disabled={!canContinue} onClick={onContinue}>{simulation.inspect.continue}</DeviceAction>}</div>;
 }
 
-function AttackerConsole({
-  decision,
-  simulation,
-  onRetry,
-}: {
-  decision: Decision;
-  simulation: SimulationMessages;
-  onRetry: () => void;
-}) {
-  const [visibleTraceCount, setVisibleTraceCount] = useState(0);
-  const [analysisExpanded, setAnalysisExpanded] = useState(false);
-  const isUnsafe = decision === "open_link";
-  const consoleCopy = simulation.console;
-  const reveal = simulation.reveal;
-  const feedback = isUnsafe ? reveal.unsafeFeedback : reveal.safeFeedback;
-  const trace = isUnsafe
-    ? consoleCopy.traceUnsafe
-    : decision === "report_delete"
-      ? consoleCopy.traceReport
-      : consoleCopy.traceSafe;
+function InspectButton({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
+  return <button aria-pressed={active} className={`min-h-11 border px-3 py-2 text-left font-mono text-xs ${active ? "border-signal/50 text-signal" : "border-white/[0.1] text-ice hover:border-signal/50"}`} disabled={active} type="button" onClick={onClick}>{active ? "✓ " : ""}{label}</button>;
+}
+
+function TrustedCourierApp({ checked, onCheck, onConfirm, simulation }: { checked: boolean; onCheck: () => void; onConfirm: () => void; simulation: SimulationMessages }) {
+  return <div className="min-h-[39rem] bg-[#e7eee9] px-5 py-6 text-[#16241e]"><div className="mx-auto h-1.5 w-16 rounded-full bg-[#789084]" /><div className="mt-8 flex items-center justify-between"><p className="font-mono text-xs font-bold tracking-[0.12em]">{simulation.verify.appTitle}</p><span className="text-xs">{simulation.verify.appSimulation}</span></div><h2 className="mt-12 text-2xl font-semibold">{simulation.verify.trackTitle}</h2><div className="mt-5 border border-[#aab9ae] bg-white px-4 py-3 font-mono text-sm text-[#617066]">{simulation.verify.trackingPlaceholder}</div>{!checked ? <button className="mt-4 min-h-11 bg-[#193c2e] px-4 font-mono text-xs text-white" type="button" onClick={onCheck}>{simulation.verify.search}</button> : <div className="mt-6 border-l-4 border-[#2f6c4c] bg-white p-4"><p className="font-mono text-xs text-[#2f6c4c]">{simulation.verify.searchResultLabel}</p><p className="mt-2 text-sm leading-6">{simulation.verify.orderStatus}</p><p className="mt-2 text-xs leading-5 text-[#53635a]">{simulation.verify.orderStatusDescription}</p><button className="mt-5 min-h-10 border border-[#193c2e] px-4 font-mono text-xs text-[#193c2e]" type="button" onClick={onConfirm}>{simulation.verify.continue}</button></div>}</div>;
+}
+
+function DecisionChoices({ choices, disabled = false, onSelect }: { choices: SimulationMessages["decide"]["choices"]; disabled?: boolean; onSelect: (decision: Decision) => void }) {
+  return <div className="grid gap-2">{decisionOptions.map((option) => { const choice = choices[option.choiceKey]; return <button key={option.decision} className="flex min-h-12 items-center gap-3 border border-white/[0.1] bg-navy-900 px-3 py-2 text-left transition hover:border-signal/60 disabled:cursor-not-allowed disabled:opacity-45" disabled={disabled} type="button" onClick={() => onSelect(option.decision)}><span aria-hidden="true" className="font-mono text-sm text-signal">{option.marker}</span><span><span className="block font-mono text-xs text-ice">{choice.label}</span><span className="mt-1 block text-[11px] leading-4 text-muted">{choice.description}</span></span></button>; })}</div>;
+}
+
+function DeviceAction({ children, disabled = false, onClick }: { children: React.ReactNode; disabled?: boolean; onClick: () => void }) {
+  return <button className="min-h-11 border border-signal bg-signal px-4 font-mono text-xs font-bold text-navy-950 disabled:cursor-not-allowed disabled:border-navy-700 disabled:bg-navy-800 disabled:text-muted" disabled={disabled} type="button" onClick={onClick}>{children} <span aria-hidden="true" className="ml-2">→</span></button>;
+}
+
+function VictimOutcome({ decision, simulation }: { decision: Decision; simulation: SimulationMessages }) {
   const choice = simulation.decide.choices[choiceKeyByDecision[decision]];
-  const traceFinished = visibleTraceCount >= trace.length;
+  const outcome = decision === "open_link" ? simulation.outcomes.openLink : decision === "report_delete" ? simulation.outcomes.reportDelete : simulation.outcomes.verifyOfficial;
+  return <div className="min-h-[39rem] bg-navy-900 px-5 py-6"><p className="font-mono text-xs text-muted">{simulation.devices.victim}</p><h2 className="mt-10 text-2xl font-semibold text-ice">{choice.label}</h2>{decision === "open_link" ? <div className="mt-6 rounded-xl border border-warning/30 bg-navy-950 p-5"><p className="font-mono text-xs text-warning">{simulation.outcomes.simulatedPage}</p><p className="mt-4 text-lg text-ice">{simulation.outcomes.deliveryPortal}</p><p className="mt-2 text-sm leading-6 text-muted">{outcome.detail}</p><div className="mt-6 border border-navy-700 px-3 py-3 font-mono text-xs text-muted">{simulation.outcomes.noDataField}</div></div> : <div className="mt-6 border-l-4 border-signal bg-signal/[0.05] p-4 text-sm leading-6 text-ice">{outcome.detail}</div>}<p className="mt-8 text-sm leading-6 text-muted">{outcome.summary}</p></div>;
+}
+
+function AttackerDevice({ decision, isRetryOutcome, onAdvanceOutcome, simulation, state, verificationChecked }: { decision: Decision | null; isRetryOutcome: boolean; onAdvanceOutcome: () => void; simulation: SimulationMessages; state: SimulationState; verificationChecked: boolean }) {
+  const [visibleOutcomeEvents, setVisibleOutcomeEvents] = useState(0);
+  const [analysisExpanded, setAnalysisExpanded] = useState(false);
+  const outcomeEvents = decision ? outcomeEventsFor(decision, simulation) : [];
+  const traceFinished = !decision || visibleOutcomeEvents >= outcomeEvents.length;
+  const feedback = decision ? feedbackFor(decision, simulation) : null;
+  const events = campaignEventsFor(state, simulation, verificationChecked, isRetryOutcome);
 
   useEffect(() => {
-    setVisibleTraceCount(0);
+    setVisibleOutcomeEvents(0);
     setAnalysisExpanded(false);
-
+    if (!decision) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setVisibleTraceCount(trace.length);
+      setVisibleOutcomeEvents(outcomeEvents.length);
       return;
     }
-
-    const timer = window.setInterval(() => {
-      setVisibleTraceCount((currentCount) => {
-        if (currentCount >= trace.length) {
-          window.clearInterval(timer);
-          return currentCount;
-        }
-
-        return currentCount + 1;
-      });
-    }, 420);
-
+    const timer = window.setInterval(() => setVisibleOutcomeEvents((count) => Math.min(count + 1, outcomeEvents.length)), 360);
     return () => window.clearInterval(timer);
-  }, [decision, trace.length]);
+  }, [decision, outcomeEvents.length]);
 
-  return (
-    <div className="space-y-3">
-      <section className={`overflow-hidden border-2 bg-navy-900 shadow-panel ${isUnsafe ? "border-warning/45" : "border-signal/45"}`}>
-        <div className="border-b border-white/[0.08] p-5 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-full ${isUnsafe ? "bg-warning" : "bg-signal"}`} />
-              <p className="font-mono text-[11px] font-bold tracking-[0.16em] text-ice">{consoleCopy.title}</p>
-            </div>
-            <span className="font-mono text-[10px] tracking-[0.14em] text-muted">{simulation.stageLabels.reveal}</span>
-          </div>
+  const allEvents = [...events, ...outcomeEvents.slice(0, visibleOutcomeEvents)];
+  const status = decision && traceFinished
+    ? finalStatusFor(decision, simulation)
+    : campaignStatusFor(state, simulation, verificationChecked, isRetryOutcome);
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <div className="border border-white/[0.08] bg-navy-950/60 p-3">
-              <p className="font-mono text-[9px] tracking-[0.12em] text-muted">{consoleCopy.targetSession}</p>
-              <p className="mt-2 font-mono text-xs text-signal">{consoleCopy.targetValue}</p>
-            </div>
-            <div className="border border-white/[0.08] bg-navy-950/60 p-3">
-              <p className="font-mono text-[9px] tracking-[0.12em] text-muted">{consoleCopy.decisionLabel}</p>
-              <p className="mt-2 font-mono text-xs text-ice">{choice.label}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-5 sm:p-6">
-          <div className="flex items-center justify-between gap-4">
-            <p className="font-mono text-[11px] tracking-[0.16em] text-signal">{consoleCopy.traceLabel}</p>
-            <span className="font-mono text-[10px] tracking-[0.1em] text-muted">{simulation.safeNote}</span>
-          </div>
-
-          <div className="mt-5 min-h-[15rem] border border-white/[0.08] bg-navy-950/70 p-4 sm:p-5">
-            {visibleTraceCount === 0 ? (
-              <p className="font-mono text-xs text-muted" aria-live="polite">{consoleCopy.traceWaiting}</p>
-            ) : (
-              <ol className="space-y-3" aria-live="polite">
-                {trace.slice(0, visibleTraceCount).map((event, index) => (
-                  <li key={event} className="flex items-start gap-3 border-l border-signal/50 pl-4">
-                    <span aria-hidden="true" className="font-mono text-[10px] text-signal">{String(index + 1).padStart(2, "0")}</span>
-                    <span className="font-mono text-xs leading-6 text-ice">{event}</span>
-                  </li>
-                ))}
-              </ol>
-            )}
-            {!traceFinished ? <p className="mt-6 font-mono text-[10px] tracking-[0.1em] text-muted" aria-live="polite">{consoleCopy.traceRunning}</p> : null}
-          </div>
-
-          {traceFinished ? (
-            <div className={`mt-5 flex flex-wrap items-start justify-between gap-4 border p-4 ${isUnsafe ? "border-warning/40 bg-warning/[0.04]" : "border-signal/40 bg-signal/[0.04]"}`}>
-              <div>
-                <p className="font-mono text-[10px] tracking-[0.14em] text-muted">{consoleCopy.finalStatus}</p>
-                <p className={`mt-2 font-mono text-sm font-bold tracking-[0.1em] ${isUnsafe ? "text-warning" : "text-signal"}`}>
-                  {isUnsafe ? consoleCopy.unsafeStatus : consoleCopy.safeStatus}
-                </p>
-                <p className="mt-2 max-w-md text-xs leading-5 text-muted">{isUnsafe ? consoleCopy.unsafeStatusDetail : consoleCopy.safeStatusDetail}</p>
-              </div>
-            </div>
-          ) : null}
-        </div>
-
-        {traceFinished ? (
-          <div className="border-t border-white/[0.08] bg-navy-950/75 p-4 sm:flex sm:items-center sm:justify-between sm:gap-5">
-            <div>
-              <p className="font-mono text-[10px] tracking-[0.12em] text-signal">{reveal.notificationLabel}</p>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-ice">{feedback.whatHappened}</p>
-            </div>
-            <button
-              aria-controls="attacker-analysis"
-              aria-expanded={analysisExpanded}
-              className="mt-4 inline-flex min-h-10 shrink-0 items-center border border-signal px-4 font-mono text-[11px] tracking-[0.08em] text-signal transition hover:bg-signal hover:text-navy-950 sm:mt-0"
-              type="button"
-              onClick={() => setAnalysisExpanded((expanded) => !expanded)}
-            >
-              {analysisExpanded ? reveal.hideAnalysis : reveal.viewAnalysis}
-              <span aria-hidden="true" className="ml-3">{analysisExpanded ? "↑" : "↓"}</span>
-            </button>
-          </div>
-        ) : null}
-      </section>
-
-      {traceFinished && analysisExpanded ? (
-        <AnalysisSheet feedback={feedback} simulation={simulation} onClose={() => setAnalysisExpanded(false)} />
-      ) : null}
-
-      {traceFinished ? (
-        <div className="flex justify-end">
-          <button
-            className="font-mono text-[10px] tracking-[0.08em] text-muted hover:text-ice"
-            type="button"
-            onClick={onRetry}
-          >
-            {reveal.retry} <span aria-hidden="true">→</span>
-          </button>
-        </div>
-      ) : null}
-    </div>
-  );
+  return <section className="mx-auto w-full max-w-[25rem]" aria-label={simulation.devices.attacker}><p className="mb-3 font-mono text-xs tracking-[0.1em] text-muted">{simulation.devices.attacker}</p><div className="rounded-[2.2rem] border-[7px] border-[#101922] bg-[#05090d] p-2 shadow-panel"><div className="min-h-[39rem] overflow-hidden rounded-[1.65rem] border border-white/[0.08] bg-[#070d13]"><div className="flex justify-center pt-2"><span aria-hidden="true" className="h-1.5 w-16 rounded-full bg-navy-700" /></div><div className="border-b border-white/[0.08] px-4 pb-4 pt-5"><div className="flex items-center justify-between gap-3"><p className="font-mono text-xs font-bold tracking-[0.08em] text-ice">{simulation.console.campaignTitle}</p><span className="font-mono text-[10px] text-signal">{isRetryOutcome ? simulation.console.roundRetry : simulation.console.roundPrimary}</span></div><dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 font-mono text-[10px] leading-4"><CampaignField label={simulation.console.campaignLabel} value={simulation.console.campaignValue} /><CampaignField label={simulation.console.targetLabel} value={simulation.console.targetValue} /><CampaignField label={simulation.console.objectiveLabel} value={simulation.console.objective} wide /><CampaignField label={simulation.console.tacticLabel} value={isRetryOutcome ? simulation.console.retryTactic : simulation.console.tactic} wide /></dl></div><div className="px-4 py-5"><div className="flex items-center justify-between gap-3"><p className="font-mono text-[10px] tracking-[0.1em] text-muted">{simulation.console.liveLogLabel}</p><span className="font-mono text-[10px] text-warning">{status}</span></div><ol className="mt-4 min-h-[17rem] space-y-2 border-l border-white/[0.12] pl-3" aria-live="polite">{allEvents.map((event, index) => <li key={`${event}-${index}`} className="font-mono text-[11px] leading-5 text-ice"><span className="mr-2 text-muted">[{eventTime(index)}]</span>{event}</li>)}</ol><div className="mt-4 border-t border-white/[0.08] pt-3"><p className="font-mono text-[10px] text-muted">{simulation.console.nextActionLabel}</p><p className="mt-1 font-mono text-xs leading-5 text-ice">{nextActionFor(state, decision, simulation, isRetryOutcome)}</p></div></div>{decision && traceFinished && feedback ? <div className="border-t border-white/[0.08] bg-navy-950/90"><div aria-hidden="true" className="mx-auto mt-2 h-1 w-10 rounded-full bg-white/20" /><div className="flex items-start justify-between gap-4 px-4 pb-4 pt-3"><div><p className="font-mono text-[10px] text-signal">{simulation.reveal.notificationLabel}</p><p className="mt-1 text-xs leading-5 text-ice">{feedback.whatHappened}</p></div><button aria-expanded={analysisExpanded} className="shrink-0 font-mono text-xs text-signal" type="button" onClick={() => setAnalysisExpanded((expanded) => !expanded)}>{analysisExpanded ? simulation.reveal.hideAnalysis : simulation.reveal.viewAnalysis}</button></div>{analysisExpanded ? <AnalysisPanel feedback={feedback} simulation={simulation} /> : null}</div> : null}{decision && traceFinished && state.stage !== "complete" ? <div className="border-t border-white/[0.08] px-4 py-4"><button className="font-mono text-xs text-muted hover:text-ice" type="button" onClick={onAdvanceOutcome}>{isRetryOutcome ? simulation.reveal.finish : simulation.reveal.retry} <span aria-hidden="true">→</span></button></div> : null}</div></div></section>;
 }
 
-function FeedbackRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="grid gap-1 sm:grid-cols-[minmax(8rem,0.35fr)_minmax(0,1fr)] sm:gap-4">
-      <dt className="font-mono text-[10px] tracking-[0.1em] text-muted">{label}</dt>
-      <dd className="text-sm leading-6 text-ice">{value}</dd>
-    </div>
-  );
+function CampaignField({ label, value, wide = false }: { label: string; value: string; wide?: boolean }) {
+  return <div className={wide ? "col-span-2" : ""}><dt className="text-muted">{label}</dt><dd className="mt-1 text-ice">{value}</dd></div>;
 }
 
-function AnalysisSheet({
-  feedback,
-  simulation,
-  onClose,
-}: {
-  feedback: SimulationMessages["reveal"]["unsafeFeedback"];
-  simulation: SimulationMessages;
-  onClose: () => void;
-}) {
-  return (
-    <section id="attacker-analysis" aria-labelledby="attacker-analysis-title" className="border border-signal/30 bg-navy-950 shadow-panel">
-      <div className="flex justify-center py-3 md:hidden">
-        <span aria-hidden="true" className="h-1 w-12 rounded-full bg-muted/60" />
-      </div>
-      <div className="flex items-center justify-between gap-4 border-b border-white/[0.08] px-5 py-4 sm:px-6">
-        <h3 id="attacker-analysis-title" className="font-mono text-[11px] tracking-[0.16em] text-signal">{simulation.reveal.analysisTitle}</h3>
-        <button className="font-mono text-[10px] tracking-[0.08em] text-muted hover:text-ice" type="button" onClick={onClose}>
-          {simulation.reveal.hideAnalysis}
-        </button>
-      </div>
-      <dl className="space-y-4 px-5 py-5 sm:px-6">
-        <FeedbackRow label={simulation.reveal.fields.signal} value={feedback.signal} />
-        <FeedbackRow label={simulation.reveal.fields.technique} value={feedback.technique} />
-        <FeedbackRow label={simulation.reveal.fields.impact} value={feedback.impact} />
-        <FeedbackRow label={simulation.reveal.fields.saferResponse} value={feedback.saferResponse} />
-      </dl>
-    </section>
-  );
+function AnalysisPanel({ feedback, simulation }: { feedback: SimulationMessages["reveal"]["safeFeedback"]; simulation: SimulationMessages }) {
+  return <dl className="border-t border-white/[0.08] px-4 py-4"><AnalysisRow label={simulation.reveal.fields.whatHappened} value={feedback.whatHappened} /><AnalysisRow label={simulation.reveal.fields.attackerObjective} value={feedback.attackerObjective} /><AnalysisRow label={simulation.reveal.fields.technique} value={feedback.technique} /><AnalysisRow label={simulation.reveal.fields.saferResponse} value={feedback.saferResponse} /></dl>;
 }
+function AnalysisRow({ label, value }: { label: string; value: string }) { return <div><dt className="font-mono text-[10px] text-muted">{label}</dt><dd className="mt-1 text-xs leading-5 text-ice">{value}</dd></div>; }
+function CompletionSummary({ progress, simulation }: { progress: PracticeProgress | null; simulation: SimulationMessages }) { return <section className="mx-auto mt-7 flex max-w-[52rem] flex-wrap items-center justify-between gap-4 border-t border-white/[0.08] pt-5"><div><p className="font-mono text-xs text-signal">{simulation.complete.title}</p><p className="mt-1 text-sm leading-6 text-muted">{progress ? simulation.complete.skillUpdate : simulation.complete.description}</p></div><Link className="font-mono text-xs text-signal" href="/">{simulation.complete.backHome} →</Link></section>; }
 
-function TrustedChannelSheet({ simulation, onConfirm }: { simulation: SimulationMessages; onConfirm: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-navy-950/85 p-4 sm:items-center">
-      <section
-        aria-describedby="trusted-channel-description"
-        aria-labelledby="trusted-channel-title"
-        aria-modal="true"
-        className="w-full max-w-lg border border-signal/40 bg-navy-900 p-6 shadow-panel sm:p-8"
-        role="dialog"
-      >
-        <div className="flex items-start gap-4">
-          <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center border border-signal/50 bg-signal/10 font-mono text-signal">✓</span>
-          <div>
-            <h2 id="trusted-channel-title" className="font-mono text-sm font-bold tracking-[0.08em] text-ice">{simulation.verify.sheetTitle}</h2>
-            <p id="trusted-channel-description" className="mt-3 text-sm leading-6 text-muted">{simulation.verify.sheetDescription}</p>
-          </div>
-        </div>
-        <div className="mt-6 border border-signal/25 bg-signal/[0.04] p-5">
-          <p className="font-mono text-[10px] tracking-[0.14em] text-muted">{simulation.verify.orderLabel}</p>
-          <p className="mt-4 text-lg font-medium text-signal">{simulation.verify.orderStatus}</p>
-          <p className="mt-2 text-sm leading-6 text-muted">{simulation.verify.orderStatusDescription}</p>
-        </div>
-        <button
-          className="mt-6 inline-flex min-h-11 items-center justify-center border border-signal bg-signal px-5 font-mono text-xs font-bold tracking-[0.1em] text-navy-950 transition hover:bg-signal/90"
-          type="button"
-          onClick={onConfirm}
-        >
-          {simulation.verify.continue}
-          <span aria-hidden="true" className="ml-4 text-base">→</span>
-        </button>
-      </section>
-    </div>
-  );
+function campaignEventsFor(state: SimulationState, simulation: SimulationMessages, verificationChecked: boolean, isRetryRound: boolean): string[] {
+  const inspectedSignals = isRetryRound ? state.retryInspectedSignals : state.inspectedSignals;
+  const events = isRetryRound ? [...simulation.console.retryInitialEvents] : [...simulation.console.initialEvents];
+  if (isRetryRound || state.stage !== "receive") events.push(simulation.console.messageOpened);
+  if (inspectedSignals.includes("sender")) events.push(simulation.console.senderInspected, simulation.console.responseDelay);
+  if (inspectedSignals.includes("link")) events.push(simulation.console.linkInspected, simulation.console.domainMismatch);
+  if (!isRetryRound && (state.verificationOpen || verificationChecked)) events.push(simulation.console.trustedCheckDetected);
+  if (!isRetryRound && verificationChecked) events.push(simulation.console.trackingNotFound, simulation.console.confidenceDeclining);
+  return events;
 }
-
-function CompletionPanel({ progress, simulation }: { progress: PracticeProgress | null; simulation: SimulationMessages }) {
-  const messages = getMessages();
-  const mastery = progress
-    ? `${simulation.complete.masteryLabel}: ${messages.progress.masteryStates[progress.mastery]}`
-    : simulation.complete.mastery;
-
-  return (
-    <section className="mt-8 border border-signal/40 bg-navy-900 p-6 shadow-panel sm:p-10">
-      <div className="flex h-12 w-12 items-center justify-center border border-signal bg-signal/10 font-mono text-xl text-signal">✓</div>
-      <div className="mt-10 max-w-2xl">
-        <p className="font-mono text-[11px] tracking-[0.2em] text-signal">{simulation.stageLabels.complete}</p>
-        <h2 className="mt-4 text-3xl font-semibold tracking-tight text-ice sm:text-4xl">{simulation.complete.title}</h2>
-        <p className="mt-4 leading-7 text-muted">{simulation.complete.description}</p>
-      </div>
-      <div className="mt-10 grid gap-4 sm:grid-cols-2">
-        <div className="border border-white/[0.08] bg-navy-950/50 p-5">
-          <p className="font-mono text-[10px] tracking-[0.12em] text-muted">{simulation.complete.skillUpdate}</p>
-          <p className="mt-4 font-mono text-sm text-signal">{mastery}</p>
-        </div>
-        <p className="border border-white/[0.08] bg-navy-950/50 p-5 text-sm leading-6 text-muted">{simulation.complete.support}</p>
-      </div>
-      <Link className="mt-8 inline-flex min-h-11 items-center border border-signal px-5 font-mono text-xs tracking-[0.1em] text-signal transition hover:bg-signal hover:text-navy-950" href="/">
-        {simulation.complete.backHome}
-        <span aria-hidden="true" className="ml-4 text-base">→</span>
-      </Link>
-    </section>
-  );
+function outcomeEventsFor(decision: Decision, simulation: SimulationMessages): string[] {
+  if (decision === "open_link") return simulation.console.traceUnsafe;
+  if (decision === "report_delete") return simulation.console.traceReport;
+  return simulation.console.traceSafe;
 }
+function feedbackFor(decision: Decision, simulation: SimulationMessages) {
+  if (decision === "open_link") return simulation.reveal.unsafeFeedback;
+  return simulation.reveal.safeFeedback;
+}
+function campaignStatusFor(state: SimulationState, simulation: SimulationMessages, verificationChecked: boolean, isRetryRound: boolean): string {
+  if (isRetryRound) return simulation.console.statusRetry;
+  if (verificationChecked) return simulation.console.statusDeclining;
+  if (state.verificationOpen) return simulation.console.statusObserved;
+  if (state.stage === "inspect") return simulation.console.statusRisk;
+  return simulation.console.statusWaiting;
+}
+function finalStatusFor(decision: Decision, simulation: SimulationMessages): string { return decision === "open_link" ? simulation.console.unsafeStatus : decision === "report_delete" ? simulation.console.interruptedStatus : simulation.console.safeStatus; }
+function nextActionFor(state: SimulationState, decision: Decision | null, simulation: SimulationMessages, isRetryRound: boolean): string {
+  if (decision) return simulation.console.nextActionComplete;
+  if (state.stage === "decide") return simulation.console.nextActionDecide;
+  if (state.stage === "verify") return simulation.console.nextActionVerify;
+  if (state.stage === "inspect") return simulation.console.nextActionInspect;
+  if (isRetryRound) return simulation.console.nextActionRetry;
+  return simulation.console.nextActionWaiting;
+}
+function eventTime(index: number): string { return `09:41:${String(8 + index * 2).padStart(2, "0")}`; }

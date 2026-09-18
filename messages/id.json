@@ -5,7 +5,7 @@
   },
   "common": {
     "primaryNavigation": "Navigasi utama",
-    "foundation": "FONDASI PRODUK",
+    "foundation": "RUANG LATIHAN",
     "simulationOnly": "SIMULASI AMAN",
     "noRealData": "Tidak ada data nyata yang dikumpulkan",
     "comingSoon": "Segera hadir",
@@ -29,11 +29,11 @@
     },
     "day": "hari",
     "days": "hari",
-    "freezeRemaining": "freeze tersisa",
+    "freezeRemaining": "perlindungan tersisa",
     "habits": {
-      "inspect": "Inspect",
-      "verify": "Verify",
-      "report": "Report"
+      "inspect": "Memeriksa",
+      "verify": "Memverifikasi",
+      "report": "Melaporkan"
     },
     "noHabits": "Belum ada",
     "retryResults": {
@@ -41,35 +41,35 @@
       "unsafe": "Perlu penguatan",
       "none": "Belum tersedia"
     },
-    "firstBadge": "First Practice",
+    "firstBadge": "Latihan pertama",
     "firstBadgeDescription": "Menyelesaikan latihan Courier SMS pertama."
   },
   "dashboard": {
-    "eyebrow": "OPERATOR HOME",
-    "greeting": "Selamat datang kembali",
-    "summary": "Satu latihan singkat untuk membangun kebiasaan berhenti, memeriksa, dan memverifikasi.",
-    "currentChallenge": "Tantangan saat ini",
+    "eyebrow": "BERANDA LATIHAN",
+    "greeting": "Latihan hari ini",
+    "summary": "Bangun kebiasaan berhenti, memeriksa, dan memverifikasi.",
+    "currentChallenge": "Latihan saat ini",
     "moduleNumber": "MODUL 01",
     "moduleTitle": "Courier SMS Phishing",
     "moduleDescription": "Kenali tekanan dalam pesan pengiriman dan pilih langkah aman berikutnya.",
-    "checkpointCount": "5 checkpoint · sekitar 3 menit",
+    "checkpointCount": "5 tahap · sekitar 3 menit",
     "startPractice": "Mulai latihan",
     "progressLabel": "Progres modul",
     "progressValue": "Belum selesai",
     "progressCompleted": "Selesai",
-    "skillSummary": "Ringkasan keterampilan",
+    "skillSummary": "Keterampilan saat ini",
     "skillName": "Sender and Link Verification",
     "skillStatus": "Belum dipelajari",
-    "streak": "Streak latihan",
+    "streak": "Rangkaian latihan",
     "streakValue": "0 hari",
-    "freeze": "1 freeze tersisa",
-    "masteryNote": "Mastery tidak turun saat streak terputus."
+    "freeze": "1 perlindungan tersisa",
+    "masteryNote": "Keterampilan tidak hilang saat rangkaian terputus."
   },
   "simulation": {
     "eyebrow": "MODUL 01 · SMS PHISHING",
-    "title": "Courier message",
-    "description": "Belajar berhenti, memeriksa, dan memverifikasi sebelum membuka tautan pengiriman.",
-    "checkpointCount": "5 checkpoint · sekitar 3 menit",
+    "title": "Pesan kurir",
+  "description": "Bayangkan kamu sedang menunggu paket dan membuka SMS ini di antara notifikasi lainnya. Pesan ini sengaja dibuat agar kamu bertindak sebelum sempat memeriksa.",
+  "checkpointCount": "5 tahap · sekitar 3 menit",
     "safeNote": "SIMULASI AMAN · Tidak ada data nyata yang dikumpulkan",
     "phoneTime": "09:41",
     "phoneLabel": "SMS",
@@ -82,20 +82,31 @@
     "nextPhase": "Simulator interaktif segera hadir",
     "returnDashboard": "Kembali ke beranda",
     "stageLabels": {
-      "briefing": "BRIEFING",
-      "receive": "RECEIVE",
-      "inspect": "INSPECT",
-      "verify": "VERIFY",
-      "decide": "DECIDE",
-      "reveal": "REVEAL",
-      "retry": "RETRY",
-      "complete": "COMPLETE"
+      "briefing": "PENGANTAR",
+      "receive": "TERIMA",
+      "inspect": "PERIKSA",
+      "verify": "VERIFIKASI",
+      "decide": "PILIH",
+      "reveal": "PAHAMI",
+      "retry": "COBA ULANG",
+      "complete": "SELESAI"
+    },
+  "checkpoints": {
+    "receive": "Pesan masuk",
+    "inspect": "Periksa",
+    "verify": "Verifikasi",
+    "decide": "Tentukan respons",
+    "understand": "Lihat akibatnya"
+  },
+  "devices": {
+    "victim": "KORBAN · SMS",
+    "attacker": "PELAKU · PERANGKAT OPERASI"
     },
     "briefing": {
-      "label": "MODULE 01 · SMS PHISHING",
-      "title": "Courier message",
-      "description": "Belajar berhenti, memeriksa, dan memverifikasi sebelum membuka tautan pengiriman.",
-      "checkpointCount": "5 checkpoint · sekitar 3 menit",
+      "label": "MODUL 01 · PHISHING SMS",
+      "title": "Pesan kurir",
+      "description": "Bayangkan kamu sedang menunggu paket dan membuka SMS ini di antara notifikasi lainnya. Pesan ini sengaja dibuat agar kamu bertindak sebelum sempat memeriksa.",
+      "checkpointCount": "5 tahap · sekitar 3 menit",
       "safeNotice": "SIMULASI AMAN · Tidak ada data nyata yang dikumpulkan",
       "begin": "Mulai modul"
     },
@@ -130,48 +141,55 @@
       }
     },
     "receive": {
-      "title": "Terima pesan",
-      "description": "Baca pesan seperti biasa. Perhatikan tekanan yang mendorong keputusan cepat.",
-      "action": "Lanjutkan",
-      "analystNote": "Signal: urgensi. Mengapa penting: urgensi digunakan untuk mengurangi waktu memeriksa. Kebiasaan aman: berhenti sebelum merespons."
+    "title": "Pesan masuk",
+    "description": "Pesan terlihat seperti pembaruan pengiriman biasa.",
+    "action": "Periksa pesan",
+    "analystNote": "Tekanan waktu dipakai agar target bertindak cepat."
     },
     "inspect": {
-      "title": "Periksa sinyal",
-      "description": "Periksa setidaknya satu sinyal sebelum melanjutkan.",
+    "title": "Periksa pengirim dan tautan",
+    "description": "Buka detail yang tersedia sebelum menentukan respons.",
       "senderAction": "Periksa pengirim",
       "linkAction": "Periksa tautan",
       "inspected": "Sudah diperiksa",
       "continue": "Lanjutkan",
-      "requirement": "Periksa pengirim atau tautan untuk membuka checkpoint berikutnya.",
-      "bothInspected": "Dua sinyal sudah diperiksa.",
-      "senderAnalystNote": "Signal: pengirim tidak terverifikasi. Kebiasaan aman: jangan gunakan identitas dalam pesan sebagai satu-satunya bukti.",
-      "linkAnalystNote": "Signal: domain tidak cocok. Kebiasaan aman: baca alamat secara perlahan dan verifikasi melalui kanal yang kamu buka sendiri."
+    "requirement": "Pilih pengirim atau tautan untuk melihat detailnya.",
+    "bothInspected": "Detail pesan telah diperiksa.",
+    "analystNote": "Nama pengirim terlihat resmi, tetapi nomor dan domainnya tidak menyediakan jalur verifikasi yang terpercaya.",
+    "senderAnalystNote": "Nama pengirim bukan bukti bahwa kanal ini resmi.",
+    "linkAnalystNote": "Domain tidak cocok dengan kanal resmi kurir."
     },
     "verify": {
-      "title": "Verifikasi secara mandiri",
-      "description": "Gunakan kanal yang kamu buka sendiri untuk memeriksa status pengiriman.",
+    "title": "Verifikasi kanal resmi",
+    "description": "Buka aplikasi kurir simulasi dari perangkat ini.",
       "action": "Buka aplikasi kurir resmi",
       "analystNote": "Memverifikasi melalui kanal yang kamu buka sendiri memutus kendali penyerang atas rute pemeriksaan.",
-      "sheetTitle": "Aplikasi kurir resmi · simulasi",
-      "sheetDescription": "Kamu membuka kanal dari perangkatmu sendiri. Tidak ada aplikasi nyata yang diluncurkan.",
-      "orderLabel": "PESANAN CONTOH",
-      "orderStatus": "Tidak ada masalah pengiriman",
-      "orderStatusDescription": "Pesanan contoh ini tidak memerlukan konfirmasi tambahan.",
-      "continue": "Kembali ke latihan"
+    "sheetTitle": "Aplikasi kurir resmi · simulasi",
+    "sheetDescription": "Tidak ada aplikasi nyata yang diluncurkan.",
+    "orderLabel": "PESANAN CONTOH",
+    "orderStatus": "Tidak ada paket dengan nomor tersebut.",
+    "orderStatusDescription": "Pesan sebelumnya tidak memiliki bukti bahwa ia benar-benar berasal dari kurir.",
+    "continue": "Kembali ke SMS",
+    "appTitle": "KURIR NASIONAL",
+    "appSimulation": "SIMULASI",
+    "trackTitle": "Lacak paket",
+    "trackingPlaceholder": "Masukkan nomor resi",
+    "search": "Cari resi contoh",
+    "searchResultLabel": "HASIL PENCARIAN"
     },
     "decide": {
-      "title": "Pilih respons",
-      "description": "Pilih respons terhadap pesan ini. Semua pilihan aman untuk dicoba.",
-      "analystNote": "Pilih tindakan yang paling sesuai dengan kebiasaan amanmu; analisis akan muncul setelah pilihan dibuat.",
+    "title": "Tentukan respons",
+    "description": "Tindakanmu menentukan apakah rute pelaku maju atau terputus.",
+    "analystNote": "Pilih satu tindakan untuk melihat konsekuensi simulasinya.",
       "choices": {
         "openLink": {
           "label": "Buka tautan",
           "description": "Ikuti tautan yang dikirim dalam pesan."
         },
-        "verifyOfficial": {
-          "label": "Verifikasi lewat aplikasi resmi",
-          "description": "Periksa status pengiriman dari aplikasi yang kamu buka sendiri."
-        },
+      "verifyOfficial": {
+        "label": "Verifikasi lewat aplikasi resmi",
+        "description": "Periksa status pengiriman dari aplikasi yang kamu buka sendiri."
+      },
         "reportDelete": {
           "label": "Laporkan dan hapus pesan",
           "description": "Hentikan percakapan dengan menghapus dan melaporkan pesan."
@@ -179,16 +197,59 @@
       }
     },
     "console": {
-      "title": "ATTACKER VIEW · SIMULATION ONLY",
-      "targetSession": "TARGET / SESSION",
-      "targetValue": "LOCAL DEMO · DECISION RECORDED",
-      "decisionLabel": "USER DECISION",
-      "traceLabel": "CHRONOLOGICAL TRACE",
-      "traceWaiting": "Menunggu trace simulasi…",
-      "traceRunning": "Trace berjalan",
-      "finalStatus": "FINAL STATUS",
-      "unsafeStatus": "SIMULATED IMPACT",
-      "safeStatus": "SESSION BLOCKED",
+    "campaignTitle": "COURIER CAMPAIGN // ACTIVE",
+    "campaignLabel": "CAMPAIGN",
+    "campaignValue": "07",
+    "roundPrimary": "PUTARAN 01",
+    "roundRetry": "PUTARAN 02",
+    "targetLabel": "TARGET",
+    "targetValue": "SIM-01",
+    "objectiveLabel": "OBJECTIVE",
+    "objective": "Membuat target bertindak sebelum memeriksa.",
+    "tacticLabel": "TACTIC",
+    "tactic": "Kurir palsu + tekanan waktu.",
+    "retryTactic": "Alasan perubahan alamat + tekanan biaya.",
+    "liveLogLabel": "LIVE EVENT LOG",
+    "nextActionLabel": "NEXT SIMULATED ACTION",
+    "nextActionWaiting": "Menunggu target membuka pesan.",
+    "nextActionInspect": "Menilai kemungkinan respons target.",
+    "nextActionDecide": "Menunggu target menentukan respons.",
+    "nextActionVerify": "Memantau pemeriksaan kanal resmi.",
+    "nextActionRetry": "Menunggu respons pada variasi kedua.",
+    "nextActionComplete": "Tidak ada tindakan nyata dilakukan.",
+    "statusWaiting": "WAITING",
+    "statusRisk": "RISK INCREASING",
+    "statusObserved": "OBSERVED",
+    "statusDeclining": "CONFIDENCE DECLINING",
+    "statusRetry": "VARIANT ACTIVE",
+    "interruptedStatus": "TERPUTUS",
+    "initialEvents": [
+      "LURE DELIVERED",
+      "TARGET STATE: UNREAD",
+      "CAMPAIGN STATUS: WAITING"
+    ],
+    "retryInitialEvents": [
+      "VARIANT 02 DELIVERED",
+      "TARGET STATE: UNREAD",
+      "CAMPAIGN STATUS: VARIANT ACTIVE"
+    ],
+    "messageOpened": "TARGET VIEWED MESSAGE",
+    "senderInspected": "TARGET INSPECTING SENDER",
+    "responseDelay": "RESPONSE DELAY DETECTED",
+    "linkInspected": "TARGET INSPECTING ROUTE",
+    "domainMismatch": "DOMAIN MISMATCH CONFIRMED",
+    "trustedCheckDetected": "TRUSTED CHANNEL CHECK DETECTED",
+    "trackingNotFound": "TRACKING ID NOT FOUND",
+    "confidenceDeclining": "CAMPAIGN CONFIDENCE: DECLINING",
+      "title": "PERSPEKTIF PENYERANG · HANYA SIMULASI",
+      "targetSession": "TARGET / SESI",
+      "decisionLabel": "PILIHAN PENGGUNA",
+      "traceLabel": "URUTAN KEJADIAN",
+      "traceWaiting": "Menunggu urutan simulasi…",
+      "traceRunning": "Urutan sedang berjalan",
+      "finalStatus": "STATUS AKHIR",
+      "unsafeStatus": "DAMPAK TERSIMULASI",
+      "safeStatus": "SESI TERBLOKIR",
       "unsafeStatusDetail": "Rute simulasi berakhir sebelum transmisi data apa pun.",
       "safeStatusDetail": "Rute yang dikendalikan penyerang berhasil dilewati.",
       "traceUnsafe": [
@@ -204,13 +265,13 @@
         "ATTACKER_ROUTE_BYPASSED",
         "SESSION_BLOCKED"
       ],
-      "traceReport": [
-        "MESSAGE_DELIVERED",
-        "REPORT_AND_DELETE_SELECTED",
-        "ATTACKER_ROUTE_BYPASSED",
-        "SESSION_BLOCKED"
-      ]
-    },
+    "traceReport": [
+      "MESSAGE_DELIVERED",
+      "REPORT_AND_DELETE_SELECTED",
+      "ATTACKER_ROUTE_BYPASSED",
+      "SESSION_BLOCKED"
+    ]
+  },
     "reveal": {
       "description": "Sekarang lihat hubungan antara keputusanmu dan kemungkinan dampaknya.",
       "attackerTitle": "Sudut pandang penyerang",
@@ -235,28 +296,43 @@
       "feedbackTitle": "Umpan balik",
       "fields": {
         "whatHappened": "Apa yang terjadi",
-        "signal": "Signal",
+        "attackerObjective": "Tujuan pelaku",
         "technique": "Teknik",
-        "impact": "Dampak",
         "saferResponse": "Respons yang lebih aman"
       },
       "unsafeFeedback": {
         "whatHappened": "Pesan menggunakan batas waktu untuk menciptakan urgensi.",
-        "signal": "Domain tidak cocok dengan kanal kurir resmi.",
+        "attackerObjective": "Memindahkan target dari SMS ke halaman yang dikendalikan pelaku.",
         "technique": "Rekayasa sosial: urgensi ditambah penyamaran layanan.",
-        "impact": "Halaman palsu menyiapkan permintaan detail akun; tidak ada data nyata yang dikirim.",
         "saferResponse": "Buka aplikasi kurir resmi sendiri, lalu periksa pengiriman."
       },
-      "safeFeedback": {
+    "safeFeedback": {
         "whatHappened": "Kamu menghentikan rute yang dikirim melalui pesan.",
-        "signal": "Pengirim dan domain tidak memberi jalur verifikasi yang tepercaya.",
+        "attackerObjective": "Menjaga target di rute yang dikirim sebelum ia memeriksanya secara mandiri.",
         "technique": "Rekayasa sosial: urgensi ditambah penyamaran layanan.",
-        "impact": "Rute penyerang dilewati dan sesi diblokir; tidak ada informasi yang terbuka.",
-        "saferResponse": "Pertahankan kebiasaan membuka kanal resmi sendiri sebelum bertindak."
-      },
-      "retry": "Coba variasi lain",
-      "retryNote": "Variasi baru menguji kebiasaan yang sama."
+      "saferResponse": "Pertahankan kebiasaan membuka kanal resmi sendiri sebelum bertindak."
     },
+    "retry": "Coba variasi lain",
+    "finish": "Selesaikan latihan",
+    "retryNote": "Variasi baru menguji kebiasaan yang sama."
+  },
+  "outcomes": {
+    "simulatedPage": "HALAMAN PENGIRIMAN · SIMULASI",
+    "deliveryPortal": "Konfirmasi pengiriman",
+    "noDataField": "Tidak ada data yang diminta atau dikirim.",
+    "openLink": {
+      "detail": "Kamu masuk ke halaman simulasi yang dikendalikan pelaku.",
+      "summary": "Belum ada data nyata yang dikirim, tetapi alur serangan berhasil maju."
+    },
+    "verifyOfficial": {
+      "detail": "Kamu menghentikan alur serangan sebelum diarahkan ke halaman yang dikendalikan pelaku.",
+      "summary": "Kanal resmi tidak menemukan paket yang dimaksud."
+    },
+    "reportDelete": {
+      "detail": "Pesan ditandai dan percakapan dihentikan.",
+      "summary": "Rute pelaku terputus sebelum target diarahkan ke halaman lain."
+    }
+  },
     "retryStep": {
       "title": "Coba variasi lain",
       "description": "Pretext dan kata-katanya berubah, tetapi sinyalnya tetap perlu diperiksa.",
@@ -277,53 +353,53 @@
     }
   },
   "training": {
-    "eyebrow": "TRAINING LIBRARY",
+    "eyebrow": "PERPUSTAKAAN LATIHAN",
     "title": "Learn it. Do it.",
     "description": "Latihan singkat yang menghubungkan keputusan sehari-hari dengan kebiasaan aman.",
     "active": "Aktif",
-    "available": "Tersedia di fondasi",
+    "available": "Tersedia",
     "moduleNumber": "MODUL 01",
     "courierTitle": "Courier SMS Phishing",
     "courierDescription": "Berhenti sejenak saat menerima pesan pengiriman yang mendesak.",
-    "futureSmsTitle": "Signal lainnya",
+    "futureSmsTitle": "Sinyal lainnya",
     "futureSmsDescription": "Variasi latihan untuk memperkuat pemeriksaan pengirim dan tautan.",
     "futureModuleNumber": "02",
     "openModule": "Buka modul",
     "soon": "Segera hadir"
   },
   "insights": {
-    "eyebrow": "PRACTICE INSIGHTS",
+    "eyebrow": "RINGKASAN LATIHAN",
     "title": "Insight Latihan",
     "description": "Lihat kebiasaan yang sedang dilatih, tanpa skor yang menghakimi.",
     "modulesCompleted": "Modul selesai",
     "modulesCompletedValue": "0",
     "habitsPractised": "Kebiasaan dipraktikkan",
     "habitsPractisedValue": "Belum ada",
-    "transferCheck": "Pengecekan transfer terakhir",
+    "transferCheck": "Hasil latihan ulang terakhir",
     "transferCheckValue": "Belum tersedia",
-    "currentMastery": "Mastery saat ini",
-    "lastRetry": "Hasil retry terakhir",
+    "currentMastery": "Keterampilan saat ini",
+    "lastRetry": "Hasil latihan ulang terakhir",
     "support": "Insight ini membantu melihat latihan, bukan menilai dirimu.",
     "habitsLabel": "Kebiasaan aman",
-    "habitsDescription": "Inspect · Verify · Report"
+    "habitsDescription": "Memeriksa · Memverifikasi · Melaporkan"
   },
   "profile": {
-    "eyebrow": "OPERATOR PROFILE",
+    "eyebrow": "PROFIL LATIHAN",
     "title": "Profil",
-    "description": "Atur preferensi latihan dan lihat perkembangan keterampilanmu.",
-    "mastery": "Mastery keterampilan",
+    "description": "Lihat perkembangan keterampilan dan kebiasaan latihanmu.",
+    "mastery": "Keterampilan saat ini",
     "skillName": "Sender and Link Verification",
     "masteryStatus": "Belum dipelajari",
-    "streak": "Streak latihan",
+    "streak": "Rangkaian latihan",
     "streakValue": "0 hari",
-    "freeze": "Streak freeze",
+    "freeze": "Perlindungan rangkaian",
     "freezeValue": "1 tersisa",
-    "badges": "Badge",
+    "badges": "Pencapaian",
     "badgeEarned": "Latihan pertama selesai.",
     "badgeValue": "Badge pertama akan muncul setelah latihan",
-    "language": "Bahasa",
-    "indonesian": "Bahasa Indonesia",
+    "language": "Bahasa antarmuka",
+    "indonesian": "Indonesia",
     "english": "English",
-    "languageNote": "English tersedia sebagai struktur locale berikutnya."
+    "languageNote": "Bahasa antarmuka saat ini: Indonesia."
   }
 }
