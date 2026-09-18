@@ -352,6 +352,30 @@
       "backHome": "Back to dashboard"
     }
   },
+  "socialEngineering": {
+    "eyebrow": "MODULE 02 · SOCIAL ENGINEERING",
+    "title": "An offer that moves you away from the safer route",
+    "description": "See how trust, channel shifts, and unexpected fees are used to rush a decision.",
+    "safeNote": "SAFE SIMULATION · No payment or real data",
+    "flowLabel": "Marketplace practice flow",
+    "checkpoints": { "context": "Offer", "trust": "Trust", "channel": "Channel", "pressure": "Pressure", "decide": "Response" },
+    "devices": { "victim": "VICTIM · MARKETPLACE", "attacker": "ATTACKER · WORKSPACE" },
+    "briefing": { "label": "MODULE 02 · SOCIAL ENGINEERING", "checkpointCount": "5 stages · about 4 minutes", "begin": "Start simulation" },
+    "scenarios": {
+      "primary": { "listing": "PixelCanvas 13 · lightly used", "price": "Rp4,250,000", "seller": "Raka Gadget", "handle": "@raka.gadget.id", "rating": "4.9 · 48 reviews", "review": "“Item matched the photos; fast delivery.”", "opening": "It is still available. I lowered the price because I need it moved quickly.", "channelRequest": "To make this faster, continue in an outside chat: chat-raka[.]example/offer", "handler": "Safe Funds Centre", "request": "Buyer confirmation requires a Rp75,000 verification fee before funds can be secured.", "sellerInspection": "Good reviews do not prove that this conversation or outside channel is official.", "paymentInspection": "The verification fee appears after the channel shift and is not listed on the marketplace page." },
+      "retry": { "listing": "LuminaBook Air · excellent condition", "price": "Rp5,100,000", "seller": "Nisa Komputer", "handle": "@nisa.deals", "rating": "4.8 · 31 reviews", "review": "“Responsive seller; unit sold quickly.”", "opening": "Another buyer is waiting, but I can hold it briefly.", "channelRequest": "A refund is easier through this help centre: refund-help[.]example/chat", "handler": "Marketplace Refund Team", "request": "Before a refund is processed, send a security deposit to unlock the buyer account.", "sellerInspection": "An account name and reviews are supporting signals; they do not authorise an outside-platform request.", "paymentInspection": "A deposit to unlock a refund changes the transaction and does not match the marketplace flow." }
+    },
+    "context": { "action": "View offer", "note": "An attractive price and good reviews can make an offer feel safer than the available evidence." },
+    "trust": { "title": "Review the seller", "inspect": "Inspect trust signals", "continue": "Continue the conversation", "stay": "Stay on the marketplace", "note": "Reviews can help assess a listing, but they do not move marketplace protection to another channel." },
+    "channel": { "title": "Request to change channels", "accept": "Move to outside chat", "stay": "Stay on the marketplace", "note": "An outside channel can isolate the conversation from platform evidence and safeguards." },
+    "pressure": { "title": "Unexpected request", "inspect": "Inspect the fee request", "continue": "Choose a response", "report": "Stop and report", "note": "A new fee or deposit after a channel shift is a reason to pause and check." },
+    "decide": { "title": "Choose a response", "description": "No real payment occurs in this practice.", "choices": { "comply": { "label": "Continue with the verification fee", "description": "Continue the simulated payment route." }, "verify": { "label": "Verify in the marketplace", "description": "Return to the platform channel you opened yourself." }, "report": { "label": "Stop and report", "description": "End the route requested by the attacker." } } },
+    "console": { "campaign": "MARKETPLACE TRUST TRANSFER", "roundPrimary": "ROUND 01", "roundRetry": "ROUND 02", "campaignLabel": "CAMPAIGN", "targetLabel": "TARGET", "targetValue": "BUYER-SIM-04", "objectiveLabel": "OBJECTIVE", "objective": "Move the target away from platform safeguards.", "tacticLabel": "CURRENT TACTIC", "tactic": "Borrowed credibility + attractive price.", "retryTactic": "Scarcity + refund pretext.", "statusLabel": "STATUS", "controlLabel": "ATTACKER CONTROL", "controlHigh": "HIGH", "controlReduced": "REDUCED", "controlLost": "LOST", "statusActive": "ACTIVE", "statusEscalating": "ESCALATING", "statusInterrupted": "INTERRUPTED", "statusImpact": "SIMULATED IMPACT", "timelineLabel": "EVENT TIMELINE", "nextLabel": "NEXT INTENDED MOVE", "nextContext": "Wait for the target to assess the offer.", "nextTrust": "Request a shift to an outside channel.", "nextChannel": "Introduce an outside payment handler.", "nextPressure": "Push a fee before the target checks.", "nextDecision": "Wait for the fee response.", "nextStopped": "The route cannot continue.", "primaryEvents": ["LISTING PUBLISHED", "TARGET STATE: BROWSING", "TRUST CUES DISPLAYED"], "retryEvents": ["VARIANT LISTING PUBLISHED", "TARGET STATE: BROWSING", "REFUND PRETEXT PREPARED"], "opened": "TARGET OPENED LISTING", "sellerChecked": "TARGET CHECKING SELLER SIGNALS", "trustQuestioned": "BORROWED TRUST: QUESTIONED", "channelAccepted": "CHANNEL SHIFT ACCEPTED", "platformRetained": "PLATFORM SAFEGUARDS RETAINED", "handlerIntroduced": "EXTERNAL HANDLER INTRODUCED", "paymentChecked": "UNUSUAL REQUEST INSPECTED", "feeMismatch": "MARKETPLACE FLOW MISMATCH CONFIRMED", "verifyDetected": "INDEPENDENT VERIFICATION DETECTED", "complied": ["TARGET COMPLIED WITH REQUEST", "MONETIZATION ROUTE ADVANCED", "NO REAL PAYMENT EXECUTED"], "verified": ["TARGET RETURNED TO PLATFORM", "ATTACKER ROUTE BYPASSED", "CAMPAIGN INTERRUPTED"], "reported": ["TARGET STOPPED AND REPORTED", "CAMPAIGN FAILED TO PROGRESS", "ROUTE CONTAINED"] },
+    "reveal": { "notification": "Why this happened", "view": "View analysis", "hide": "Hide analysis", "retry": "Try another variation", "finish": "Finish practice", "fields": { "whatHappened": "What happened", "attackerObjective": "Attacker objective", "technique": "Manipulation technique", "saferResponse": "Safer response" }, "unsafe": { "whatHappened": "The fee request was accepted after platform safeguards were left behind.", "attackerObjective": "Keep the target moving value through a route that cannot be independently checked.", "technique": "Channel isolation, urgency, and fee pressure after trust is built.", "saferResponse": "Stop the flow and return to the marketplace to check the transaction." }, "safe": { "whatHappened": "You did not follow the route requested outside the marketplace.", "attackerObjective": "Move the target away from platform evidence and safeguards.", "technique": "Borrowed trust, channel isolation, then an unusual request.", "saferResponse": "Use the marketplace channel you opened yourself, or stop the transaction." } },
+    "outcomes": { "complied": "The simulated monetisation route advanced, but no payment or data was sent.", "verified": "Independent checking ended the attacker route before a fee was processed.", "reported": "The exchange ended before the unusual request could progress." },
+    "retry": { "prompt": "Inspect one signal before choosing a response to this variation.", "question": "How do you respond to this refund request?" },
+    "complete": { "title": "Practice complete", "description": "The same pattern can appear in offers, refunds, or payment handlers.", "backHome": "Back to dashboard" }
+  },
   "training": {
     "eyebrow": "TRAINING LIBRARY",
     "title": "Learn it. Do it.",
@@ -361,6 +385,9 @@
     "moduleNumber": "MODULE 01",
     "courierTitle": "Courier SMS Phishing",
     "courierDescription": "Pause when a delivery message creates pressure to act quickly.",
+    "socialModuleNumber": "MODULE 02",
+    "socialTitle": "Marketplace Social Engineering",
+    "socialDescription": "Recognise when trust and a channel shift are used to request something unusual.",
     "futureSmsTitle": "More signals",
     "futureSmsDescription": "Practice variations to strengthen sender and link inspection.",
     "futureModuleNumber": "02",

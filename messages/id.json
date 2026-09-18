@@ -352,6 +352,70 @@
       "backHome": "Kembali ke beranda"
     }
   },
+  "socialEngineering": {
+    "eyebrow": "MODUL 02 · REKAYASA SOSIAL",
+    "title": "Penawaran yang memindahkanmu dari jalur aman",
+    "description": "Periksa bagaimana kepercayaan, perpindahan kanal, dan biaya tak terduga dipakai untuk mendorong keputusan cepat.",
+    "safeNote": "SIMULASI AMAN · Tidak ada pembayaran atau data nyata",
+    "flowLabel": "Alur latihan marketplace",
+    "checkpoints": { "context": "Penawaran", "trust": "Kepercayaan", "channel": "Kanal", "pressure": "Tekanan", "decide": "Respons" },
+    "devices": { "victim": "KORBAN · MARKETPLACE", "attacker": "PELAKU · RUANG KERJA" },
+    "briefing": { "label": "MODUL 02 · REKAYASA SOSIAL", "checkpointCount": "5 tahap · sekitar 4 menit", "begin": "Mulai simulasi" },
+    "scenarios": {
+      "primary": {
+        "listing": "PixelCanvas 13 · bekas mulus",
+        "price": "Rp4.250.000",
+        "seller": "Raka Gadget",
+        "handle": "@raka.gadget.id",
+        "rating": "4,9 · 48 ulasan",
+        "review": "“Barang sesuai foto, pengiriman cepat.”",
+        "opening": "Masih tersedia. Harganya saya turunkan karena butuh cepat.",
+        "channelRequest": "Agar cepat, lanjut lewat chat di luar marketplace ya: chat-raka[.]example/offer",
+        "handler": "Pusat Dana Aman",
+        "request": "Konfirmasi pembeli memerlukan biaya verifikasi Rp75.000 sebelum dana diamankan.",
+        "sellerInspection": "Ulasan terlihat baik, tetapi tidak membuktikan bahwa percakapan atau kanal luar ini resmi.",
+        "paymentInspection": "Biaya verifikasi muncul setelah kanal dipindahkan dan tidak tercantum pada halaman marketplace."
+      },
+      "retry": {
+        "listing": "LuminaBook Air · kondisi sangat baik",
+        "price": "Rp5.100.000",
+        "seller": "Nisa Komputer",
+        "handle": "@nisa.deals",
+        "rating": "4,8 · 31 ulasan",
+        "review": "“Penjual responsif, unit cepat terjual.”",
+        "opening": "Ada pembeli lain yang menunggu, tetapi saya bisa tahan sebentar.",
+        "channelRequest": "Pengembalian dana lebih mudah diproses lewat pusat bantuan ini: bantu-pengembalian[.]example/chat",
+        "handler": "Tim Pengembalian Marketplace",
+        "request": "Sebelum refund diproses, kirim deposit pengamanan untuk membuka akun pembeli.",
+        "sellerInspection": "Nama akun dan ulasan hanya menjadi sinyal pendukung; keduanya tidak mengesahkan permintaan di luar platform.",
+        "paymentInspection": "Permintaan deposit untuk membuka refund mengubah tujuan transaksi dan tidak sesuai alur marketplace."
+      }
+    },
+    "context": { "action": "Lihat penawaran", "note": "Harga menarik dan ulasan baik dapat membuat penawaran terasa lebih aman dari bukti yang tersedia." },
+    "trust": { "title": "Tinjau penjual", "inspect": "Periksa sinyal kepercayaan", "continue": "Lanjutkan percakapan", "stay": "Tetap di marketplace", "note": "Ulasan membantu menilai listing, tetapi tidak memindahkan perlindungan marketplace ke kanal lain." },
+    "channel": { "title": "Permintaan pindah kanal", "accept": "Pindah ke chat luar", "stay": "Tetap di marketplace", "note": "Kanal luar dapat mengisolasi percakapan dari bukti dan perlindungan platform." },
+    "pressure": { "title": "Permintaan tak terduga", "inspect": "Periksa permintaan biaya", "continue": "Tentukan respons", "report": "Hentikan dan laporkan", "note": "Biaya atau deposit baru setelah perpindahan kanal adalah alasan untuk berhenti dan memeriksa." },
+    "decide": {
+      "title": "Tentukan respons", "description": "Tidak ada pembayaran nyata dalam latihan ini.",
+      "choices": {
+        "comply": { "label": "Lanjutkan biaya verifikasi", "description": "Meneruskan alur pembayaran simulasi." },
+        "verify": { "label": "Verifikasi di marketplace", "description": "Kembali ke kanal platform yang kamu buka sendiri." },
+        "report": { "label": "Hentikan dan laporkan", "description": "Mengakhiri rute yang diminta pelaku." }
+      }
+    },
+    "console": {
+      "campaign": "MARKETPLACE TRUST TRANSFER", "roundPrimary": "PUTARAN 01", "roundRetry": "PUTARAN 02", "campaignLabel": "CAMPAIGN", "targetLabel": "TARGET", "targetValue": "BUYER-SIM-04", "objectiveLabel": "OBJECTIVE", "objective": "Memindahkan target dari perlindungan platform.", "tacticLabel": "CURRENT TACTIC", "tactic": "Kredibilitas pinjaman + harga menarik.", "retryTactic": "Kelangkaan + alasan refund.", "statusLabel": "STATUS", "controlLabel": "ATTACKER CONTROL", "controlHigh": "TINGGI", "controlReduced": "MENURUN", "controlLost": "HILANG", "statusActive": "ACTIVE", "statusEscalating": "ESCALATING", "statusInterrupted": "INTERRUPTED", "statusImpact": "SIMULATED IMPACT", "timelineLabel": "EVENT TIMELINE", "nextLabel": "NEXT INTENDED MOVE", "nextContext": "Menunggu target menilai penawaran.", "nextTrust": "Meminta perpindahan ke kanal luar.", "nextChannel": "Memperkenalkan perantara pembayaran.", "nextPressure": "Mendorong biaya sebelum target memeriksa.", "nextDecision": "Menunggu respons atas permintaan biaya.", "nextStopped": "Rute tidak dapat dilanjutkan.", "primaryEvents": ["LISTING PUBLISHED", "TARGET STATE: BROWSING", "TRUST CUES DISPLAYED"], "retryEvents": ["VARIANT LISTING PUBLISHED", "TARGET STATE: BROWSING", "REFUND PRETEXT PREPARED"], "opened": "TARGET OPENED LISTING", "sellerChecked": "TARGET CHECKING SELLER SIGNALS", "trustQuestioned": "BORROWED TRUST: QUESTIONED", "channelAccepted": "CHANNEL SHIFT ACCEPTED", "platformRetained": "PLATFORM SAFEGUARDS RETAINED", "handlerIntroduced": "EXTERNAL HANDLER INTRODUCED", "paymentChecked": "UNUSUAL REQUEST INSPECTED", "feeMismatch": "MARKETPLACE FLOW MISMATCH CONFIRMED", "verifyDetected": "INDEPENDENT VERIFICATION DETECTED", "complied": ["TARGET COMPLIED WITH REQUEST", "MONETIZATION ROUTE ADVANCED", "NO REAL PAYMENT EXECUTED"], "verified": ["TARGET RETURNED TO PLATFORM", "ATTACKER ROUTE BYPASSED", "CAMPAIGN INTERRUPTED"], "reported": ["TARGET STOPPED AND REPORTED", "CAMPAIGN FAILED TO PROGRESS", "ROUTE CONTAINED"]
+    },
+    "reveal": {
+      "notification": "Mengapa ini terjadi", "view": "Lihat analisis", "hide": "Tutup analisis", "retry": "Coba variasi lain", "finish": "Selesaikan latihan",
+      "fields": { "whatHappened": "Apa yang terjadi", "attackerObjective": "Tujuan pelaku", "technique": "Teknik manipulasi", "saferResponse": "Respons yang lebih aman" },
+      "unsafe": { "whatHappened": "Permintaan biaya diterima setelah perlindungan platform ditinggalkan.", "attackerObjective": "Membuat target meneruskan nilai transaksi di jalur yang tidak dapat diverifikasi.", "technique": "Perpindahan kanal, urgensi, dan tekanan biaya setelah kepercayaan dibangun.", "saferResponse": "Hentikan alur dan kembali ke marketplace untuk memeriksa transaksi." },
+      "safe": { "whatHappened": "Kamu tidak mengikuti rute yang diminta dari luar marketplace.", "attackerObjective": "Menjauhkan target dari bukti dan perlindungan platform.", "technique": "Kredibilitas pinjaman, isolasi kanal, lalu permintaan yang tidak biasa.", "saferResponse": "Gunakan kanal marketplace yang kamu buka sendiri atau hentikan transaksi." }
+    },
+    "outcomes": { "complied": "Rute monetisasi simulasi maju, tetapi tidak ada pembayaran atau data yang dikirim.", "verified": "Pemeriksaan mandiri memutus rute pelaku sebelum biaya diproses.", "reported": "Percakapan dihentikan sebelum permintaan tak terduga dapat berkembang." },
+    "retry": { "prompt": "Periksa satu sinyal sebelum memilih respons pada variasi ini.", "question": "Apa responsmu terhadap permintaan refund ini?" },
+    "complete": { "title": "Latihan selesai", "description": "Pola yang sama dapat muncul dalam penawaran, refund, atau perantara pembayaran.", "backHome": "Kembali ke beranda" }
+  },
   "training": {
     "eyebrow": "PERPUSTAKAAN LATIHAN",
     "title": "Learn it. Do it.",
@@ -361,6 +425,9 @@
     "moduleNumber": "MODUL 01",
     "courierTitle": "Courier SMS Phishing",
     "courierDescription": "Berhenti sejenak saat menerima pesan pengiriman yang mendesak.",
+    "socialModuleNumber": "MODUL 02",
+    "socialTitle": "Marketplace Social Engineering",
+    "socialDescription": "Kenali saat kepercayaan dan perpindahan kanal dipakai untuk meminta sesuatu yang tidak biasa.",
     "futureSmsTitle": "Sinyal lainnya",
     "futureSmsDescription": "Variasi latihan untuk memperkuat pemeriksaan pengirim dan tautan.",
     "futureModuleNumber": "02",
