@@ -28,16 +28,16 @@ export default function TrainingPage() {
             </Link>
           </article>
 
-          <article className="border border-white/[0.08] bg-navy-900/50 p-6 sm:p-8">
+          <article className="border border-signal/40 bg-navy-900 p-6 shadow-signal sm:p-8">
             <div className="flex items-center justify-between gap-4">
-              <span className="font-mono text-[11px] tracking-[0.16em] text-warning">{training.soon}</span>
-              <span className="font-mono text-[10px] tracking-[0.12em] text-muted">{training.futureModuleNumber}</span>
+              <span className="font-mono text-[11px] tracking-[0.16em] text-signal">{training.available}</span>
+              <span className="font-mono text-[10px] tracking-[0.12em] text-muted">{training.socialModuleNumber}</span>
             </div>
-            <h2 className="mt-12 text-2xl font-semibold tracking-tight text-ice">{training.futureSmsTitle}</h2>
-            <p className="mt-3 min-h-14 leading-7 text-muted">{training.futureSmsDescription}</p>
-            <span className="mt-8 inline-flex min-h-11 items-center border border-navy-700 px-4 font-mono text-xs tracking-[0.08em] text-muted">
-              {training.soon}
-            </span>
+            <h2 className="mt-12 text-2xl font-semibold tracking-tight text-ice">{training.socialTitle}</h2>
+            <p className="mt-3 min-h-14 leading-7 text-muted">{training.socialDescription}</p>
+            <Link className="mt-8 inline-flex min-h-11 items-center border border-signal px-4 font-mono text-xs tracking-[0.08em] text-signal hover:bg-signal hover:text-navy-950" href="/simulation/social-engineering">
+              {training.openModule} <span aria-hidden="true" className="ml-4">→</span>
+            </Link>
           </article>
         </div>
       </div>
