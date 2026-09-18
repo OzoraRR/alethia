@@ -1,8 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { recordCourierSmsCompletion, type PracticeProgress } from "@/features/progress/progress";
+import {
+  persistPracticeEvent,
+  persistProgressSnapshot,
+  startPracticeAttempt,
+  type PracticeEventMetadata,
+  type PracticeEventType,
+} from "@/features/progress/supabase-persistence";
 import { getMessages, type Messages } from "@/lib/i18n";
 import { courierScenarios, type CourierScenarioCopy } from "../scenario-data";
 import {
@@ -38,10 +45,102 @@ export function CourierSmsSimulation() {
   const simulation = messages.simulation;
   const [state, dispatch] = useReducer(simulationReducer, initialSimulationState);
   const completionRecorded = useRef(false);
+  const hasStartedRef = useRef(false);
+  const attemptIdRef = useRef<string | null>(null);
+  const attemptPromiseRef = useRef<Promise<string | null> | null>(null);
+  const recordedEventKeysRef = useRef(new Set<string>());
   const [completionProgress, setCompletionProgress] = useState<PracticeProgress | null>(null);
   const scenario = state.stage === "retry" ? courierScenarios.retry : courierScenarios.primary;
   const scenarioCopy = simulation.scenarios[scenario.copyKey];
   const showAttackerPov = state.stage === "reveal";
+
+  const ensureAttempt = useCallback(() => {
+    if (!attemptPromiseRef.current) {
+      attemptPromiseRef.current = startPracticeAttempt()
+        .then((attemptId) => {
+          attemptIdRef.current = attemptId;
+          return attemptId;
+        })
+        .catch(() => null);
+    }
+
+    return attemptPromiseRef.current;
+  }, []);
+
+  const recordEvent = useCallback(
+    (
+      key: string,
+      eventType: PracticeEventType,
+      stage: SimulationStage,
+      metadata?: PracticeEventMetadata,
+    ) => {
+      if (recordedEventKeysRef.current.has(key)) {
+        return;
+      }
+
+      recordedEventKeysRef.current.add(key);
+      void ensureAttempt().then((attemptId) =>
+        persistPracticeEvent({ attemptId, eventType, stage, metadata }),
+      ).catch(() => undefined);
+    },
+    [ensureAttempt],
+  );
+
+  const beginModule = () => {
+    hasStartedRef.current = true;
+    recordEvent("module_started", "module_started", "briefing");
+    dispatch({ type: "start_module" });
+  };
+
+  const inspectSignal = (signal: "sender" | "link") => {
+    const eventType: PracticeEventType = signal === "sender" ? "sender_inspected" : "link_inspected";
+    recordEvent(`inspect:${signal}`, eventType, "inspect", { signal });
+    dispatch({ type: "inspect_signal", signal });
+  };
+
+  const inspectRetrySignal = (signal: "sender" | "link") => {
+    const eventType: PracticeEventType = signal === "sender" ? "sender_inspected" : "link_inspected";
+    recordEvent(`retry-inspect:${signal}`, eventType, "retry", { signal });
+    dispatch({ type: "inspect_retry_signal", signal });
+  };
+
+  const confirmVerification = () => {
+    recordEvent("official_channel_verified", "official_channel_verified", "verify", { channel: "official_app" });
+    dispatch({ type: "confirm_verification" });
+  };
+
+  const selectDecision = (decision: Decision) => {
+    recordEvent("decision:primary", "decision_selected", "decide", { choice: decision });
+    dispatch({ type: "select_decision", decision });
+  };
+
+  const startRetry = () => {
+    recordEvent("retry_started", "retry_started", "reveal", { variant: "retry" });
+    dispatch({ type: "start_retry" });
+  };
+
+  const selectRetryDecision = (decision: Decision) => {
+    recordEvent("decision:retry", "decision_selected", "retry", { choice: decision });
+    dispatch({ type: "select_retry_decision", decision });
+  };
+
+  useEffect(() => {
+    if (!hasStartedRef.current || state.stage === "briefing") {
+      return;
+    }
+
+    recordEvent(`stage:${state.stage}`, "stage_viewed", state.stage);
+  }, [recordEvent, state.stage]);
+
+  useEffect(() => {
+    if (state.stage !== "reveal" || state.decision === null) {
+      return;
+    }
+
+    const metadata = { choice: state.decision };
+    recordEvent("attacker_pov_viewed", "attacker_pov_viewed", "reveal", metadata);
+    recordEvent("feedback_viewed", "feedback_viewed", "reveal", metadata);
+  }, [recordEvent, state.decision, state.stage]);
 
   useEffect(() => {
     if (state.stage !== "complete" || state.retryDecision === null || completionRecorded.current) {
@@ -49,8 +148,21 @@ export function CourierSmsSimulation() {
     }
 
     completionRecorded.current = true;
-    setCompletionProgress(recordCourierSmsCompletion({ retryDecision: state.retryDecision }));
-  }, [state.retryDecision, state.stage]);
+    const outcome = state.retryDecision === "open_link" ? "unsafe" : "safe";
+    recordEvent("module_completed", "module_completed", "complete", { outcome });
+    const attemptId = attemptIdRef.current;
+    const nextProgress = recordCourierSmsCompletion({ retryDecision: state.retryDecision, attemptId });
+    setCompletionProgress(nextProgress);
+    if (!attemptId) {
+      void ensureAttempt().then((resolvedAttemptId) => {
+        if (resolvedAttemptId) {
+          return persistProgressSnapshot({ progress: nextProgress, attemptId: resolvedAttemptId });
+        }
+
+        return undefined;
+      }).catch(() => undefined);
+    }
+  }, [ensureAttempt, recordEvent, state.retryDecision, state.stage]);
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
@@ -68,7 +180,7 @@ export function CourierSmsSimulation() {
       <StageProgress activeStage={state.stage} simulation={simulation} />
 
       {state.stage === "briefing" ? (
-        <BriefingPanel simulation={simulation} onBegin={() => dispatch({ type: "start_module" })} />
+        <BriefingPanel simulation={simulation} onBegin={beginModule} />
       ) : state.stage === "complete" ? (
         <CompletionPanel progress={completionProgress} simulation={simulation} />
       ) : (
@@ -78,12 +190,26 @@ export function CourierSmsSimulation() {
             <AttackerConsole
               decision={state.decision ?? "open_link"}
               simulation={simulation}
-              onRetry={() => dispatch({ type: "start_retry" })}
+              onRetry={startRetry}
             />
           ) : state.stage === "retry" ? (
-            <RetryPanel state={state} scenario={scenarioCopy} simulation={simulation} dispatch={dispatch} />
+            <RetryPanel
+              state={state}
+              scenario={scenarioCopy}
+              simulation={simulation}
+              onInspectSignal={inspectRetrySignal}
+              onSelectDecision={selectRetryDecision}
+            />
           ) : (
-            <StagePanel state={state} scenario={scenarioCopy} simulation={simulation} dispatch={dispatch} />
+            <StagePanel
+              state={state}
+              scenario={scenarioCopy}
+              simulation={simulation}
+              dispatch={dispatch}
+              onInspectSignal={inspectSignal}
+              onSelectDecision={selectDecision}
+              onOpenTrustedChannel={() => dispatch({ type: "open_trusted_channel" })}
+            />
           )}
         </div>
       )}
@@ -91,7 +217,7 @@ export function CourierSmsSimulation() {
       {state.verificationOpen ? (
         <TrustedChannelSheet
           simulation={simulation}
-          onConfirm={() => dispatch({ type: "confirm_verification" })}
+          onConfirm={confirmVerification}
         />
       ) : null}
     </div>
@@ -204,11 +330,17 @@ function StagePanel({
   scenario,
   simulation,
   dispatch,
+  onInspectSignal,
+  onSelectDecision,
+  onOpenTrustedChannel,
 }: {
   state: SimulationState;
   scenario: ScenarioCopy;
   simulation: SimulationMessages;
   dispatch: React.Dispatch<SimulationAction>;
+  onInspectSignal: (signal: "sender" | "link") => void;
+  onSelectDecision: (decision: Decision) => void;
+  onOpenTrustedChannel: () => void;
 }) {
   if (state.stage === "receive") {
     return (
@@ -221,7 +353,7 @@ function StagePanel({
   }
 
   if (state.stage === "inspect") {
-    return <InspectPanel state={state} scenario={scenario} simulation={simulation} dispatch={dispatch} />;
+    return <InspectPanel state={state} scenario={scenario} simulation={simulation} dispatch={dispatch} onInspectSignal={onInspectSignal} />;
   }
 
   if (state.stage === "verify") {
@@ -229,7 +361,7 @@ function StagePanel({
       <PanelFrame stage="verify" title={simulation.verify.title} simulation={simulation}>
         <p className="leading-7 text-muted">{simulation.verify.description}</p>
         <AnalystNote>{simulation.verify.analystNote}</AnalystNote>
-        <PanelAction onClick={() => dispatch({ type: "open_trusted_channel" })}>{simulation.verify.action}</PanelAction>
+        <PanelAction onClick={onOpenTrustedChannel}>{simulation.verify.action}</PanelAction>
       </PanelFrame>
     );
   }
@@ -240,7 +372,7 @@ function StagePanel({
       <AnalystNote>{simulation.decide.analystNote}</AnalystNote>
       <DecisionChoices
         choices={simulation.decide.choices}
-        onSelect={(decision) => dispatch({ type: "select_decision", decision })}
+        onSelect={onSelectDecision}
       />
     </PanelFrame>
   );
@@ -251,11 +383,13 @@ function InspectPanel({
   scenario,
   simulation,
   dispatch,
+  onInspectSignal,
 }: {
   state: SimulationState;
   scenario: ScenarioCopy;
   simulation: SimulationMessages;
   dispatch: React.Dispatch<SimulationAction>;
+  onInspectSignal: (signal: "sender" | "link") => void;
 }) {
   const hasSender = state.inspectedSignals.includes("sender");
   const hasLink = state.inspectedSignals.includes("link");
@@ -275,13 +409,13 @@ function InspectPanel({
           inspected={hasSender}
           label={simulation.inspect.senderAction}
           status={simulation.inspect.inspected}
-          onClick={() => dispatch({ type: "inspect_signal", signal: "sender" })}
+          onClick={() => onInspectSignal("sender")}
         />
         <InspectionButton
           inspected={hasLink}
           label={simulation.inspect.linkAction}
           status={simulation.inspect.inspected}
-          onClick={() => dispatch({ type: "inspect_signal", signal: "link" })}
+          onClick={() => onInspectSignal("link")}
         />
       </div>
       <div className="space-y-3">
@@ -307,12 +441,14 @@ function RetryPanel({
   state,
   scenario,
   simulation,
-  dispatch,
+  onInspectSignal,
+  onSelectDecision,
 }: {
   state: SimulationState;
   scenario: ScenarioCopy;
   simulation: SimulationMessages;
-  dispatch: React.Dispatch<SimulationAction>;
+  onInspectSignal: (signal: "sender" | "link") => void;
+  onSelectDecision: (decision: Decision) => void;
 }) {
   const hasSender = state.retryInspectedSignals.includes("sender");
   const hasLink = state.retryInspectedSignals.includes("link");
@@ -328,13 +464,13 @@ function RetryPanel({
           inspected={hasSender}
           label={simulation.inspect.senderAction}
           status={simulation.inspect.inspected}
-          onClick={() => dispatch({ type: "inspect_retry_signal", signal: "sender" })}
+          onClick={() => onInspectSignal("sender")}
         />
         <InspectionButton
           inspected={hasLink}
           label={simulation.inspect.linkAction}
           status={simulation.inspect.inspected}
-          onClick={() => dispatch({ type: "inspect_retry_signal", signal: "link" })}
+          onClick={() => onInspectSignal("link")}
         />
       </div>
       <div className="space-y-3">
@@ -349,7 +485,7 @@ function RetryPanel({
           <DecisionChoices
             choices={simulation.decide.choices}
             disabled={!canChoose}
-            onSelect={(decision) => dispatch({ type: "select_retry_decision", decision })}
+            onSelect={onSelectDecision}
           />
         </div>
       </div>
