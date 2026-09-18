@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react";
 import type { Decision } from "@/features/simulation/types";
+import {
+  loadRemoteProgress,
+  persistProgressSnapshot,
+  type RemoteProgress,
+} from "./supabase-persistence";
 
 export const masteryStates = ["not_started", "familiar", "skilled", "needs_practice"] as const;
 export type MasteryState = (typeof masteryStates)[number];
@@ -72,9 +77,11 @@ export function saveProgress(progress: PracticeProgress): void {
 export function recordCourierSmsCompletion({
   retryDecision,
   completedAt = localDateKey(),
+  attemptId,
 }: {
   retryDecision: Decision;
   completedAt?: string;
+  attemptId?: string | null;
 }): PracticeProgress {
   const currentProgress = loadProgress();
   const isFirstCompletion = !currentProgress.courierSmsCompleted;
@@ -105,6 +112,7 @@ export function recordCourierSmsCompletion({
   };
 
   saveProgress(nextProgress);
+  void persistProgressSnapshot({ progress: nextProgress, attemptId }).catch(() => undefined);
   return nextProgress;
 }
 
@@ -112,10 +120,65 @@ export function useLocalProgress(): PracticeProgress {
   const [progress, setProgress] = useState<PracticeProgress>(defaultProgress);
 
   useEffect(() => {
-    setProgress(loadProgress());
+    let cancelled = false;
+    const localProgress = loadProgress();
+    setProgress(localProgress);
+
+    void loadRemoteProgress().then((remoteProgress) => {
+      if (cancelled) {
+        return;
+      }
+
+      if (!remoteProgress) {
+        if (localProgress.courierSmsCompleted) {
+          void persistProgressSnapshot({ progress: localProgress }).catch(() => undefined);
+        }
+        return;
+      }
+
+      const mergedProgress = mergeProgress(localProgress, remoteProgress);
+      saveProgress(mergedProgress);
+      setProgress(mergedProgress);
+
+      if (localProgress.courierSmsCompleted) {
+        void persistProgressSnapshot({ progress: mergedProgress }).catch(() => undefined);
+      }
+    }).catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return progress;
+}
+
+function mergeProgress(localProgress: PracticeProgress, remoteProgress: RemoteProgress): PracticeProgress {
+  if (!localProgress.courierSmsCompleted) {
+    return {
+      ...localProgress,
+      ...remoteProgress,
+      habits: { ...remoteProgress.habits },
+      badges: [...remoteProgress.badges],
+    };
+  }
+
+  return {
+    ...localProgress,
+    modulesCompleted: Math.max(localProgress.modulesCompleted, remoteProgress.modulesCompleted),
+    mastery: localProgress.mastery === "not_started" ? remoteProgress.mastery : localProgress.mastery,
+    currentStreak: localProgress.lastQualifyingDate ? localProgress.currentStreak : remoteProgress.currentStreak,
+    longestStreak: Math.max(localProgress.longestStreak, remoteProgress.longestStreak),
+    freezesRemaining: localProgress.lastQualifyingDate ? localProgress.freezesRemaining : remoteProgress.freezesRemaining,
+    lastQualifyingDate: localProgress.lastQualifyingDate ?? remoteProgress.lastQualifyingDate,
+    lastRetryResult: localProgress.lastRetryResult ?? remoteProgress.lastRetryResult,
+    habits: {
+      inspect: localProgress.habits.inspect || remoteProgress.habits.inspect,
+      verify: localProgress.habits.verify || remoteProgress.habits.verify,
+      report: localProgress.habits.report || remoteProgress.habits.report,
+    },
+    badges: [...new Set([...localProgress.badges, ...remoteProgress.badges])],
+  };
 }
 
 function calculateNextStreak(progress: PracticeProgress, completedAt: string) {
@@ -194,4 +257,3 @@ function nonNegativeInteger(value: unknown): number {
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
-
