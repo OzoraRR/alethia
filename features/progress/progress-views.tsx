@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { getMessages } from "@/lib/i18n";
 import { useLocalProgress, type PracticeProgress } from "./progress";
 
@@ -10,148 +11,132 @@ const masteryWidths: Record<PracticeProgress["mastery"], string> = {
   needs_practice: "45%",
 };
 
+const achievementVisuals = ["/media/levelone.webp", "/media/leveltwo.webp", "/media/levelthree.webp"];
+
 export function DashboardModuleStatus() {
   const messages = getMessages();
   const progress = useLocalProgress();
-
   return <span>{progress.courierSmsCompleted ? messages.dashboard.progressCompleted : messages.dashboard.progressValue}</span>;
 }
 
-export function DashboardProgress() {
+export function DashboardStreak() {
   const messages = getMessages();
-  const progressCopy = messages.progress;
-  const dashboard = messages.dashboard;
   const progress = useLocalProgress();
-  const masteryLabel = progressCopy.masteryStates[progress.mastery];
+  const activeDays = Math.min(progress.currentStreak, 7);
 
   return (
-    <aside className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
-      <section className="border border-white/[0.08] bg-navy-900/70 p-6">
-        <p className="font-mono text-[11px] tracking-[0.18em] text-muted">{dashboard.skillSummary}</p>
-        <div className="mt-8 flex items-end justify-between gap-4">
-          <p className="max-w-[15rem] text-lg font-medium leading-7 text-ice">{progressCopy.skillName}</p>
-          <span className="shrink-0 font-mono text-[10px] text-warning">{masteryLabel}</span>
-        </div>
-        <div className="mt-5 h-1 bg-navy-700">
-          <div className="h-full bg-signal" style={{ width: masteryWidths[progress.mastery] }} />
-        </div>
-      </section>
+    <section className="dashboard-streak" aria-label={formatStreak(progress.currentStreak, messages.progress)}>
+      <div className="dashboard-streak__value">{formatStreak(progress.currentStreak, messages.progress)}</div>
+      <div className="dashboard-streak__line" aria-hidden="true">
+        {Array.from({ length: 7 }, (_, index) => {
+          const complete = index < activeDays;
+          const current = activeDays === 0 ? index === 0 : index === activeDays - 1;
+          return <span className={`dashboard-streak-node ${complete ? "dashboard-streak-node--complete" : ""} ${current ? "dashboard-streak-node--current" : ""}`} key={index} />;
+        })}
+      </div>
+      <p>{formatFreeze(progress.freezesRemaining, messages.progress)}</p>
+    </section>
+  );
+}
 
-      <section className="border border-white/[0.08] bg-navy-900/70 p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="font-mono text-[11px] tracking-[0.18em] text-muted">{dashboard.streak}</p>
-            <p className="mt-4 text-3xl font-semibold tracking-tight text-ice">{formatStreak(progress.currentStreak, progressCopy)}</p>
-          </div>
-          <span aria-hidden="true" className="text-2xl text-signal">◌</span>
-        </div>
-        <p className="mt-5 font-mono text-[11px] text-muted">{formatFreeze(progress.freezesRemaining, progressCopy)}</p>
-        <p className="mt-3 text-xs leading-5 text-muted">{dashboard.masteryNote}</p>
-      </section>
-    </aside>
+export function DashboardOperatorProfile() {
+  const messages = getMessages();
+  const progress = useLocalProgress();
+  const operator = getOperatorLevel(progress, messages.profile);
+
+  return (
+    <section className="dashboard-profile">
+      <div className="dashboard-profile__image"><Image alt="Animated operator level" height={192} priority src={getOperatorAsset(progress)} unoptimized width={192} /></div>
+      <div>
+        <p className="font-mono text-2xl font-bold tracking-[-0.05em] text-ice">{operator.label}</p>
+        <h2 className="mt-1 text-base text-muted">{operator.title}</h2>
+      </div>
+    </section>
   );
 }
 
 export function ProfileProgress() {
   const messages = getMessages();
-  const profile = messages.profile;
-  const progressCopy = messages.progress;
+  const { profile, progress: progressCopy } = messages;
   const progress = useLocalProgress();
-  const masteryLabel = progressCopy.masteryStates[progress.mastery];
+  const operator = getOperatorLevel(progress, profile);
+  const achievement = progress.badges.includes("first_practice");
 
   return (
     <>
-      <div className="mt-12 grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(17rem,0.8fr)]">
-        <section className="border border-white/[0.08] bg-navy-900/70 p-6 sm:p-8">
-          <p className="font-mono text-[11px] tracking-[0.18em] text-muted">{profile.mastery}</p>
-          <div className="mt-8 flex flex-wrap items-end justify-between gap-4">
-            <p className="text-xl font-medium text-ice">{progressCopy.skillName}</p>
-            <span className="font-mono text-[10px] tracking-[0.08em] text-warning">{masteryLabel}</span>
-          </div>
-          <div className="mt-6 h-1 bg-navy-700">
-            <div className="h-full bg-signal" style={{ width: masteryWidths[progress.mastery] }} />
-          </div>
-        </section>
-
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
-          <ProfileStat label={profile.streak} value={formatStreak(progress.currentStreak, progressCopy)} />
-          <ProfileStat label={profile.freeze} value={formatFreeze(progress.freezesRemaining, progressCopy)} />
+      <section className="profile-steam-hero">
+        <div className="profile-steam-hero__avatar" aria-hidden="true"><Image alt="" height={192} priority src="/media/operator-pixel.svg" width={192} /></div>
+        <div className="min-w-0">
+          <h1 className="text-4xl font-semibold tracking-tight text-ice sm:text-6xl">{profile.anonymousOperator}</h1>
         </div>
-      </div>
-
-      <section className="mt-5 border border-white/[0.08] bg-navy-900/50 p-6 sm:p-8">
-        <p className="font-mono text-[11px] tracking-[0.18em] text-muted">{profile.badges}</p>
-        <div className="mt-8 flex flex-wrap items-center gap-4">
-          <span className={`border px-3 py-2 font-mono text-xs ${progress.badges.includes("first_practice") ? "border-signal/50 text-signal" : "border-navy-700 text-muted"}`}>
-            {progressCopy.firstBadge}
-          </span>
-          <p className="text-sm leading-6 text-muted">
-            {progress.badges.includes("first_practice") ? profile.badgeEarned : profile.badgeValue}
-          </p>
+        <div className="profile-steam-hero__level">
+          <div><p>{operator.label}</p><h2>{operator.title}</h2></div>
+          <Image alt="Animated operator level" height={112} priority src={getOperatorAsset(progress)} unoptimized width={112} />
         </div>
+      </section>
+
+      <section className="profile-progress-line">
+        <div><p className="text-lg font-medium text-ice">{progressCopy.skillName}</p><p className="mt-1 font-mono text-[11px] text-muted">{progressCopy.masteryStates[progress.mastery]}</p></div>
+        <div className="profile-progress-line__track"><div style={{ width: masteryWidths[progress.mastery] }} /></div>
+      </section>
+
+      <section className="profile-achievement-collection">
+        <div className="achievement-row">
+          <AchievementItem compact index={0} locked={!achievement} title="Signal reader" />
+          <AchievementItem compact index={1} locked={!progress.habits.verify} title="Independent route" />
+          <AchievementItem compact index={2} locked={!progress.habits.report} title="Safe interruption" />
+        </div>
+      </section>
+
+      <section className="profile-footer-data">
+        <div aria-label={profile.streak}><p className="font-mono text-2xl text-ice">{formatStreak(progress.currentStreak, progressCopy)}</p></div>
+        <div><p className="font-mono text-2xl text-ice">{formatFreeze(progress.freezesRemaining, progressCopy)}</p><p>{profile.freeze}</p></div>
+        <div><p className="font-mono text-ice">{profile.indonesian}</p><p>{profile.language}</p></div>
       </section>
     </>
   );
 }
 
 export function InsightsProgress() {
-  const messages = getMessages();
-  const insights = messages.insights;
-  const progressCopy = messages.progress;
   const progress = useLocalProgress();
-  const retryResultKey = progress.lastRetryResult ?? "none";
-  const habitItems = [
-    { key: "inspect", label: progressCopy.habits.inspect },
-    { key: "verify", label: progressCopy.habits.verify },
-    { key: "report", label: progressCopy.habits.report },
-  ] as const;
-  const practisedHabits = habitItems.filter((habit) => progress.habits[habit.key]);
+  const achievements = [
+    { title: "Pressure recognized", description: "Pause before urgency takes over.", unlocked: progress.courierSmsCompleted },
+    { title: "Sender checked", description: "Inspect the channel before acting.", unlocked: progress.habits.inspect },
+    { title: "Link inspected", description: "Read the route, not only the message.", unlocked: progress.habits.inspect },
+    { title: "Independent route", description: "Open the official channel yourself.", unlocked: progress.habits.verify },
+    { title: "Safe interruption", description: "Stop the route before it expands.", unlocked: progress.habits.report },
+  ];
+  const unlocked = achievements.filter((achievement) => achievement.unlocked);
+  const locked = achievements.filter((achievement) => !achievement.unlocked);
 
   return (
-    <>
-      <div className="mt-12 grid gap-px overflow-hidden border border-white/[0.08] bg-white/[0.08] sm:grid-cols-2 xl:grid-cols-4">
-        <InsightMetric label={insights.modulesCompleted} value={String(progress.modulesCompleted)} />
-        <InsightMetric label={insights.habitsPractised} value={practisedHabits.length ? String(practisedHabits.length) : progressCopy.noHabits} />
-        <InsightMetric label={insights.currentMastery} value={progressCopy.masteryStates[progress.mastery]} />
-        <InsightMetric label={insights.lastRetry} value={progressCopy.retryResults[retryResultKey]} />
-      </div>
-
-      <section className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,0.65fr)]">
-        <div className="border border-white/[0.08] bg-navy-900/70 p-6 sm:p-8">
-          <p className="font-mono text-[11px] tracking-[0.18em] text-muted">{insights.habitsLabel}</p>
-          {practisedHabits.length ? (
-            <div className="mt-6 flex flex-wrap gap-3">
-              {practisedHabits.map((habit) => (
-                <span key={habit.key} className="border border-signal/40 bg-signal/[0.05] px-3 py-2 font-mono text-xs text-signal">
-                  <span aria-hidden="true">✓ </span>{habit.label}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-6 text-2xl font-medium text-muted">{progressCopy.noHabits}</p>
-          )}
-        </div>
-        <p className="border border-signal/20 bg-signal/[0.04] p-6 text-sm leading-7 text-muted sm:p-8">{insights.support}</p>
+    <div className="achievement-page mt-10">
+      <section className="achievement-progress">
+        <p>{unlocked.length} / {achievements.length}</p>
+        <div><span style={{ width: `${(unlocked.length / achievements.length) * 100}%` }} /></div>
       </section>
-    </>
+
+      <AchievementSection heading="Unlocked" items={unlocked} />
+      <AchievementSection heading="Locked" items={locked} locked />
+    </div>
   );
 }
 
-function ProfileStat({ label, value }: { label: string; value: string }) {
+function AchievementSection({ heading, items, locked = false }: { heading: string; items: Array<{ title: string; description: string; unlocked: boolean }>; locked?: boolean }) {
   return (
-    <section className="border border-white/[0.08] bg-navy-900/70 p-6">
-      <p className="font-mono text-[11px] tracking-[0.18em] text-muted">{label}</p>
-      <p className="mt-6 text-2xl font-semibold tracking-tight text-ice">{value}</p>
+    <section className="achievement-section">
+      <h2>{heading}</h2>
+      {items.length ? <div className="achievement-grid">{items.map((achievement, index) => <AchievementItem description={achievement.description} index={index % achievementVisuals.length} key={achievement.title} locked={locked} title={achievement.title} />)}</div> : <p className="achievement-empty">Your first completed module will appear here.</p>}
     </section>
   );
 }
 
-function InsightMetric({ label, value }: { label: string; value: string }) {
+function AchievementItem({ compact = false, description, index, locked, title }: { compact?: boolean; description?: string; index: number; locked: boolean; title: string }) {
   return (
-    <div className="min-h-36 bg-navy-900/80 p-6 sm:min-h-44 sm:p-8">
-      <p className="font-mono text-[11px] tracking-[0.12em] text-muted">{label}</p>
-      <p className="mt-8 text-2xl font-semibold tracking-tight text-ice">{value}</p>
-    </div>
+    <article className={`achievement-item ${compact ? "achievement-item--compact" : ""} ${locked ? "achievement-item--locked" : ""}`}>
+      <div className="achievement-item__image"><Image alt="" fill sizes={compact ? "96px" : "(min-width: 1024px) 180px, 35vw"} src={achievementVisuals[index]} unoptimized /></div>
+      <div><h3>{title}</h3>{description ? <p>{description}</p> : null}</div>
+    </article>
   );
 }
 
@@ -163,3 +148,13 @@ function formatFreeze(value: number, copy: typeof import("@/messages/id.json")["
   return `${value} ${copy.freezeRemaining}`;
 }
 
+function getOperatorLevel(progress: PracticeProgress, profile: typeof import("@/messages/id.json")["profile"]) {
+  const level = Math.max(1, progress.modulesCompleted + 1);
+  const titleKey = progress.mastery === "skilled" ? "analyst" : progress.mastery === "familiar" ? "scout" : "cadet";
+  return { label: `${profile.level} ${String(level).padStart(2, "0")}`, title: profile.operatorTitles[titleKey] };
+}
+
+function getOperatorAsset(progress: PracticeProgress): string {
+  const level = Math.max(1, Math.min(3, progress.modulesCompleted + 1));
+  return `/media/level${level === 1 ? "one" : level === 2 ? "two" : "three"}.webp`;
+}

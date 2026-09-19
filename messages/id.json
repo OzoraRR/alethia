@@ -14,7 +14,7 @@
   },
   "nav": {
     "dashboard": "Beranda",
-    "simulation": "Simulasi",
+    "reports": "Laporan",
     "training": "Pelatihan",
     "insights": "Insight Latihan",
     "profile": "Profil"
@@ -63,7 +63,15 @@
     "streak": "Rangkaian latihan",
     "streakValue": "0 hari",
     "freeze": "1 perlindungan tersisa",
-    "masteryNote": "Keterampilan tidak hilang saat rangkaian terputus."
+    "masteryNote": "Keterampilan tidak hilang saat rangkaian terputus.",
+    "streakStart": "Mulai jejak latihanmu dengan satu pemeriksaan tenang.",
+    "viewModules": "Lihat modul",
+    "nextModuleLabel": "MODUL BERIKUTNYA",
+    "socialTitle": "Marketplace Social Engineering",
+    "socialDescription": "Kenali saat kepercayaan dan perpindahan kanal dipakai untuk mendorong pembayaran.",
+    "clickHere": "Klik di sini",
+    "openModule": "Buka modul"
+    ,"operatorLabel": "LEVEL OPERATOR"
   },
   "simulation": {
     "eyebrow": "MODUL 01 · SMS PHISHING",
@@ -417,9 +425,10 @@
     "complete": { "title": "Latihan selesai", "description": "Pola yang sama dapat muncul dalam penawaran, refund, atau perantara pembayaran.", "backHome": "Kembali ke beranda" }
   },
   "training": {
-    "eyebrow": "PERPUSTAKAAN LATIHAN",
+    "eyebrow": "MODUL",
     "title": "Learn it. Do it.",
     "description": "Latihan singkat yang menghubungkan keputusan sehari-hari dengan kebiasaan aman.",
+    "motivation": "Satu keputusan aman, lalu keputusan berikutnya.",
     "active": "Aktif",
     "available": "Tersedia",
     "moduleNumber": "MODUL 01",
@@ -446,7 +455,16 @@
     "transferCheckValue": "Belum tersedia",
     "currentMastery": "Keterampilan saat ini",
     "lastRetry": "Hasil latihan ulang terakhir",
-    "support": "Insight ini membantu melihat latihan, bukan menilai dirimu.",
+    "support": "Keterampilan tumbuh dari jeda kecil yang kamu pilih untuk ambil.",
+    "emptyState": "Mulai satu modul untuk melihat sinyal pertama di peta keterampilanmu.",
+    "streakTimeline": "JEJAK RANGKAIAN",
+    "streakActive": "Rangkaian aktif dibangun dari latihan yang kamu pilih hari ini.",
+    "streakEmpty": "Belum ada rangkaian—modul pertama adalah titik mulai yang baik.",
+    "skillsObserved": "KETERAMPILAN TERAMATI",
+    "masteryMap": "PETA KETERAMPILAN",
+    "progressionLabel": "STATUS PROGRESI",
+    "achievements": "PENCAPAIAN KONTEKSTUAL",
+    "daysShort": ["SN", "SL", "RB", "KM", "JM", "SB", "MG"],
     "habitsLabel": "Kebiasaan aman",
     "habitsDescription": "Memeriksa · Memverifikasi · Melaporkan"
   },
@@ -454,6 +472,17 @@
     "eyebrow": "PROFIL LATIHAN",
     "title": "Profil",
     "description": "Lihat perkembangan keterampilan dan kebiasaan latihanmu.",
+    "anonymousOperator": "Operator Anonim",
+    "username": "Operator Baru",
+    "operatorStatus": "OPERATOR · DALAM PELATIHAN",
+    "identityNote": "Identitas lokal untuk ruang latihanmu.",
+    "avatarOptions": ["Operator", "Pengamat", "Analis"],
+    "level": "LEVEL",
+    "operatorTitles": {
+      "cadet": "Kadet Sinyal",
+      "scout": "Pengintai Rute",
+      "analyst": "Analis Pertahanan"
+    },
     "mastery": "Keterampilan saat ini",
     "skillName": "Sender and Link Verification",
     "masteryStatus": "Belum dipelajari",
