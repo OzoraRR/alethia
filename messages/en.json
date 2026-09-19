@@ -14,7 +14,7 @@
   },
   "nav": {
     "dashboard": "Dashboard",
-    "simulation": "Simulation",
+    "reports": "Reports",
     "training": "Training",
     "insights": "Practice Insights",
     "profile": "Profile"
@@ -63,7 +63,15 @@
     "streak": "Practice streak",
     "streakValue": "0 days",
     "freeze": "1 freeze remaining",
-    "masteryNote": "Mastery does not drop when a streak breaks."
+    "masteryNote": "Mastery does not drop when a streak breaks.",
+    "streakStart": "Start your practice trail with one calm check.",
+    "viewModules": "View modules",
+    "nextModuleLabel": "NEXT MODULE",
+    "socialTitle": "Marketplace Social Engineering",
+    "socialDescription": "Recognise when trust and a channel shift are used to push a payment.",
+    "clickHere": "Click here",
+    "openModule": "Open module"
+    ,"operatorLabel": "OPERATOR LEVEL"
   },
   "simulation": {
     "eyebrow": "MODULE 01 · SMS PHISHING",
@@ -377,9 +385,10 @@
     "complete": { "title": "Practice complete", "description": "The same pattern can appear in offers, refunds, or payment handlers.", "backHome": "Back to dashboard" }
   },
   "training": {
-    "eyebrow": "TRAINING LIBRARY",
+    "eyebrow": "MODULES",
     "title": "Learn it. Do it.",
     "description": "Short practices that connect everyday decisions with safer habits.",
+    "motivation": "One safer decision, then the next.",
     "active": "Active",
     "available": "Available in foundation",
     "moduleNumber": "MODULE 01",
@@ -406,7 +415,16 @@
     "transferCheckValue": "Not available",
     "currentMastery": "Current mastery",
     "lastRetry": "Last retry result",
-    "support": "These insights show practice, not a judgement of you.",
+    "support": "Skills grow through the small pause you choose to take.",
+    "emptyState": "Start one module to see the first signals on your skill map.",
+    "streakTimeline": "STREAK TRACE",
+    "streakActive": "Your active streak is built by the practice you choose today.",
+    "streakEmpty": "No streak yet—the first module is a good place to begin.",
+    "skillsObserved": "SKILLS OBSERVED",
+    "masteryMap": "SKILL MASTERY MAP",
+    "progressionLabel": "PROGRESSION STATE",
+    "achievements": "CONTEXTUAL ACHIEVEMENTS",
+    "daysShort": ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"],
     "habitsLabel": "Safer habits",
     "habitsDescription": "Inspect · Verify · Report"
   },
@@ -414,6 +432,17 @@
     "eyebrow": "OPERATOR PROFILE",
     "title": "Profile",
     "description": "Set practice preferences and see your skill progress.",
+    "anonymousOperator": "Anonymous Operator",
+    "username": "New Operator",
+    "operatorStatus": "OPERATOR · IN TRAINING",
+    "identityNote": "A local identity for your practice space.",
+    "avatarOptions": ["Operator", "Observer", "Analyst"],
+    "level": "LEVEL",
+    "operatorTitles": {
+      "cadet": "Signal Cadet",
+      "scout": "Route Scout",
+      "analyst": "Defense Analyst"
+    },
     "mastery": "Skill mastery",
     "skillName": "Sender and Link Verification",
     "masteryStatus": "Not started",

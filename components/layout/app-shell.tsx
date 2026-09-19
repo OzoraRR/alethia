@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { getMessages } from "@/lib/i18n";
 
-type NavKey = "dashboard" | "simulation" | "training" | "insights" | "profile";
+type NavKey = "dashboard" | "simulation" | "reports" | "training" | "insights" | "profile";
+type VisibleNavKey = Exclude<NavKey, "simulation">;
 
-const navItems: ReadonlyArray<{ key: NavKey; href: string }> = [
+const navItems: ReadonlyArray<{ key: VisibleNavKey; href: string }> = [
   { key: "dashboard", href: "/" },
-  { key: "simulation", href: "/simulation/courier-sms" },
+  { key: "reports", href: "/reports" },
   { key: "training", href: "/training" },
   { key: "insights", href: "/insights" },
   { key: "profile", href: "/profile" },
@@ -82,4 +83,3 @@ export function AppShell({ activeRoute, children }: AppShellProps) {
     </div>
   );
 }
-

@@ -1,45 +1,41 @@
+import Image from "next/image";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { getMessages } from "@/lib/i18n";
 
 export default function TrainingPage() {
-  const messages = getMessages();
-  const { training } = messages;
+  const { training } = getMessages();
 
   return (
     <AppShell activeRoute="training">
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
-        <section className="mx-auto max-w-2xl text-center">
-          <p className="font-mono text-[11px] tracking-[0.2em] text-signal">{training.eyebrow}</p>
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-ice sm:text-5xl">{training.title}</h1>
-          <p className="mt-4 leading-7 text-muted">{training.description}</p>
+        <section className="max-w-2xl">
+          <h1 className="text-3xl font-semibold tracking-tight text-ice sm:text-5xl">{training.title}</h1>
+          <p className="mt-4 font-mono text-sm text-muted">{training.motivation}</p>
         </section>
 
-        <div className="mx-auto mt-12 grid max-w-5xl gap-5 md:grid-cols-2">
-          <article className="border border-signal/40 bg-navy-900 p-6 shadow-signal sm:p-8">
-            <div className="flex items-center justify-between gap-4">
-              <span className="font-mono text-[11px] tracking-[0.16em] text-signal">{training.available}</span>
-              <span className="font-mono text-[10px] tracking-[0.12em] text-muted">{training.moduleNumber}</span>
+        <section className="module-collection mt-10" aria-label={training.title}>
+          <Link aria-label={`${training.courierTitle}. ${training.openModule}`} className="module-frame module-frame--equal" href="/simulation/courier-sms">
+            <Image alt="" className="module-frame__media" fill priority sizes="(min-width: 1024px) 50vw, 100vw" src="/media/sms-phishing.webp" />
+            <div className="module-frame__copy">
+              <h2>{training.courierTitle}</h2>
+              <p>{training.courierDescription}</p>
             </div>
-            <h2 className="mt-12 text-2xl font-semibold tracking-tight text-ice">{training.courierTitle}</h2>
-            <p className="mt-3 min-h-14 leading-7 text-muted">{training.courierDescription}</p>
-            <Link className="mt-8 inline-flex min-h-11 items-center border border-signal px-4 font-mono text-xs tracking-[0.08em] text-signal hover:bg-signal hover:text-navy-950" href="/simulation/courier-sms">
-              {training.openModule} <span aria-hidden="true" className="ml-4">→</span>
-            </Link>
-          </article>
+          </Link>
 
-          <article className="border border-signal/40 bg-navy-900 p-6 shadow-signal sm:p-8">
-            <div className="flex items-center justify-between gap-4">
-              <span className="font-mono text-[11px] tracking-[0.16em] text-signal">{training.available}</span>
-              <span className="font-mono text-[10px] tracking-[0.12em] text-muted">{training.socialModuleNumber}</span>
+          <Link aria-label={`${training.socialTitle}. ${training.openModule}`} className="module-frame module-frame--equal" href="/simulation/social-engineering">
+            <Image alt="" className="module-frame__media" fill sizes="(min-width: 1024px) 50vw, 100vw" src="/media/social-engineering.webp" />
+            <div className="module-frame__copy">
+              <h2>{training.socialTitle}</h2>
+              <p>{training.socialDescription}</p>
             </div>
-            <h2 className="mt-12 text-2xl font-semibold tracking-tight text-ice">{training.socialTitle}</h2>
-            <p className="mt-3 min-h-14 leading-7 text-muted">{training.socialDescription}</p>
-            <Link className="mt-8 inline-flex min-h-11 items-center border border-signal px-4 font-mono text-xs tracking-[0.08em] text-signal hover:bg-signal hover:text-navy-950" href="/simulation/social-engineering">
-              {training.openModule} <span aria-hidden="true" className="ml-4">→</span>
-            </Link>
-          </article>
-        </div>
+          </Link>
+        </section>
+
+        <section className="mt-8 border-t border-white/[0.08] py-5">
+          <p className="font-mono text-[11px] tracking-[0.14em] text-muted">{training.futureModuleNumber} · {training.soon}</p>
+          <p className="mt-1 text-sm text-muted">{training.futureSmsTitle}</p>
+        </section>
       </div>
     </AppShell>
   );
