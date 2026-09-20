@@ -46,7 +46,7 @@
   },
   "dashboard": {
     "eyebrow": "OPERATOR HOME",
-    "greeting": "Welcome back",
+    "greeting": "Welcome, Chief.",
     "summary": "One short practice to build the habit of pausing, inspecting, and verifying.",
     "currentChallenge": "Current challenge",
     "moduleNumber": "MODULE 01",
@@ -70,8 +70,9 @@
     "socialTitle": "Marketplace Social Engineering",
     "socialDescription": "Recognise when trust and a channel shift are used to push a payment.",
     "clickHere": "Click here",
-    "openModule": "Open module"
-    ,"operatorLabel": "OPERATOR LEVEL"
+    "openModule": "Open module",
+    "operatorLabel": "OPERATOR LEVEL",
+    "profilePreviewBio": "Practice-space operator"
   },
   "simulation": {
     "eyebrow": "MODULE 01 · SMS PHISHING",
@@ -386,7 +387,7 @@
   },
   "training": {
     "eyebrow": "MODULES",
-    "title": "Learn it. Do it.",
+    "title": "Training modules",
     "description": "Short practices that connect everyday decisions with safer habits.",
     "motivation": "One safer decision, then the next.",
     "active": "Active",
@@ -426,16 +427,26 @@
     "achievements": "CONTEXTUAL ACHIEVEMENTS",
     "daysShort": ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"],
     "habitsLabel": "Safer habits",
-    "habitsDescription": "Inspect · Verify · Report"
+    "habitsDescription": "Inspect · Verify · Report",
+    "unlocked": "Unlocked",
+    "locked": "Locked",
+    "achievementEmpty": "Complete your first module to unlock the first achievement.",
+    "achievementDetails": [
+      { "title": "Pressure recognised", "description": "Pause before urgency takes over." },
+      { "title": "Sender checked", "description": "Inspect the channel before acting." },
+      { "title": "Link inspected", "description": "Read the route, not only the message." },
+      { "title": "Independent verification", "description": "Open the official channel yourself." },
+      { "title": "Safe interruption", "description": "Stop the route before it expands." }
+    ]
   },
   "profile": {
     "eyebrow": "OPERATOR PROFILE",
     "title": "Profile",
     "description": "Set practice preferences and see your skill progress.",
     "anonymousOperator": "Anonymous Operator",
-    "username": "New Operator",
+    "username": "Anonymous Operator",
     "operatorStatus": "OPERATOR · IN TRAINING",
-    "identityNote": "A local identity for your practice space.",
+    "identityNote": "Operator identity for this practice space.",
     "avatarOptions": ["Operator", "Observer", "Analyst"],
     "level": "LEVEL",
     "operatorTitles": {
@@ -456,6 +467,12 @@
     "language": "Language",
     "indonesian": "Bahasa Indonesia",
     "english": "English",
-    "languageNote": "English is available as the next locale structure."
+    "languageNote": "English is available as the next locale structure.",
+    "avatarUpload": "Update avatar",
+    "avatarHelp": "PNG, JPG, or WebP up to 2 MB.",
+    "avatarNoSession": "Sign in to save an avatar.",
+    "avatarInvalid": "Use a PNG, JPG, or WebP up to 2 MB.",
+    "avatarFailed": "The avatar could not be saved.",
+    "avatarSaved": "Avatar updated."
   }
 }

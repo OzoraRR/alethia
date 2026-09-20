@@ -4,16 +4,5 @@ import { getMessages } from "@/lib/i18n";
 
 export default function InsightsPage() {
   const { insights } = getMessages();
-
-  return (
-    <AppShell activeRoute="insights">
-      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
-        <section className="max-w-2xl">
-          <h1 className="text-3xl font-semibold tracking-tight text-ice sm:text-5xl">{insights.title}</h1>
-          <p className="mt-4 text-sm leading-6 text-muted">{insights.description}</p>
-        </section>
-        <InsightsProgress />
-      </div>
-    </AppShell>
-  );
+  return <AppShell activeRoute="insights"><div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14"><h1 className="text-3xl font-semibold tracking-tight text-ice sm:text-5xl">{insights.title}</h1><InsightsProgress /></div></AppShell>;
 }

@@ -10,32 +10,21 @@ export default function DashboardPage() {
   return (
     <AppShell activeRoute="dashboard">
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
-        <div className="flex items-end justify-between gap-5">
-          <h1 className="text-3xl font-semibold tracking-tight text-ice sm:text-4xl">{dashboard.greeting}</h1>
-          <Link className="hidden font-mono text-[11px] tracking-[0.1em] text-muted transition hover:text-signal sm:block" href="/training">{dashboard.viewModules} →</Link>
-        </div>
-
+        <h1 className="text-3xl font-semibold tracking-tight text-ice sm:text-4xl">{dashboard.greeting}</h1>
         <DashboardStreak />
-
-        <section className="module-collection mt-8" aria-label={dashboard.viewModules}>
-          <Link aria-label={`${dashboard.moduleTitle}. ${dashboard.startPractice}`} className="module-frame module-frame--equal" href="/simulation/courier-sms">
-            <Image alt="" className="module-frame__media" fill priority sizes="(min-width: 1024px) 50vw, 100vw" src="/media/sms-phishing.webp" />
-            <div className="module-frame__copy">
-              <h2>{dashboard.moduleTitle}</h2>
-              <p>{dashboard.moduleDescription}</p>
-            </div>
-          </Link>
-
-          <Link aria-label={`${dashboard.socialTitle}. ${dashboard.openModule}`} className="module-frame module-frame--equal" href="/simulation/social-engineering">
-            <Image alt="" className="module-frame__media" fill sizes="(min-width: 1024px) 50vw, 100vw" src="/media/social-engineering.webp" />
-            <div className="module-frame__copy">
-              <h2>{dashboard.socialTitle}</h2>
-              <p>{dashboard.socialDescription}</p>
-            </div>
-          </Link>
-        </section>
-
-        <DashboardOperatorProfile />
+        <div className="home-layout mt-10">
+          <section className="module-collection home-layout__modules" aria-label={dashboard.moduleTitle}>
+            <Link aria-label={`${dashboard.moduleTitle}. ${dashboard.startPractice}`} className="module-frame module-frame--equal" href="/simulation/courier-sms">
+              <Image alt="" className="module-frame__media" fill priority sizes="(min-width: 1024px) 55vw, 100vw" src="/media/sms-phishing.webp" />
+              <div className="module-frame__copy"><h2>{dashboard.moduleTitle}</h2><p>{dashboard.moduleDescription}</p></div>
+            </Link>
+            <Link aria-label={`${dashboard.socialTitle}. ${dashboard.openModule}`} className="module-frame module-frame--equal" href="/simulation/social-engineering">
+              <Image alt="" className="module-frame__media" fill sizes="(min-width: 1024px) 55vw, 100vw" src="/media/social-engineering.webp" />
+              <div className="module-frame__copy"><h2>{dashboard.socialTitle}</h2><p>{dashboard.socialDescription}</p></div>
+            </Link>
+          </section>
+          <DashboardOperatorProfile />
+        </div>
         <p className="sr-only"><DashboardModuleStatus /></p>
       </div>
     </AppShell>
