@@ -46,7 +46,7 @@
   },
   "dashboard": {
     "eyebrow": "BERANDA LATIHAN",
-    "greeting": "Latihan hari ini",
+    "greeting": "Selamat datang, Chief.",
     "summary": "Bangun kebiasaan berhenti, memeriksa, dan memverifikasi.",
     "currentChallenge": "Latihan saat ini",
     "moduleNumber": "MODUL 01",
@@ -70,8 +70,9 @@
     "socialTitle": "Marketplace Social Engineering",
     "socialDescription": "Kenali saat kepercayaan dan perpindahan kanal dipakai untuk mendorong pembayaran.",
     "clickHere": "Klik di sini",
-    "openModule": "Buka modul"
-    ,"operatorLabel": "LEVEL OPERATOR"
+    "openModule": "Buka modul",
+    "operatorLabel": "LEVEL OPERATOR",
+    "profilePreviewBio": "Operator ruang latihan"
   },
   "simulation": {
     "eyebrow": "MODUL 01 · SMS PHISHING",
@@ -426,7 +427,7 @@
   },
   "training": {
     "eyebrow": "MODUL",
-    "title": "Learn it. Do it.",
+    "title": "Modul latihan",
     "description": "Latihan singkat yang menghubungkan keputusan sehari-hari dengan kebiasaan aman.",
     "motivation": "Satu keputusan aman, lalu keputusan berikutnya.",
     "active": "Aktif",
@@ -466,16 +467,26 @@
     "achievements": "PENCAPAIAN KONTEKSTUAL",
     "daysShort": ["SN", "SL", "RB", "KM", "JM", "SB", "MG"],
     "habitsLabel": "Kebiasaan aman",
-    "habitsDescription": "Memeriksa · Memverifikasi · Melaporkan"
+    "habitsDescription": "Memeriksa · Memverifikasi · Melaporkan",
+    "unlocked": "Terbuka",
+    "locked": "Terkunci",
+    "achievementEmpty": "Selesaikan modul pertamamu untuk membuka pencapaian pertama.",
+    "achievementDetails": [
+      { "title": "Tekanan dikenali", "description": "Berhenti sebelum urgensi mengambil alih." },
+      { "title": "Pengirim diperiksa", "description": "Periksa kanal sebelum bertindak." },
+      { "title": "Tautan diperiksa", "description": "Baca rute, bukan hanya pesannya." },
+      { "title": "Verifikasi mandiri", "description": "Buka kanal resmi sendiri." },
+      { "title": "Interupsi aman", "description": "Hentikan rute sebelum meluas." }
+    ]
   },
   "profile": {
     "eyebrow": "PROFIL LATIHAN",
     "title": "Profil",
     "description": "Lihat perkembangan keterampilan dan kebiasaan latihanmu.",
     "anonymousOperator": "Operator Anonim",
-    "username": "Operator Baru",
+    "username": "Operator Anonim",
     "operatorStatus": "OPERATOR · DALAM PELATIHAN",
-    "identityNote": "Identitas lokal untuk ruang latihanmu.",
+    "identityNote": "Identitas operator untuk ruang latihan ini.",
     "avatarOptions": ["Operator", "Pengamat", "Analis"],
     "level": "LEVEL",
     "operatorTitles": {
@@ -496,6 +507,12 @@
     "language": "Bahasa antarmuka",
     "indonesian": "Indonesia",
     "english": "English",
-    "languageNote": "Bahasa antarmuka saat ini: Indonesia."
+    "languageNote": "Bahasa antarmuka saat ini: Indonesia.",
+    "avatarUpload": "Perbarui avatar",
+    "avatarHelp": "PNG, JPG, atau WebP hingga 2 MB.",
+    "avatarNoSession": "Masuk untuk menyimpan avatar.",
+    "avatarInvalid": "Gunakan PNG, JPG, atau WebP hingga 2 MB.",
+    "avatarFailed": "Avatar belum dapat disimpan.",
+    "avatarSaved": "Avatar diperbarui."
   }
 }

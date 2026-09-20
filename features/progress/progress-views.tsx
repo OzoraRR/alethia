@@ -1,7 +1,10 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import Image from "next/image";
+import { useState } from "react";
 import { getMessages } from "@/lib/i18n";
+import { useProfileAvatar } from "@/features/profile/avatar-persistence";
 import { useLocalProgress, type PracticeProgress } from "./progress";
 
 const masteryWidths: Record<PracticeProgress["mastery"], string> = {
@@ -26,15 +29,18 @@ export function DashboardStreak() {
 
   return (
     <section className="dashboard-streak" aria-label={formatStreak(progress.currentStreak, messages.progress)}>
-      <div className="dashboard-streak__value">{formatStreak(progress.currentStreak, messages.progress)}</div>
-      <div className="dashboard-streak__line" aria-hidden="true">
-        {Array.from({ length: 7 }, (_, index) => {
-          const complete = index < activeDays;
-          const current = activeDays === 0 ? index === 0 : index === activeDays - 1;
-          return <span className={`dashboard-streak-node ${complete ? "dashboard-streak-node--complete" : ""} ${current ? "dashboard-streak-node--current" : ""}`} key={index} />;
-        })}
+      <Image alt="" aria-hidden="true" className="dashboard-streak__visual" height={144} src="/media/streak.webp" unoptimized width={144} />
+      <div className="dashboard-streak__content">
+        <p className="dashboard-streak__label">{messages.dashboard.streak}</p>
+        <div className="dashboard-streak__value">{formatStreak(progress.currentStreak, messages.progress)}</div>
+        <div className="dashboard-streak__line" aria-hidden="true">
+          {Array.from({ length: 7 }, (_, index) => {
+            const complete = index < activeDays;
+            const current = activeDays === 0 ? index === 0 : index === activeDays - 1;
+            return <span className={`dashboard-streak-node ${complete ? "dashboard-streak-node--complete" : ""} ${current ? "dashboard-streak-node--current" : ""}`} key={index} />;
+          })}
+        </div>
       </div>
-      <p>{formatFreeze(progress.freezesRemaining, messages.progress)}</p>
     </section>
   );
 }
@@ -43,13 +49,15 @@ export function DashboardOperatorProfile() {
   const messages = getMessages();
   const progress = useLocalProgress();
   const operator = getOperatorLevel(progress, messages.profile);
+  const { avatarUrl } = useProfileAvatar();
 
   return (
-    <section className="dashboard-profile">
-      <div className="dashboard-profile__image"><Image alt="Animated operator level" height={192} priority src={getOperatorAsset(progress)} unoptimized width={192} /></div>
-      <div>
-        <p className="font-mono text-2xl font-bold tracking-[-0.05em] text-ice">{operator.label}</p>
-        <h2 className="mt-1 text-base text-muted">{operator.title}</h2>
+    <section className="dashboard-profile" aria-label={messages.profile.anonymousOperator}>
+      <AvatarVisual avatarUrl={avatarUrl} className="dashboard-profile__avatar" />
+      <div className="min-w-0">
+        <p className="dashboard-profile__name">{messages.profile.username}</p>
+        <p className="dashboard-profile__bio">{messages.dashboard.profilePreviewBio}</p>
+        <p className="dashboard-profile__level">{operator.label} · {operator.title}</p>
       </div>
     </section>
   );
@@ -61,72 +69,100 @@ export function ProfileProgress() {
   const progress = useLocalProgress();
   const operator = getOperatorLevel(progress, profile);
   const achievement = progress.badges.includes("first_practice");
+  const { avatarUrl, error, isSaving, save } = useProfileAvatar();
+  const [saveSucceeded, setSaveSucceeded] = useState(false);
+
+  const avatarMessage = error === "no_session" ? profile.avatarNoSession : error === "invalid_file" ? profile.avatarInvalid : error === "upload_failed" ? profile.avatarFailed : saveSucceeded ? profile.avatarSaved : null;
 
   return (
     <>
       <section className="profile-steam-hero">
-        <div className="profile-steam-hero__avatar" aria-hidden="true"><Image alt="" height={192} priority src="/media/operator-pixel.svg" width={192} /></div>
-        <div className="min-w-0">
-          <h1 className="text-4xl font-semibold tracking-tight text-ice sm:text-6xl">{profile.anonymousOperator}</h1>
+        <div className="profile-steam-hero__identity">
+          <AvatarVisual avatarUrl={avatarUrl} className="profile-steam-hero__avatar" />
+          <div className="min-w-0">
+            <h1 className="text-4xl font-semibold tracking-tight text-ice sm:text-6xl">{profile.username}</h1>
+            <p className="profile-steam-hero__bio">{profile.identityNote}</p>
+            <div className="profile-avatar-control">
+              <input
+                accept="image/png,image/jpeg,image/webp"
+                className="sr-only"
+                disabled={isSaving}
+                id="avatar-file"
+                onChange={async (event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) return;
+                  const result = await save(file);
+                  setSaveSucceeded(!result.error && Boolean(result.avatarUrl));
+                  event.target.value = "";
+                }}
+                type="file"
+              />
+              <label className="profile-avatar-control__label" htmlFor="avatar-file">{isSaving ? "…" : profile.avatarUpload}</label>
+              <span>{profile.avatarHelp}</span>
+            </div>
+            {avatarMessage ? <p aria-live="polite" className="profile-avatar-control__message">{avatarMessage}</p> : null}
+          </div>
         </div>
         <div className="profile-steam-hero__level">
+          <Image alt="" aria-hidden="true" height={96} priority src={getOperatorAsset(progress)} unoptimized width={96} />
           <div><p>{operator.label}</p><h2>{operator.title}</h2></div>
-          <Image alt="Animated operator level" height={112} priority src={getOperatorAsset(progress)} unoptimized width={112} />
         </div>
       </section>
 
-      <section className="profile-progress-line">
-        <div><p className="text-lg font-medium text-ice">{progressCopy.skillName}</p><p className="mt-1 font-mono text-[11px] text-muted">{progressCopy.masteryStates[progress.mastery]}</p></div>
-        <div className="profile-progress-line__track"><div style={{ width: masteryWidths[progress.mastery] }} /></div>
-      </section>
-
-      <section className="profile-achievement-collection">
-        <div className="achievement-row">
-          <AchievementItem compact index={0} locked={!achievement} title="Signal reader" />
-          <AchievementItem compact index={1} locked={!progress.habits.verify} title="Independent route" />
-          <AchievementItem compact index={2} locked={!progress.habits.report} title="Safe interruption" />
-        </div>
-      </section>
-
-      <section className="profile-footer-data">
-        <div aria-label={profile.streak}><p className="font-mono text-2xl text-ice">{formatStreak(progress.currentStreak, progressCopy)}</p></div>
-        <div><p className="font-mono text-2xl text-ice">{formatFreeze(progress.freezesRemaining, progressCopy)}</p><p>{profile.freeze}</p></div>
-        <div><p className="font-mono text-ice">{profile.indonesian}</p><p>{profile.language}</p></div>
-      </section>
+      <div className="profile-collection-layout">
+        <section className="profile-achievement-collection" aria-label={profile.badges}>
+          <div className="achievement-row">
+            <AchievementItem compact description={messages.insights.achievementDetails[0].description} index={0} locked={!achievement} title={messages.insights.achievementDetails[0].title} />
+            <AchievementItem compact description={messages.insights.achievementDetails[3].description} index={1} locked={!progress.habits.verify} title={messages.insights.achievementDetails[3].title} />
+            <AchievementItem compact description={messages.insights.achievementDetails[4].description} index={2} locked={!progress.habits.report} title={messages.insights.achievementDetails[4].title} />
+          </div>
+        </section>
+        <aside className="profile-side-progress">
+          <section className="profile-progress-line">
+            <div><p className="text-lg font-medium text-ice">{progressCopy.skillName}</p><p className="mt-1 font-mono text-[11px] text-muted">{progressCopy.masteryStates[progress.mastery]}</p></div>
+            <div className="profile-progress-line__track"><div style={{ width: masteryWidths[progress.mastery] }} /></div>
+          </section>
+          <section className="profile-footer-data">
+            <div aria-label={profile.streak} className="profile-streak-summary"><Image alt="" aria-hidden="true" height={96} src="/media/streak.webp" unoptimized width={96} /><div><p className="font-mono text-2xl text-ice">{formatStreak(progress.currentStreak, progressCopy)}</p><p>{profile.streak}</p></div></div>
+            <div><p className="font-mono text-ice">{profile.indonesian}</p><p>{profile.language}</p></div>
+          </section>
+        </aside>
+      </div>
     </>
   );
 }
 
 export function InsightsProgress() {
+  const messages = getMessages();
   const progress = useLocalProgress();
+  const achievementDetails = messages.insights.achievementDetails;
   const achievements = [
-    { title: "Pressure recognized", description: "Pause before urgency takes over.", unlocked: progress.courierSmsCompleted },
-    { title: "Sender checked", description: "Inspect the channel before acting.", unlocked: progress.habits.inspect },
-    { title: "Link inspected", description: "Read the route, not only the message.", unlocked: progress.habits.inspect },
-    { title: "Independent route", description: "Open the official channel yourself.", unlocked: progress.habits.verify },
-    { title: "Safe interruption", description: "Stop the route before it expands.", unlocked: progress.habits.report },
+    { ...achievementDetails[0], unlocked: progress.courierSmsCompleted },
+    { ...achievementDetails[1], unlocked: progress.habits.inspect },
+    { ...achievementDetails[2], unlocked: progress.habits.inspect },
+    { ...achievementDetails[3], unlocked: progress.habits.verify },
+    { ...achievementDetails[4], unlocked: progress.habits.report },
   ];
-  const unlocked = achievements.filter((achievement) => achievement.unlocked);
-  const locked = achievements.filter((achievement) => !achievement.unlocked);
+  const unlocked = achievements.filter((item) => item.unlocked);
+  const locked = achievements.filter((item) => !item.unlocked);
 
   return (
     <div className="achievement-page mt-10">
-      <section className="achievement-progress">
+      <section className="achievement-progress" aria-label={`${unlocked.length} / ${achievements.length}`}>
         <p>{unlocked.length} / {achievements.length}</p>
         <div><span style={{ width: `${(unlocked.length / achievements.length) * 100}%` }} /></div>
       </section>
-
-      <AchievementSection heading="Unlocked" items={unlocked} />
-      <AchievementSection heading="Locked" items={locked} locked />
+      <AchievementSection heading={messages.insights.unlocked} items={unlocked} />
+      <AchievementSection emptyCopy={messages.insights.achievementEmpty} heading={messages.insights.locked} items={locked} locked />
     </div>
   );
 }
 
-function AchievementSection({ heading, items, locked = false }: { heading: string; items: Array<{ title: string; description: string; unlocked: boolean }>; locked?: boolean }) {
+function AchievementSection({ emptyCopy, heading, items, locked = false }: { emptyCopy?: string; heading: string; items: Array<{ title: string; description: string; unlocked: boolean }>; locked?: boolean }) {
   return (
     <section className="achievement-section">
       <h2>{heading}</h2>
-      {items.length ? <div className="achievement-grid">{items.map((achievement, index) => <AchievementItem description={achievement.description} index={index % achievementVisuals.length} key={achievement.title} locked={locked} title={achievement.title} />)}</div> : <p className="achievement-empty">Your first completed module will appear here.</p>}
+      {items.length ? <div className="achievement-grid">{items.map((item, index) => <AchievementItem description={item.description} index={index % achievementVisuals.length} key={item.title} locked={locked} title={item.title} />)}</div> : <p className="achievement-empty">{emptyCopy}</p>}
     </section>
   );
 }
@@ -134,18 +170,19 @@ function AchievementSection({ heading, items, locked = false }: { heading: strin
 function AchievementItem({ compact = false, description, index, locked, title }: { compact?: boolean; description?: string; index: number; locked: boolean; title: string }) {
   return (
     <article className={`achievement-item ${compact ? "achievement-item--compact" : ""} ${locked ? "achievement-item--locked" : ""}`}>
-      <div className="achievement-item__image"><Image alt="" fill sizes={compact ? "96px" : "(min-width: 1024px) 180px, 35vw"} src={achievementVisuals[index]} unoptimized /></div>
+      <div className="achievement-item__image"><Image alt="" fill sizes={compact ? "64px" : "(min-width: 1024px) 180px, 35vw"} src={achievementVisuals[index]} unoptimized /></div>
       <div><h3>{title}</h3>{description ? <p>{description}</p> : null}</div>
     </article>
   );
 }
 
-function formatStreak(value: number, copy: typeof import("@/messages/id.json")["progress"]): string {
-  return `${value} ${value === 1 ? copy.day : copy.days}`;
+function AvatarVisual({ avatarUrl, className }: { avatarUrl: string | null; className: string }) {
+  if (avatarUrl) return <div className={className}><img alt="" src={avatarUrl} /></div>;
+  return <div className={className}><Image alt="" height={192} src="/media/operator-pixel.svg" width={192} /></div>;
 }
 
-function formatFreeze(value: number, copy: typeof import("@/messages/id.json")["progress"]): string {
-  return `${value} ${copy.freezeRemaining}`;
+function formatStreak(value: number, copy: typeof import("@/messages/id.json")["progress"]): string {
+  return `${value} ${value === 1 ? copy.day : copy.days}`;
 }
 
 function getOperatorLevel(progress: PracticeProgress, profile: typeof import("@/messages/id.json")["profile"]) {
