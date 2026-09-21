@@ -1,33 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { recordModuleCompletion } from "@/features/progress/progress";
+import {
+  persistPracticeEvent,
+  persistProgressSnapshot,
+  startPracticeAttempt,
+  type PracticeAttemptResult,
+  type PracticeEventMetadata,
+  type PracticeEventType,
+  type RemoteSyncResult,
+} from "@/features/progress/supabase-persistence";
 import { getMessages, type Messages } from "@/lib/i18n";
 import { marketplaceScenarios, type MarketplaceScenarioCopy } from "../scenario-data";
-import {
-  initialSocialEngineeringState,
-  socialEngineeringReducer,
-  type SocialEngineeringState,
-} from "../simulation-machine";
+import { initialSocialEngineeringState, socialEngineeringReducer, type SocialEngineeringState } from "../simulation-machine";
 import { type SocialEngineeringDecision, type SocialEngineeringStage } from "../types";
 
 type SocialMessages = Messages["socialEngineering"];
 type Scenario = SocialMessages["scenarios"][MarketplaceScenarioCopy];
 type Feedback = SocialMessages["reveal"]["safe"];
-
 const checkpoints = ["context", "trust", "channel", "pressure", "decide"] as const;
-const checkpointIndex: Record<SocialEngineeringStage, number> = {
-  briefing: 0,
-  context: 0,
-  trust: 1,
-  channel_shift: 2,
-  pressure: 3,
-  decide: 4,
-  reveal: 4,
-  retry: 4,
-  complete: 4,
-};
-
+const checkpointIndex: Record<SocialEngineeringStage, number> = { briefing: 0, context: 0, trust: 1, channel_shift: 2, pressure: 3, decide: 4, reveal: 4, retry: 4, complete: 4 };
+const persistenceStage: Record<SocialEngineeringStage, string> = { briefing: "briefing", context: "receive", trust: "inspect", channel_shift: "inspect", pressure: "verify", decide: "decide", reveal: "reveal", retry: "retry", complete: "complete" };
 const decisionOptions: ReadonlyArray<{ decision: SocialEngineeringDecision; key: "comply" | "verify" | "report"; marker: string }> = [
   { decision: "comply_with_request", key: "comply", marker: "↗" },
   { decision: "verify_independently", key: "verify", marker: "✓" },
@@ -35,69 +30,88 @@ const decisionOptions: ReadonlyArray<{ decision: SocialEngineeringDecision; key:
 ];
 
 export function SocialEngineeringSimulation() {
-  const social = getMessages().socialEngineering;
+  const messages = getMessages();
+  const social = messages.socialEngineering;
   const [state, dispatch] = useReducer(socialEngineeringReducer, initialSocialEngineeringState);
+  const completionRecorded = useRef(false);
+  const hasStartedRef = useRef(false);
+  const attemptIdRef = useRef<string | null>(null);
+  const attemptPromiseRef = useRef<Promise<PracticeAttemptResult> | null>(null);
+  const recordedEventKeysRef = useRef(new Set<string>());
+  const [syncStatus, setSyncStatus] = useState<RemoteSyncResult["status"] | null>(null);
   const isRetryRound = state.stage === "retry" || state.retryDecision !== null || state.stage === "complete";
   const scenario = social.scenarios[(isRetryRound ? marketplaceScenarios.retry : marketplaceScenarios.primary).copyKey];
-  const activeDecision = state.stage === "reveal" || state.stage === "complete"
-    ? state.retryDecision ?? state.decision
-    : null;
+  const activeDecision = state.stage === "reveal" || state.stage === "complete" ? state.retryDecision ?? state.decision : null;
 
+  const ensureAttempt = useCallback(() => {
+    if (attemptPromiseRef.current) return attemptPromiseRef.current;
+    const attemptPromise = startPracticeAttempt("social-engineering").then((result) => {
+      attemptIdRef.current = result.attemptId;
+      return result;
+    }).catch(() => ({ attemptId: null, status: "local_only" as const, reason: "remote_error" as const }));
+    attemptPromiseRef.current = attemptPromise;
+    return attemptPromise;
+  }, []);
+
+  const recordEvent = useCallback((key: string, eventType: PracticeEventType, stage: SocialEngineeringStage, metadata?: PracticeEventMetadata) => {
+    if (recordedEventKeysRef.current.has(key)) return;
+    recordedEventKeysRef.current.add(key);
+    void ensureAttempt().then(({ attemptId }) => persistPracticeEvent({ attemptId, eventType, stage: persistenceStage[stage], metadata })).catch(() => undefined);
+  }, [ensureAttempt]);
+
+  useEffect(() => {
+    if (hasStartedRef.current && state.stage !== "briefing") recordEvent(`stage:${state.stage}:${state.retryDecision ?? "primary"}`, "stage_viewed", state.stage);
+  }, [recordEvent, state.retryDecision, state.stage]);
+
+  useEffect(() => {
+    if (state.stage !== "complete" || state.retryDecision === null || completionRecorded.current) return;
+    completionRecorded.current = true;
+    const finalDecision = state.retryDecision;
+    const outcome = finalDecision === "comply_with_request" ? "unsafe" : "safe";
+    recordEvent("module_completed", "module_completed", "complete", { outcome });
+    const nextProgress = recordModuleCompletion({
+      moduleId: "social-engineering",
+      outcome,
+      habits: {
+        inspect: state.primarySignals.length > 0 || state.retrySignals.length > 0,
+        verify: finalDecision === "verify_independently" || finalDecision === "stay_on_platform",
+        report: finalDecision === "report_offer",
+      },
+    });
+    void ensureAttempt().then(({ attemptId }) => {
+      if (!attemptId) { setSyncStatus("local_only"); return null; }
+      return persistProgressSnapshot({ progress: nextProgress, moduleId: "social-engineering", attemptId });
+    }).then((result) => { if (result) setSyncStatus(result.status); }).catch(() => setSyncStatus("local_only"));
+  }, [ensureAttempt, recordEvent, state.primarySignals.length, state.retryDecision, state.retrySignals.length, state.stage]);
+
+  const startModule = () => { hasStartedRef.current = true; recordEvent("module_started", "module_started", "briefing"); dispatch({ type: "start_module" }); };
   const selectDecision = (decision: SocialEngineeringDecision) => {
-    dispatch(state.stage === "retry"
-      ? { type: "select_retry_decision", decision }
-      : { type: "select_decision", decision });
+    const retry = state.stage === "retry";
+    recordEvent(`decision:${retry ? "retry" : "primary"}`, "decision_selected", retry ? "retry" : "decide", { choice: decision });
+    dispatch(retry ? { type: "select_retry_decision", decision } : { type: "select_decision", decision });
   };
-
-  const inspectRetry = (signal: "seller" | "payment") => dispatch({ type: "inspect_retry", signal });
+  const inspectRetry = (signal: "seller" | "payment") => { recordEvent(`retry-inspect:${signal}`, signal === "seller" ? "sender_inspected" : "link_inspected", "retry", { signal }); dispatch({ type: "inspect_retry", signal }); };
+  const advanceOutcome = () => {
+    if (state.retryDecision) { dispatch({ type: "complete_module" }); return; }
+    recordEvent("retry_started", "retry_started", "reveal", { variant: "retry" });
+    dispatch({ type: "start_retry" });
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
       <header className="flex flex-wrap items-start justify-between gap-5">
-        <div className="max-w-2xl">
-          <p className="font-mono text-xs tracking-[0.1em] text-signal">{social.eyebrow}</p>
-          <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-ice sm:text-4xl">{social.title}</h1>
-          <p className="mt-3 text-sm leading-6 text-muted sm:text-base">{social.description}</p>
-        </div>
+        <div className="max-w-2xl"><p className="font-mono text-xs tracking-[0.1em] text-signal">{social.eyebrow}</p><h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-ice sm:text-4xl">{social.title}</h1><p className="mt-3 text-sm leading-6 text-muted sm:text-base">{social.description}</p></div>
         <p className="border border-signal/30 px-3 py-2 font-mono text-xs text-signal">{social.safeNote}</p>
       </header>
-
       <ProgressRail activeStage={state.stage} social={social} />
-
-      {state.stage === "briefing" ? (
-        <section className="mt-6 flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-6">
-          <span className="font-mono text-xs text-muted">{social.briefing.checkpointCount}</span>
-          <ActionButton onClick={() => dispatch({ type: "start_module" })}>{social.briefing.begin}</ActionButton>
-        </section>
-      ) : (
+      {state.stage === "briefing" ? <section className="mt-6 flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-6"><span className="font-mono text-xs text-muted">{social.briefing.checkpointCount}</span><ActionButton onClick={startModule}>{social.briefing.begin}</ActionButton></section> : (
         <div className="relative mt-7 grid gap-7 lg:grid-cols-2 lg:gap-12">
           <span aria-hidden="true" className="absolute left-1/2 top-1/2 hidden h-px w-12 -translate-x-1/2 bg-signal/30 lg:block" />
-          <MarketplaceVictim
-            activeDecision={activeDecision}
-            isRetryRound={isRetryRound}
-            onInspectRetry={inspectRetry}
-            onSelectDecision={selectDecision}
-            scenario={scenario}
-            social={social}
-            state={state}
-            dispatch={dispatch}
-          />
-          <MarketplaceAttacker
-            activeDecision={activeDecision}
-            isRetryRound={isRetryRound}
-            onAdvance={() => dispatch(state.retryDecision ? { type: "complete_module" } : { type: "start_retry" })}
-            social={social}
-            state={state}
-          />
+          <MarketplaceVictim activeDecision={activeDecision} isRetryRound={isRetryRound} onInspectRetry={inspectRetry} onSelectDecision={selectDecision} scenario={scenario} social={social} state={state} dispatch={dispatch} />
+          <MarketplaceAttacker activeDecision={activeDecision} isRetryRound={isRetryRound} onAdvance={advanceOutcome} social={social} state={state} />
         </div>
       )}
-
-      {state.stage === "complete" ? (
-        <section className="mx-auto mt-7 flex max-w-[52rem] flex-wrap items-center justify-between gap-4 border-t border-white/[0.08] pt-5">
-          <div><p className="font-mono text-xs text-signal">{social.complete.title}</p><p className="mt-1 text-sm leading-6 text-muted">{social.complete.description}</p></div>
-          <Link className="font-mono text-xs text-signal" href="/">{social.complete.backHome} →</Link>
-        </section>
-      ) : null}
+      {state.stage === "complete" ? <section className="mx-auto mt-7 flex max-w-[52rem] flex-wrap items-center justify-between gap-4 border-t border-white/[0.08] pt-5"><div><p className="font-mono text-xs text-signal">{social.complete.title}</p><p className="mt-1 text-sm leading-6 text-muted">{social.complete.description}</p>{syncStatus === "local_only" ? <p className="mt-2 font-mono text-[11px] text-warning" role="status">{messages.progress.syncPending}</p> : null}</div><Link className="font-mono text-xs text-signal" href="/">{social.complete.backHome} →</Link></section> : null}
     </div>
   );
 }
