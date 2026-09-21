@@ -9,6 +9,8 @@ import {
   startPracticeAttempt,
   type PracticeEventMetadata,
   type PracticeEventType,
+  type PracticeAttemptResult,
+  type RemoteSyncResult,
 } from "@/features/progress/supabase-persistence";
 import { getMessages, type Messages } from "@/lib/i18n";
 import { courierScenarios, type CourierScenarioCopy } from "../scenario-data";
@@ -34,15 +36,17 @@ const choiceKeyByDecision: Record<Decision, ChoiceKey> = {
 };
 
 export function CourierSmsSimulation() {
-  const simulation = getMessages().simulation;
+  const messages = getMessages();
+  const simulation = messages.simulation;
   const [state, dispatch] = useReducer(simulationReducer, initialSimulationState);
   const [verificationChecked, setVerificationChecked] = useState(false);
   const completionRecorded = useRef(false);
   const hasStartedRef = useRef(false);
   const attemptIdRef = useRef<string | null>(null);
-  const attemptPromiseRef = useRef<Promise<string | null> | null>(null);
+  const attemptPromiseRef = useRef<Promise<PracticeAttemptResult> | null>(null);
   const recordedEventKeysRef = useRef(new Set<string>());
   const [completionProgress, setCompletionProgress] = useState<PracticeProgress | null>(null);
+  const [syncStatus, setSyncStatus] = useState<RemoteSyncResult["status"] | null>(null);
   const isRetryScenario = state.stage === "retry" || state.retryDecision !== null || state.stage === "complete";
   const scenario = simulation.scenarios[(isRetryScenario ? courierScenarios.retry : courierScenarios.primary).copyKey];
   const activeDecision = state.stage === "reveal" || state.stage === "complete"
@@ -50,19 +54,19 @@ export function CourierSmsSimulation() {
     : null;
 
   const ensureAttempt = useCallback(() => {
-    if (!attemptPromiseRef.current) {
-      attemptPromiseRef.current = startPracticeAttempt().then((attemptId) => {
-        attemptIdRef.current = attemptId;
-        return attemptId;
-      }).catch(() => null);
-    }
-    return attemptPromiseRef.current;
+    if (attemptPromiseRef.current) return attemptPromiseRef.current;
+    const attemptPromise = startPracticeAttempt("courier-sms").then((result) => {
+      attemptIdRef.current = result.attemptId;
+      return result;
+    }).catch(() => ({ attemptId: null, status: "local_only" as const, reason: "remote_error" as const }));
+    attemptPromiseRef.current = attemptPromise;
+    return attemptPromise;
   }, []);
 
   const recordEvent = useCallback((key: string, eventType: PracticeEventType, stage: SimulationStage, metadata?: PracticeEventMetadata) => {
     if (recordedEventKeysRef.current.has(key)) return;
     recordedEventKeysRef.current.add(key);
-    void ensureAttempt().then((attemptId) => persistPracticeEvent({ attemptId, eventType, stage, metadata })).catch(() => undefined);
+    void ensureAttempt().then(({ attemptId }) => persistPracticeEvent({ attemptId, eventType, stage, metadata })).catch(() => undefined);
   }, [ensureAttempt]);
 
   const inspectSignal = (signal: "sender" | "link", retry = false) => {
@@ -90,11 +94,12 @@ export function CourierSmsSimulation() {
     completionRecorded.current = true;
     const outcome = state.retryDecision === "open_link" ? "unsafe" : "safe";
     recordEvent("module_completed", "module_completed", "complete", { outcome });
-    const nextProgress = recordCourierSmsCompletion({ retryDecision: state.retryDecision, attemptId: attemptIdRef.current });
+    const nextProgress = recordCourierSmsCompletion({ retryDecision: state.retryDecision });
     setCompletionProgress(nextProgress);
-    if (!attemptIdRef.current) {
-      void ensureAttempt().then((attemptId) => attemptId ? persistProgressSnapshot({ progress: nextProgress, attemptId }) : undefined).catch(() => undefined);
-    }
+    void ensureAttempt().then(({ attemptId }) => {
+      if (!attemptId) { setSyncStatus("local_only"); return null; }
+      return persistProgressSnapshot({ progress: nextProgress, moduleId: "courier-sms", attemptId });
+    }).then((result) => { if (result) setSyncStatus(result.status); }).catch(() => setSyncStatus("local_only"));
   }, [ensureAttempt, recordEvent, state.retryDecision, state.stage]);
 
   const startModule = () => {
@@ -168,7 +173,7 @@ export function CourierSmsSimulation() {
               verificationChecked={verificationChecked}
             />
           </div>
-          {state.stage === "complete" ? <CompletionSummary progress={completionProgress} simulation={simulation} /> : null}
+          {state.stage === "complete" ? <CompletionSummary progress={completionProgress} simulation={simulation} syncNotice={syncStatus === "local_only" ? messages.progress.syncPending : null} /> : null}
         </>
       )}
     </div>
@@ -310,7 +315,7 @@ function AnalysisPanel({ feedback, simulation }: { feedback: SimulationMessages[
   return <dl className="border-t border-white/[0.08] px-4 py-4"><AnalysisRow label={simulation.reveal.fields.whatHappened} value={feedback.whatHappened} /><AnalysisRow label={simulation.reveal.fields.attackerObjective} value={feedback.attackerObjective} /><AnalysisRow label={simulation.reveal.fields.technique} value={feedback.technique} /><AnalysisRow label={simulation.reveal.fields.saferResponse} value={feedback.saferResponse} /></dl>;
 }
 function AnalysisRow({ label, value }: { label: string; value: string }) { return <div><dt className="font-mono text-[10px] text-muted">{label}</dt><dd className="mt-1 text-xs leading-5 text-ice">{value}</dd></div>; }
-function CompletionSummary({ progress, simulation }: { progress: PracticeProgress | null; simulation: SimulationMessages }) { return <section className="mx-auto mt-7 flex max-w-[52rem] flex-wrap items-center justify-between gap-4 border-t border-white/[0.08] pt-5"><div><p className="font-mono text-xs text-signal">{simulation.complete.title}</p><p className="mt-1 text-sm leading-6 text-muted">{progress ? simulation.complete.skillUpdate : simulation.complete.description}</p></div><Link className="font-mono text-xs text-signal" href="/">{simulation.complete.backHome} →</Link></section>; }
+function CompletionSummary({ progress, simulation, syncNotice }: { progress: PracticeProgress | null; simulation: SimulationMessages; syncNotice: string | null }) { return <section className="mx-auto mt-7 flex max-w-[52rem] flex-wrap items-center justify-between gap-4 border-t border-white/[0.08] pt-5"><div><p className="font-mono text-xs text-signal">{simulation.complete.title}</p><p className="mt-1 text-sm leading-6 text-muted">{progress ? simulation.complete.skillUpdate : simulation.complete.description}</p>{syncNotice ? <p className="mt-2 font-mono text-[11px] text-warning" role="status">{syncNotice}</p> : null}</div><Link className="font-mono text-xs text-signal" href="/">{simulation.complete.backHome} →</Link></section>; }
 
 function campaignEventsFor(state: SimulationState, simulation: SimulationMessages, verificationChecked: boolean, isRetryRound: boolean): string[] {
   const inspectedSignals = isRetryRound ? state.retryInspectedSignals : state.inspectedSignals;

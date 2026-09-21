@@ -42,7 +42,8 @@
       "none": "Belum tersedia"
     },
     "firstBadge": "Latihan pertama",
-    "firstBadgeDescription": "Menyelesaikan latihan Courier SMS pertama."
+    "firstBadgeDescription": "Menyelesaikan latihan Courier SMS pertama.",
+    "syncPending": "Tersimpan di perangkat ini. Sinkronisasi akan dicoba lagi saat tersedia."
   },
   "dashboard": {
     "eyebrow": "BERANDA LATIHAN",
@@ -77,8 +78,8 @@
   "simulation": {
     "eyebrow": "MODUL 01 · SMS PHISHING",
     "title": "Pesan kurir",
-  "description": "Bayangkan kamu sedang menunggu paket dan membuka SMS ini di antara notifikasi lainnya. Pesan ini sengaja dibuat agar kamu bertindak sebelum sempat memeriksa.",
-  "checkpointCount": "5 tahap · sekitar 3 menit",
+    "description": "Bayangkan kamu sedang menunggu paket dan membuka SMS ini di antara notifikasi lainnya. Pesan ini sengaja dibuat agar kamu bertindak sebelum sempat memeriksa.",
+    "checkpointCount": "5 tahap · sekitar 3 menit",
     "safeNote": "SIMULASI AMAN · Tidak ada data nyata yang dikumpulkan",
     "phoneTime": "09:41",
     "phoneLabel": "SMS",
@@ -100,16 +101,16 @@
       "retry": "COBA ULANG",
       "complete": "SELESAI"
     },
-  "checkpoints": {
-    "receive": "Pesan masuk",
-    "inspect": "Periksa",
-    "verify": "Verifikasi",
-    "decide": "Tentukan respons",
-    "understand": "Lihat akibatnya"
-  },
-  "devices": {
-    "victim": "KORBAN · SMS",
-    "attacker": "PELAKU · PERANGKAT OPERASI"
+    "checkpoints": {
+      "receive": "Pesan masuk",
+      "inspect": "Periksa",
+      "verify": "Verifikasi",
+      "decide": "Tentukan respons",
+      "understand": "Lihat akibatnya"
+    },
+    "devices": {
+      "victim": "KORBAN · SMS",
+      "attacker": "PELAKU · PERANGKAT OPERASI"
     },
     "briefing": {
       "label": "MODUL 01 · PHISHING SMS",
@@ -150,55 +151,55 @@
       }
     },
     "receive": {
-    "title": "Pesan masuk",
-    "description": "Pesan terlihat seperti pembaruan pengiriman biasa.",
-    "action": "Periksa pesan",
-    "analystNote": "Tekanan waktu dipakai agar target bertindak cepat."
+      "title": "Pesan masuk",
+      "description": "Pesan terlihat seperti pembaruan pengiriman biasa.",
+      "action": "Periksa pesan",
+      "analystNote": "Tekanan waktu dipakai agar target bertindak cepat."
     },
     "inspect": {
-    "title": "Periksa pengirim dan tautan",
-    "description": "Buka detail yang tersedia sebelum menentukan respons.",
+      "title": "Periksa pengirim dan tautan",
+      "description": "Buka detail yang tersedia sebelum menentukan respons.",
       "senderAction": "Periksa pengirim",
       "linkAction": "Periksa tautan",
       "inspected": "Sudah diperiksa",
       "continue": "Lanjutkan",
-    "requirement": "Pilih pengirim atau tautan untuk melihat detailnya.",
-    "bothInspected": "Detail pesan telah diperiksa.",
-    "analystNote": "Nama pengirim terlihat resmi, tetapi nomor dan domainnya tidak menyediakan jalur verifikasi yang terpercaya.",
-    "senderAnalystNote": "Nama pengirim bukan bukti bahwa kanal ini resmi.",
-    "linkAnalystNote": "Domain tidak cocok dengan kanal resmi kurir."
+      "requirement": "Pilih pengirim atau tautan untuk melihat detailnya.",
+      "bothInspected": "Detail pesan telah diperiksa.",
+      "analystNote": "Nama pengirim terlihat resmi, tetapi nomor dan domainnya tidak menyediakan jalur verifikasi yang terpercaya.",
+      "senderAnalystNote": "Nama pengirim bukan bukti bahwa kanal ini resmi.",
+      "linkAnalystNote": "Domain tidak cocok dengan kanal resmi kurir."
     },
     "verify": {
-    "title": "Verifikasi kanal resmi",
-    "description": "Buka aplikasi kurir simulasi dari perangkat ini.",
+      "title": "Verifikasi kanal resmi",
+      "description": "Buka aplikasi kurir simulasi dari perangkat ini.",
       "action": "Buka aplikasi kurir resmi",
       "analystNote": "Memverifikasi melalui kanal yang kamu buka sendiri memutus kendali penyerang atas rute pemeriksaan.",
-    "sheetTitle": "Aplikasi kurir resmi · simulasi",
-    "sheetDescription": "Tidak ada aplikasi nyata yang diluncurkan.",
-    "orderLabel": "PESANAN CONTOH",
-    "orderStatus": "Tidak ada paket dengan nomor tersebut.",
-    "orderStatusDescription": "Pesan sebelumnya tidak memiliki bukti bahwa ia benar-benar berasal dari kurir.",
-    "continue": "Kembali ke SMS",
-    "appTitle": "KURIR NASIONAL",
-    "appSimulation": "SIMULASI",
-    "trackTitle": "Lacak paket",
-    "trackingPlaceholder": "Masukkan nomor resi",
-    "search": "Cari resi contoh",
-    "searchResultLabel": "HASIL PENCARIAN"
+      "sheetTitle": "Aplikasi kurir resmi · simulasi",
+      "sheetDescription": "Tidak ada aplikasi nyata yang diluncurkan.",
+      "orderLabel": "PESANAN CONTOH",
+      "orderStatus": "Tidak ada paket dengan nomor tersebut.",
+      "orderStatusDescription": "Pesan sebelumnya tidak memiliki bukti bahwa ia benar-benar berasal dari kurir.",
+      "continue": "Kembali ke SMS",
+      "appTitle": "KURIR NASIONAL",
+      "appSimulation": "SIMULASI",
+      "trackTitle": "Lacak paket",
+      "trackingPlaceholder": "Masukkan nomor resi",
+      "search": "Cari resi contoh",
+      "searchResultLabel": "HASIL PENCARIAN"
     },
     "decide": {
-    "title": "Tentukan respons",
-    "description": "Tindakanmu menentukan apakah rute pelaku maju atau terputus.",
-    "analystNote": "Pilih satu tindakan untuk melihat konsekuensi simulasinya.",
+      "title": "Tentukan respons",
+      "description": "Tindakanmu menentukan apakah rute pelaku maju atau terputus.",
+      "analystNote": "Pilih satu tindakan untuk melihat konsekuensi simulasinya.",
       "choices": {
         "openLink": {
           "label": "Buka tautan",
           "description": "Ikuti tautan yang dikirim dalam pesan."
         },
-      "verifyOfficial": {
-        "label": "Verifikasi lewat aplikasi resmi",
-        "description": "Periksa status pengiriman dari aplikasi yang kamu buka sendiri."
-      },
+        "verifyOfficial": {
+          "label": "Verifikasi lewat aplikasi resmi",
+          "description": "Periksa status pengiriman dari aplikasi yang kamu buka sendiri."
+        },
         "reportDelete": {
           "label": "Laporkan dan hapus pesan",
           "description": "Hentikan percakapan dengan menghapus dan melaporkan pesan."
@@ -206,50 +207,50 @@
       }
     },
     "console": {
-    "campaignTitle": "COURIER CAMPAIGN // ACTIVE",
-    "campaignLabel": "CAMPAIGN",
-    "campaignValue": "07",
-    "roundPrimary": "PUTARAN 01",
-    "roundRetry": "PUTARAN 02",
-    "targetLabel": "TARGET",
-    "targetValue": "SIM-01",
-    "objectiveLabel": "OBJECTIVE",
-    "objective": "Membuat target bertindak sebelum memeriksa.",
-    "tacticLabel": "TACTIC",
-    "tactic": "Kurir palsu + tekanan waktu.",
-    "retryTactic": "Alasan perubahan alamat + tekanan biaya.",
-    "liveLogLabel": "LIVE EVENT LOG",
-    "nextActionLabel": "NEXT SIMULATED ACTION",
-    "nextActionWaiting": "Menunggu target membuka pesan.",
-    "nextActionInspect": "Menilai kemungkinan respons target.",
-    "nextActionDecide": "Menunggu target menentukan respons.",
-    "nextActionVerify": "Memantau pemeriksaan kanal resmi.",
-    "nextActionRetry": "Menunggu respons pada variasi kedua.",
-    "nextActionComplete": "Tidak ada tindakan nyata dilakukan.",
-    "statusWaiting": "WAITING",
-    "statusRisk": "RISK INCREASING",
-    "statusObserved": "OBSERVED",
-    "statusDeclining": "CONFIDENCE DECLINING",
-    "statusRetry": "VARIANT ACTIVE",
-    "interruptedStatus": "TERPUTUS",
-    "initialEvents": [
-      "LURE DELIVERED",
-      "TARGET STATE: UNREAD",
-      "CAMPAIGN STATUS: WAITING"
-    ],
-    "retryInitialEvents": [
-      "VARIANT 02 DELIVERED",
-      "TARGET STATE: UNREAD",
-      "CAMPAIGN STATUS: VARIANT ACTIVE"
-    ],
-    "messageOpened": "TARGET VIEWED MESSAGE",
-    "senderInspected": "TARGET INSPECTING SENDER",
-    "responseDelay": "RESPONSE DELAY DETECTED",
-    "linkInspected": "TARGET INSPECTING ROUTE",
-    "domainMismatch": "DOMAIN MISMATCH CONFIRMED",
-    "trustedCheckDetected": "TRUSTED CHANNEL CHECK DETECTED",
-    "trackingNotFound": "TRACKING ID NOT FOUND",
-    "confidenceDeclining": "CAMPAIGN CONFIDENCE: DECLINING",
+      "campaignTitle": "COURIER CAMPAIGN // ACTIVE",
+      "campaignLabel": "CAMPAIGN",
+      "campaignValue": "07",
+      "roundPrimary": "PUTARAN 01",
+      "roundRetry": "PUTARAN 02",
+      "targetLabel": "TARGET",
+      "targetValue": "SIM-01",
+      "objectiveLabel": "OBJECTIVE",
+      "objective": "Membuat target bertindak sebelum memeriksa.",
+      "tacticLabel": "TACTIC",
+      "tactic": "Kurir palsu + tekanan waktu.",
+      "retryTactic": "Alasan perubahan alamat + tekanan biaya.",
+      "liveLogLabel": "LIVE EVENT LOG",
+      "nextActionLabel": "NEXT SIMULATED ACTION",
+      "nextActionWaiting": "Menunggu target membuka pesan.",
+      "nextActionInspect": "Menilai kemungkinan respons target.",
+      "nextActionDecide": "Menunggu target menentukan respons.",
+      "nextActionVerify": "Memantau pemeriksaan kanal resmi.",
+      "nextActionRetry": "Menunggu respons pada variasi kedua.",
+      "nextActionComplete": "Tidak ada tindakan nyata dilakukan.",
+      "statusWaiting": "WAITING",
+      "statusRisk": "RISK INCREASING",
+      "statusObserved": "OBSERVED",
+      "statusDeclining": "CONFIDENCE DECLINING",
+      "statusRetry": "VARIANT ACTIVE",
+      "interruptedStatus": "TERPUTUS",
+      "initialEvents": [
+        "LURE DELIVERED",
+        "TARGET STATE: UNREAD",
+        "CAMPAIGN STATUS: WAITING"
+      ],
+      "retryInitialEvents": [
+        "VARIANT 02 DELIVERED",
+        "TARGET STATE: UNREAD",
+        "CAMPAIGN STATUS: VARIANT ACTIVE"
+      ],
+      "messageOpened": "TARGET VIEWED MESSAGE",
+      "senderInspected": "TARGET INSPECTING SENDER",
+      "responseDelay": "RESPONSE DELAY DETECTED",
+      "linkInspected": "TARGET INSPECTING ROUTE",
+      "domainMismatch": "DOMAIN MISMATCH CONFIRMED",
+      "trustedCheckDetected": "TRUSTED CHANNEL CHECK DETECTED",
+      "trackingNotFound": "TRACKING ID NOT FOUND",
+      "confidenceDeclining": "CAMPAIGN CONFIDENCE: DECLINING",
       "title": "PERSPEKTIF PENYERANG · HANYA SIMULASI",
       "targetSession": "TARGET / SESI",
       "decisionLabel": "PILIHAN PENGGUNA",
@@ -274,13 +275,13 @@
         "ATTACKER_ROUTE_BYPASSED",
         "SESSION_BLOCKED"
       ],
-    "traceReport": [
-      "MESSAGE_DELIVERED",
-      "REPORT_AND_DELETE_SELECTED",
-      "ATTACKER_ROUTE_BYPASSED",
-      "SESSION_BLOCKED"
-    ]
-  },
+      "traceReport": [
+        "MESSAGE_DELIVERED",
+        "REPORT_AND_DELETE_SELECTED",
+        "ATTACKER_ROUTE_BYPASSED",
+        "SESSION_BLOCKED"
+      ]
+    },
     "reveal": {
       "description": "Sekarang lihat hubungan antara keputusanmu dan kemungkinan dampaknya.",
       "attackerTitle": "Sudut pandang penyerang",
@@ -315,33 +316,33 @@
         "technique": "Rekayasa sosial: urgensi ditambah penyamaran layanan.",
         "saferResponse": "Buka aplikasi kurir resmi sendiri, lalu periksa pengiriman."
       },
-    "safeFeedback": {
+      "safeFeedback": {
         "whatHappened": "Kamu menghentikan rute yang dikirim melalui pesan.",
         "attackerObjective": "Menjaga target di rute yang dikirim sebelum ia memeriksanya secara mandiri.",
         "technique": "Rekayasa sosial: urgensi ditambah penyamaran layanan.",
-      "saferResponse": "Pertahankan kebiasaan membuka kanal resmi sendiri sebelum bertindak."
+        "saferResponse": "Pertahankan kebiasaan membuka kanal resmi sendiri sebelum bertindak."
+      },
+      "retry": "Coba variasi lain",
+      "finish": "Selesaikan latihan",
+      "retryNote": "Variasi baru menguji kebiasaan yang sama."
     },
-    "retry": "Coba variasi lain",
-    "finish": "Selesaikan latihan",
-    "retryNote": "Variasi baru menguji kebiasaan yang sama."
-  },
-  "outcomes": {
-    "simulatedPage": "HALAMAN PENGIRIMAN · SIMULASI",
-    "deliveryPortal": "Konfirmasi pengiriman",
-    "noDataField": "Tidak ada data yang diminta atau dikirim.",
-    "openLink": {
-      "detail": "Kamu masuk ke halaman simulasi yang dikendalikan pelaku.",
-      "summary": "Belum ada data nyata yang dikirim, tetapi alur serangan berhasil maju."
+    "outcomes": {
+      "simulatedPage": "HALAMAN PENGIRIMAN · SIMULASI",
+      "deliveryPortal": "Konfirmasi pengiriman",
+      "noDataField": "Tidak ada data yang diminta atau dikirim.",
+      "openLink": {
+        "detail": "Kamu masuk ke halaman simulasi yang dikendalikan pelaku.",
+        "summary": "Belum ada data nyata yang dikirim, tetapi alur serangan berhasil maju."
+      },
+      "verifyOfficial": {
+        "detail": "Kamu menghentikan alur serangan sebelum diarahkan ke halaman yang dikendalikan pelaku.",
+        "summary": "Kanal resmi tidak menemukan paket yang dimaksud."
+      },
+      "reportDelete": {
+        "detail": "Pesan ditandai dan percakapan dihentikan.",
+        "summary": "Rute pelaku terputus sebelum target diarahkan ke halaman lain."
+      }
     },
-    "verifyOfficial": {
-      "detail": "Kamu menghentikan alur serangan sebelum diarahkan ke halaman yang dikendalikan pelaku.",
-      "summary": "Kanal resmi tidak menemukan paket yang dimaksud."
-    },
-    "reportDelete": {
-      "detail": "Pesan ditandai dan percakapan dihentikan.",
-      "summary": "Rute pelaku terputus sebelum target diarahkan ke halaman lain."
-    }
-  },
     "retryStep": {
       "title": "Coba variasi lain",
       "description": "Pretext dan kata-katanya berubah, tetapi sinyalnya tetap perlu diperiksa.",
@@ -367,9 +368,22 @@
     "description": "Periksa bagaimana kepercayaan, perpindahan kanal, dan biaya tak terduga dipakai untuk mendorong keputusan cepat.",
     "safeNote": "SIMULASI AMAN · Tidak ada pembayaran atau data nyata",
     "flowLabel": "Alur latihan marketplace",
-    "checkpoints": { "context": "Penawaran", "trust": "Kepercayaan", "channel": "Kanal", "pressure": "Tekanan", "decide": "Respons" },
-    "devices": { "victim": "KORBAN · MARKETPLACE", "attacker": "PELAKU · RUANG KERJA" },
-    "briefing": { "label": "MODUL 02 · REKAYASA SOSIAL", "checkpointCount": "5 tahap · sekitar 4 menit", "begin": "Mulai simulasi" },
+    "checkpoints": {
+      "context": "Penawaran",
+      "trust": "Kepercayaan",
+      "channel": "Kanal",
+      "pressure": "Tekanan",
+      "decide": "Respons"
+    },
+    "devices": {
+      "victim": "KORBAN · MARKETPLACE",
+      "attacker": "PELAKU · RUANG KERJA"
+    },
+    "briefing": {
+      "label": "MODUL 02 · REKAYASA SOSIAL",
+      "checkpointCount": "5 tahap · sekitar 4 menit",
+      "begin": "Mulai simulasi"
+    },
     "scenarios": {
       "primary": {
         "listing": "PixelCanvas 13 · bekas mulus",
@@ -400,30 +414,151 @@
         "paymentInspection": "Permintaan deposit untuk membuka refund mengubah tujuan transaksi dan tidak sesuai alur marketplace."
       }
     },
-    "context": { "action": "Lihat penawaran", "note": "Harga menarik dan ulasan baik dapat membuat penawaran terasa lebih aman dari bukti yang tersedia." },
-    "trust": { "title": "Tinjau penjual", "inspect": "Periksa sinyal kepercayaan", "continue": "Lanjutkan percakapan", "stay": "Tetap di marketplace", "note": "Ulasan membantu menilai listing, tetapi tidak memindahkan perlindungan marketplace ke kanal lain." },
-    "channel": { "title": "Permintaan pindah kanal", "accept": "Pindah ke chat luar", "stay": "Tetap di marketplace", "note": "Kanal luar dapat mengisolasi percakapan dari bukti dan perlindungan platform." },
-    "pressure": { "title": "Permintaan tak terduga", "inspect": "Periksa permintaan biaya", "continue": "Tentukan respons", "report": "Hentikan dan laporkan", "note": "Biaya atau deposit baru setelah perpindahan kanal adalah alasan untuk berhenti dan memeriksa." },
+    "context": {
+      "action": "Lihat penawaran",
+      "note": "Harga menarik dan ulasan baik dapat membuat penawaran terasa lebih aman dari bukti yang tersedia."
+    },
+    "trust": {
+      "title": "Tinjau penjual",
+      "inspect": "Periksa sinyal kepercayaan",
+      "continue": "Lanjutkan percakapan",
+      "stay": "Tetap di marketplace",
+      "note": "Ulasan membantu menilai listing, tetapi tidak memindahkan perlindungan marketplace ke kanal lain."
+    },
+    "channel": {
+      "title": "Permintaan pindah kanal",
+      "accept": "Pindah ke chat luar",
+      "stay": "Tetap di marketplace",
+      "note": "Kanal luar dapat mengisolasi percakapan dari bukti dan perlindungan platform."
+    },
+    "pressure": {
+      "title": "Permintaan tak terduga",
+      "inspect": "Periksa permintaan biaya",
+      "continue": "Tentukan respons",
+      "report": "Hentikan dan laporkan",
+      "note": "Biaya atau deposit baru setelah perpindahan kanal adalah alasan untuk berhenti dan memeriksa."
+    },
     "decide": {
-      "title": "Tentukan respons", "description": "Tidak ada pembayaran nyata dalam latihan ini.",
+      "title": "Tentukan respons",
+      "description": "Tidak ada pembayaran nyata dalam latihan ini.",
       "choices": {
-        "comply": { "label": "Lanjutkan biaya verifikasi", "description": "Meneruskan alur pembayaran simulasi." },
-        "verify": { "label": "Verifikasi di marketplace", "description": "Kembali ke kanal platform yang kamu buka sendiri." },
-        "report": { "label": "Hentikan dan laporkan", "description": "Mengakhiri rute yang diminta pelaku." }
+        "comply": {
+          "label": "Lanjutkan biaya verifikasi",
+          "description": "Meneruskan alur pembayaran simulasi."
+        },
+        "verify": {
+          "label": "Verifikasi di marketplace",
+          "description": "Kembali ke kanal platform yang kamu buka sendiri."
+        },
+        "report": {
+          "label": "Hentikan dan laporkan",
+          "description": "Mengakhiri rute yang diminta pelaku."
+        }
       }
     },
     "console": {
-      "campaign": "MARKETPLACE TRUST TRANSFER", "roundPrimary": "PUTARAN 01", "roundRetry": "PUTARAN 02", "campaignLabel": "CAMPAIGN", "targetLabel": "TARGET", "targetValue": "BUYER-SIM-04", "objectiveLabel": "OBJECTIVE", "objective": "Memindahkan target dari perlindungan platform.", "tacticLabel": "CURRENT TACTIC", "tactic": "Kredibilitas pinjaman + harga menarik.", "retryTactic": "Kelangkaan + alasan refund.", "statusLabel": "STATUS", "controlLabel": "ATTACKER CONTROL", "controlHigh": "TINGGI", "controlReduced": "MENURUN", "controlLost": "HILANG", "statusActive": "ACTIVE", "statusEscalating": "ESCALATING", "statusInterrupted": "INTERRUPTED", "statusImpact": "SIMULATED IMPACT", "timelineLabel": "EVENT TIMELINE", "nextLabel": "NEXT INTENDED MOVE", "nextContext": "Menunggu target menilai penawaran.", "nextTrust": "Meminta perpindahan ke kanal luar.", "nextChannel": "Memperkenalkan perantara pembayaran.", "nextPressure": "Mendorong biaya sebelum target memeriksa.", "nextDecision": "Menunggu respons atas permintaan biaya.", "nextStopped": "Rute tidak dapat dilanjutkan.", "primaryEvents": ["LISTING PUBLISHED", "TARGET STATE: BROWSING", "TRUST CUES DISPLAYED"], "retryEvents": ["VARIANT LISTING PUBLISHED", "TARGET STATE: BROWSING", "REFUND PRETEXT PREPARED"], "opened": "TARGET OPENED LISTING", "sellerChecked": "TARGET CHECKING SELLER SIGNALS", "trustQuestioned": "BORROWED TRUST: QUESTIONED", "channelAccepted": "CHANNEL SHIFT ACCEPTED", "platformRetained": "PLATFORM SAFEGUARDS RETAINED", "handlerIntroduced": "EXTERNAL HANDLER INTRODUCED", "paymentChecked": "UNUSUAL REQUEST INSPECTED", "feeMismatch": "MARKETPLACE FLOW MISMATCH CONFIRMED", "verifyDetected": "INDEPENDENT VERIFICATION DETECTED", "complied": ["TARGET COMPLIED WITH REQUEST", "MONETIZATION ROUTE ADVANCED", "NO REAL PAYMENT EXECUTED"], "verified": ["TARGET RETURNED TO PLATFORM", "ATTACKER ROUTE BYPASSED", "CAMPAIGN INTERRUPTED"], "reported": ["TARGET STOPPED AND REPORTED", "CAMPAIGN FAILED TO PROGRESS", "ROUTE CONTAINED"]
+      "campaign": "MARKETPLACE TRUST TRANSFER",
+      "roundPrimary": "PUTARAN 01",
+      "roundRetry": "PUTARAN 02",
+      "campaignLabel": "CAMPAIGN",
+      "targetLabel": "TARGET",
+      "targetValue": "BUYER-SIM-04",
+      "objectiveLabel": "OBJECTIVE",
+      "objective": "Memindahkan target dari perlindungan platform.",
+      "tacticLabel": "CURRENT TACTIC",
+      "tactic": "Kredibilitas pinjaman + harga menarik.",
+      "retryTactic": "Kelangkaan + alasan refund.",
+      "statusLabel": "STATUS",
+      "controlLabel": "ATTACKER CONTROL",
+      "controlHigh": "TINGGI",
+      "controlReduced": "MENURUN",
+      "controlLost": "HILANG",
+      "statusActive": "ACTIVE",
+      "statusEscalating": "ESCALATING",
+      "statusInterrupted": "INTERRUPTED",
+      "statusImpact": "SIMULATED IMPACT",
+      "timelineLabel": "EVENT TIMELINE",
+      "nextLabel": "NEXT INTENDED MOVE",
+      "nextContext": "Menunggu target menilai penawaran.",
+      "nextTrust": "Meminta perpindahan ke kanal luar.",
+      "nextChannel": "Memperkenalkan perantara pembayaran.",
+      "nextPressure": "Mendorong biaya sebelum target memeriksa.",
+      "nextDecision": "Menunggu respons atas permintaan biaya.",
+      "nextStopped": "Rute tidak dapat dilanjutkan.",
+      "primaryEvents": [
+        "LISTING PUBLISHED",
+        "TARGET STATE: BROWSING",
+        "TRUST CUES DISPLAYED"
+      ],
+      "retryEvents": [
+        "VARIANT LISTING PUBLISHED",
+        "TARGET STATE: BROWSING",
+        "REFUND PRETEXT PREPARED"
+      ],
+      "opened": "TARGET OPENED LISTING",
+      "sellerChecked": "TARGET CHECKING SELLER SIGNALS",
+      "trustQuestioned": "BORROWED TRUST: QUESTIONED",
+      "channelAccepted": "CHANNEL SHIFT ACCEPTED",
+      "platformRetained": "PLATFORM SAFEGUARDS RETAINED",
+      "handlerIntroduced": "EXTERNAL HANDLER INTRODUCED",
+      "paymentChecked": "UNUSUAL REQUEST INSPECTED",
+      "feeMismatch": "MARKETPLACE FLOW MISMATCH CONFIRMED",
+      "verifyDetected": "INDEPENDENT VERIFICATION DETECTED",
+      "complied": [
+        "TARGET COMPLIED WITH REQUEST",
+        "MONETIZATION ROUTE ADVANCED",
+        "NO REAL PAYMENT EXECUTED"
+      ],
+      "verified": [
+        "TARGET RETURNED TO PLATFORM",
+        "ATTACKER ROUTE BYPASSED",
+        "CAMPAIGN INTERRUPTED"
+      ],
+      "reported": [
+        "TARGET STOPPED AND REPORTED",
+        "CAMPAIGN FAILED TO PROGRESS",
+        "ROUTE CONTAINED"
+      ]
     },
     "reveal": {
-      "notification": "Mengapa ini terjadi", "view": "Lihat analisis", "hide": "Tutup analisis", "retry": "Coba variasi lain", "finish": "Selesaikan latihan",
-      "fields": { "whatHappened": "Apa yang terjadi", "attackerObjective": "Tujuan pelaku", "technique": "Teknik manipulasi", "saferResponse": "Respons yang lebih aman" },
-      "unsafe": { "whatHappened": "Permintaan biaya diterima setelah perlindungan platform ditinggalkan.", "attackerObjective": "Membuat target meneruskan nilai transaksi di jalur yang tidak dapat diverifikasi.", "technique": "Perpindahan kanal, urgensi, dan tekanan biaya setelah kepercayaan dibangun.", "saferResponse": "Hentikan alur dan kembali ke marketplace untuk memeriksa transaksi." },
-      "safe": { "whatHappened": "Kamu tidak mengikuti rute yang diminta dari luar marketplace.", "attackerObjective": "Menjauhkan target dari bukti dan perlindungan platform.", "technique": "Kredibilitas pinjaman, isolasi kanal, lalu permintaan yang tidak biasa.", "saferResponse": "Gunakan kanal marketplace yang kamu buka sendiri atau hentikan transaksi." }
+      "notification": "Mengapa ini terjadi",
+      "view": "Lihat analisis",
+      "hide": "Tutup analisis",
+      "retry": "Coba variasi lain",
+      "finish": "Selesaikan latihan",
+      "fields": {
+        "whatHappened": "Apa yang terjadi",
+        "attackerObjective": "Tujuan pelaku",
+        "technique": "Teknik manipulasi",
+        "saferResponse": "Respons yang lebih aman"
+      },
+      "unsafe": {
+        "whatHappened": "Permintaan biaya diterima setelah perlindungan platform ditinggalkan.",
+        "attackerObjective": "Membuat target meneruskan nilai transaksi di jalur yang tidak dapat diverifikasi.",
+        "technique": "Perpindahan kanal, urgensi, dan tekanan biaya setelah kepercayaan dibangun.",
+        "saferResponse": "Hentikan alur dan kembali ke marketplace untuk memeriksa transaksi."
+      },
+      "safe": {
+        "whatHappened": "Kamu tidak mengikuti rute yang diminta dari luar marketplace.",
+        "attackerObjective": "Menjauhkan target dari bukti dan perlindungan platform.",
+        "technique": "Kredibilitas pinjaman, isolasi kanal, lalu permintaan yang tidak biasa.",
+        "saferResponse": "Gunakan kanal marketplace yang kamu buka sendiri atau hentikan transaksi."
+      }
     },
-    "outcomes": { "complied": "Rute monetisasi simulasi maju, tetapi tidak ada pembayaran atau data yang dikirim.", "verified": "Pemeriksaan mandiri memutus rute pelaku sebelum biaya diproses.", "reported": "Percakapan dihentikan sebelum permintaan tak terduga dapat berkembang." },
-    "retry": { "prompt": "Periksa satu sinyal sebelum memilih respons pada variasi ini.", "question": "Apa responsmu terhadap permintaan refund ini?" },
-    "complete": { "title": "Latihan selesai", "description": "Pola yang sama dapat muncul dalam penawaran, refund, atau perantara pembayaran.", "backHome": "Kembali ke beranda" }
+    "outcomes": {
+      "complied": "Rute monetisasi simulasi maju, tetapi tidak ada pembayaran atau data yang dikirim.",
+      "verified": "Pemeriksaan mandiri memutus rute pelaku sebelum biaya diproses.",
+      "reported": "Percakapan dihentikan sebelum permintaan tak terduga dapat berkembang."
+    },
+    "retry": {
+      "prompt": "Periksa satu sinyal sebelum memilih respons pada variasi ini.",
+      "question": "Apa responsmu terhadap permintaan refund ini?"
+    },
+    "complete": {
+      "title": "Latihan selesai",
+      "description": "Pola yang sama dapat muncul dalam penawaran, refund, atau perantara pembayaran.",
+      "backHome": "Kembali ke beranda"
+    }
   },
   "training": {
     "eyebrow": "MODUL",
@@ -465,18 +600,41 @@
     "masteryMap": "PETA KETERAMPILAN",
     "progressionLabel": "STATUS PROGRESI",
     "achievements": "PENCAPAIAN KONTEKSTUAL",
-    "daysShort": ["SN", "SL", "RB", "KM", "JM", "SB", "MG"],
+    "daysShort": [
+      "SN",
+      "SL",
+      "RB",
+      "KM",
+      "JM",
+      "SB",
+      "MG"
+    ],
     "habitsLabel": "Kebiasaan aman",
     "habitsDescription": "Memeriksa · Memverifikasi · Melaporkan",
     "unlocked": "Terbuka",
     "locked": "Terkunci",
     "achievementEmpty": "Selesaikan modul pertamamu untuk membuka pencapaian pertama.",
     "achievementDetails": [
-      { "title": "Tekanan dikenali", "description": "Berhenti sebelum urgensi mengambil alih." },
-      { "title": "Pengirim diperiksa", "description": "Periksa kanal sebelum bertindak." },
-      { "title": "Tautan diperiksa", "description": "Baca rute, bukan hanya pesannya." },
-      { "title": "Verifikasi mandiri", "description": "Buka kanal resmi sendiri." },
-      { "title": "Interupsi aman", "description": "Hentikan rute sebelum meluas." }
+      {
+        "title": "Tekanan dikenali",
+        "description": "Berhenti sebelum urgensi mengambil alih."
+      },
+      {
+        "title": "Pengirim diperiksa",
+        "description": "Periksa kanal sebelum bertindak."
+      },
+      {
+        "title": "Tautan diperiksa",
+        "description": "Baca rute, bukan hanya pesannya."
+      },
+      {
+        "title": "Verifikasi mandiri",
+        "description": "Buka kanal resmi sendiri."
+      },
+      {
+        "title": "Interupsi aman",
+        "description": "Hentikan rute sebelum meluas."
+      }
     ]
   },
   "profile": {
@@ -487,7 +645,11 @@
     "username": "Operator Anonim",
     "operatorStatus": "OPERATOR · DALAM PELATIHAN",
     "identityNote": "Identitas operator untuk ruang latihan ini.",
-    "avatarOptions": ["Operator", "Pengamat", "Analis"],
+    "avatarOptions": [
+      "Operator",
+      "Pengamat",
+      "Analis"
+    ],
     "level": "LEVEL",
     "operatorTitles": {
       "cadet": "Kadet Sinyal",
