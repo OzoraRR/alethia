@@ -2,11 +2,15 @@
   "name": "alethia",
   "version": "0.1.0",
   "private": true,
+  "imports": {
+    "@/*": "./*"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "test": "tsx --test tests/**/*.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -24,6 +28,7 @@
     "eslint-config-next": "15.5.9",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.15",
     "typescript": "^5.7.2"
   }
 }
