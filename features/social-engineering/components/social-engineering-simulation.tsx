@@ -55,33 +55,41 @@ const decisionOptions: ReadonlyArray<{ decision: SocialEngineeringDecision; key:
   { decision: "report_offer", key: "report", marker: "×" },
 ];
 
-function initSocialState(initial: SocialEngineeringState): SocialEngineeringState {
-  if (typeof window === "undefined") return initial;
-  const saved = loadSocialChallenge();
-  if (saved && !saved.isCompleted && saved.stage !== "complete") {
-    return {
-      stage: saved.stage,
-      primarySignals: saved.primarySignals ?? [],
-      retrySignals: saved.retrySignals ?? [],
-      decision: saved.decision ?? null,
-      retryDecision: saved.retryDecision ?? null,
-    };
-  }
-  return initial;
-}
+// Hydration-safe: state is restored from localStorage after mount via useEffect
 
 export function SocialEngineeringSimulation() {
   const messages = getMessages();
   const social = messages.socialEngineering;
-  const [state, dispatch] = useReducer(socialEngineeringReducer, initialSocialEngineeringState, initSocialState);
+  const [state, dispatch] = useReducer(socialEngineeringReducer, initialSocialEngineeringState);
+  const [mounted, setMounted] = useState(false);
   const completionRecorded = useRef(false);
-  const hasStartedRef = useRef(state.stage !== "briefing");
-  const attemptIdRef = useRef<string | null>(
-    typeof window !== "undefined" ? loadSocialChallenge()?.attemptId ?? null : null,
-  );
+  const hasStartedRef = useRef(false);
+  const attemptIdRef = useRef<string | null>(null);
   const attemptPromiseRef = useRef<Promise<PracticeAttemptResult> | null>(null);
   const recordedEventKeysRef = useRef(new Set<string>());
   const [syncStatus, setSyncStatus] = useState<RemoteSyncResult["status"] | null>(null);
+
+  // Restore state from localStorage after mount (hydration-safe)
+  useEffect(() => {
+    const saved = loadSocialChallenge();
+    if (saved && !saved.isCompleted && saved.stage !== "complete") {
+      dispatch({
+        type: "restore_state",
+        state: {
+          stage: saved.stage,
+          primarySignals: saved.primarySignals ?? [],
+          retrySignals: saved.retrySignals ?? [],
+          decision: saved.decision ?? null,
+          retryDecision: saved.retryDecision ?? null,
+        },
+      });
+      attemptIdRef.current = saved.attemptId ?? null;
+      hasStartedRef.current = saved.stage !== "briefing";
+    }
+    setMounted(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const isRetryRound = state.stage === "retry" || state.retryDecision !== null || state.stage === "complete";
   const scenario = social.scenarios[(isRetryRound ? marketplaceScenarios.retry : marketplaceScenarios.primary).copyKey];
   const activeDecision = state.stage === "reveal" || state.stage === "complete"

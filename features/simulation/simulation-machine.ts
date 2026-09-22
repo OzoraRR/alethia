@@ -20,7 +20,8 @@ export type SimulationAction =
   | { type: "start_retry" }
   | { type: "inspect_retry_signal"; signal: InspectionSignal }
   | { type: "select_retry_decision"; decision: Decision }
-  | { type: "complete_module" };
+  | { type: "complete_module" }
+  | { type: "restore_state"; state: SimulationState };
 
 export const initialSimulationState: SimulationState = {
   stage: "briefing",
@@ -84,6 +85,8 @@ export function simulationReducer(
       return state.stage === "reveal" && state.retryDecision !== null
         ? { ...state, stage: "complete" }
         : state;
+    case "restore_state":
+      return action.state;
     default:
       return state;
   }

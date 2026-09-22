@@ -50,39 +50,45 @@ const choiceKeyByDecision: Record<Decision, ChoiceKey> = {
   report_delete: "reportDelete",
 };
 
-function initCourierState(initial: SimulationState): SimulationState {
-  if (typeof window === "undefined") return initial;
-  const saved = loadCourierChallenge();
-  if (saved && !saved.isCompleted && saved.stage !== "complete") {
-    return {
-      stage: saved.stage,
-      inspectedSignals: saved.inspectedSignals ?? [],
-      retryInspectedSignals: saved.retryInspectedSignals ?? [],
-      verificationOpen: saved.verificationOpen ?? false,
-      decision: saved.decision ?? null,
-      retryDecision: saved.retryDecision ?? null,
-    };
-  }
-  return initial;
-}
+// Hydration-safe: state is restored from localStorage after mount via useEffect
 
 export function CourierSmsSimulation() {
   const messages = getMessages();
   const simulation = messages.simulation;
-  const [state, dispatch] = useReducer(simulationReducer, initialSimulationState, initCourierState);
-  const [verificationChecked, setVerificationChecked] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return loadCourierChallenge()?.verificationChecked ?? false;
-  });
+  const [state, dispatch] = useReducer(simulationReducer, initialSimulationState);
+  const [verificationChecked, setVerificationChecked] = useState<boolean>(false);
+  const [mounted, setMounted] = useState(false);
   const completionRecorded = useRef(false);
-  const hasStartedRef = useRef(state.stage !== "briefing");
-  const attemptIdRef = useRef<string | null>(
-    typeof window !== "undefined" ? loadCourierChallenge()?.attemptId ?? null : null,
-  );
+  const hasStartedRef = useRef(false);
+  const attemptIdRef = useRef<string | null>(null);
   const attemptPromiseRef = useRef<Promise<PracticeAttemptResult> | null>(null);
   const recordedEventKeysRef = useRef(new Set<string>());
   const [completionProgress, setCompletionProgress] = useState<PracticeProgress | null>(null);
   const [syncStatus, setSyncStatus] = useState<RemoteSyncResult["status"] | null>(null);
+
+  // Restore state from localStorage after mount (hydration-safe)
+  useEffect(() => {
+    const saved = loadCourierChallenge();
+    if (saved && !saved.isCompleted && saved.stage !== "complete") {
+      dispatch({
+        type: "restore_state",
+        state: {
+          stage: saved.stage,
+          inspectedSignals: saved.inspectedSignals ?? [],
+          retryInspectedSignals: saved.retryInspectedSignals ?? [],
+          verificationOpen: saved.verificationOpen ?? false,
+          decision: saved.decision ?? null,
+          retryDecision: saved.retryDecision ?? null,
+        },
+      });
+      setVerificationChecked(saved.verificationChecked ?? false);
+      attemptIdRef.current = saved.attemptId ?? null;
+      hasStartedRef.current = saved.stage !== "briefing";
+    }
+    setMounted(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const isRetryScenario = state.stage === "retry" || state.retryDecision !== null || state.stage === "complete";
   const scenario = simulation.scenarios[(isRetryScenario ? courierScenarios.retry : courierScenarios.primary).copyKey];
   const activeDecision = state.stage === "reveal" || state.stage === "complete"

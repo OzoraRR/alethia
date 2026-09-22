@@ -21,7 +21,8 @@ export type SocialEngineeringAction =
   | { type: "start_retry" }
   | { type: "inspect_retry"; signal: SocialEngineeringSignal }
   | { type: "select_retry_decision"; decision: SocialEngineeringDecision }
-  | { type: "complete_module" };
+  | { type: "complete_module" }
+  | { type: "restore_state"; state: SocialEngineeringState };
 
 export const initialSocialEngineeringState: SocialEngineeringState = {
   stage: "briefing",
@@ -74,6 +75,8 @@ export function socialEngineeringReducer(
         : state;
     case "complete_module":
       return state.stage === "reveal" && state.retryDecision !== null ? { ...state, stage: "complete" } : state;
+    case "restore_state":
+      return action.state;
     default:
       return state;
   }
