@@ -675,6 +675,110 @@
     "avatarNoSession": "Masuk untuk menyimpan avatar.",
     "avatarInvalid": "Gunakan PNG, JPG, atau WebP hingga 2 MB.",
     "avatarFailed": "Avatar belum dapat disimpan.",
-    "avatarSaved": "Avatar diperbarui."
+    "avatarSaved": "Avatar diperbarui.",
+    "activityTitle": "Investigation activity",
+    "activitySubtitle": "Jejak latihan seperti kontribusi github.",
+    "reportActivity": "Report activity",
+    "reportActivityHint": "Latihan yang selesai tercatat sebagai laporan.",
+    "statModules": "modul",
+    "statStreak": "rangkaian",
+    "statBadges": "badge",
+    "completed": "Selesai",
+    "pending": "Belum mulai",
+    "emptyReports": "Mulai satu modul untuk melihat laporan pertamamu.",
+    "viewReports": "Lihat laporan"
+  },
+  "landing": {
+    "eyebrow": "PLATFORM LATIHAN KEAMANAN",
+    "title": "Belajar menipu sebelum tertipu.",
+    "description": "Alethia adalah ruang latihan keamanan siber: simulasi SMS phishing, rekayasa sosial marketplace, dan laporan komunitas. Semua fiktif, semua aman, semua bisa diulang.",
+    "start": "Mulai",
+    "enter": "Masuk",
+    "safe": "SIMULASI AMAN · Tanpa data nyata",
+    "worldsEyebrow": "DUNIA LATIHAN",
+    "worldsTitle": "Tiga dunia, satu kebiasaan: verifikasi.",
+    "rolesEyebrow": "DUA PERAN",
+    "rolesTitle": "Mulai sebagai Student, naik jadi Investigator.",
+    "studentTitle": "Student",
+    "studentDesc": "Mengajukan laporan dengan bukti dan alasan risiko. Laporan masuk antrean moderasi.",
+    "investigatorTitle": "Investigator",
+    "investigatorDesc": "Selesaikan 1 modul dengan respons aman untuk membuka investigasi dan konfirmasi sinyal.",
+    "stepsEyebrow": "CARA MAIN",
+    "howTitle": "Tiga langkah masuk ke dalam.",
+    "finalTitle": "Siap uji instingmu?",
+    "finalDesc": "Pilih nama sandi operator dan mulai latihan pertamamu.",
+    "worlds": [
+      {
+        "title": "Simulasi Serangan Siber",
+        "desc": "Latihan interaktif mengenali & merespons SMS phishing, penipuan marketplace, dan dokumen berbahaya.",
+        "meta": "FITUR 01 · SIMULASI",
+        "status": "Aktif"
+      },
+      {
+        "title": "Progress & Streak Tracking",
+        "desc": "Pantau perkembangan skill, konsistensi latihan harian, dan raih badge pencapaian.",
+        "meta": "FITUR 02 · PROGRESS",
+        "status": "Aktif"
+      },
+      {
+        "title": "Report Hub & Profil Operator",
+        "desc": "Pelajari pola serangan dari komunitas & kembangkan profil operator dengan sistem level personal.",
+        "meta": "FITUR 03 · KOMUNITAS",
+        "status": "Aktif"
+      }
+    ],
+    "steps": [
+      {
+        "title": "Pilih nama sandi",
+        "desc": "Masuk sebagai operator anonim. Tanpa email, tanpa password."
+      },
+      {
+        "title": "Mainkan simulasi",
+        "desc": "Hadapi pesan kurir dan penawaran pasar dalam ponsel simulasi."
+      },
+      {
+        "title": "Naik tingkat",
+        "desc": "Respons aman membuka peran Investigator dan metamorfosismu."
+      }
+    ],
+    "chooseWorld": "Pilih duniamu",
+    "prevWorld": "Dunia sebelumnya",
+    "nextWorld": "Dunia berikutnya"
+  },
+  "login": {
+    "eyebrow": "GERBANG OPERATOR",
+    "title": "Masuk ke ruang latihan.",
+    "description": "Daftar sekali, lalu masuk dengan username atau email. Akun tersimpan di perambanmu, bukan di server kami.",
+    "tabLogin": "Masuk",
+    "tabRegister": "Daftar",
+    "usernameLabel": "USERNAME",
+    "usernamePlaceholder": "mis. sinyal_ops",
+    "identifierLabel": "USERNAME ATAU EMAIL",
+    "identifierPlaceholder": "nama sandi atau email",
+    "emailLabel": "EMAIL",
+    "emailPlaceholder": "nama@contoh.id",
+    "passLabel": "SANDI",
+    "passPlaceholder": "min. 8 karakter",
+    "confirmLabel": "KONFIRMASI SANDI",
+    "loginSubmit": "Masuk ke latihan",
+    "registerSubmit": "Buat akun operator",
+    "back": "← Kembali",
+    "usernameInvalid": "Username 3–24 karakter: huruf, angka, garis bawah.",
+    "emailInvalid": "Format email tidak valid.",
+    "passwordShort": "Sandi minimal 8 karakter.",
+    "passwordMismatch": "Konfirmasi sandi tidak sama.",
+    "usernameTaken": "Username sudah dipakai di peramban ini.",
+    "emailTaken": "Email sudah terdaftar di peramban ini.",
+    "invalidCredentials": "Username/email atau sandi salah.",
+    "unavailable": "Keamanan peramban tidak tersedia. Coba browser lain.",
+    "localNote": "Akun latihan lokal: kredensial tidak pernah dikirim ke mana pun.",
+    "overlayWelcome": "Selamat datang kembali, Chief!",
+    "overlayWelcomeDesc": "Masuk untuk lanjutkan latihan, streak, dan investigasimu.",
+    "overlayGoRegister": "Buat akun",
+    "overlayHello": "Halo, Operator!",
+    "overlayHelloDesc": "Daftar untuk membuka ruang latihan, peran, dan metamorfosismu.",
+    "overlayGoLogin": "Masuk",
+    "switchToRegister": "Belum punya akun? > Daftar",
+    "switchToLogin": "Sudah punya akun? > Masuk"
   }
 }

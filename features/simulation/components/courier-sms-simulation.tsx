@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { recordCourierSmsCompletion, type PracticeProgress } from "@/features/progress/progress";
@@ -86,7 +87,7 @@ export function CourierSmsSimulation() {
       hasStartedRef.current = saved.stage !== "briefing";
     }
     setMounted(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isRetryScenario = state.stage === "retry" || state.retryDecision !== null || state.stage === "complete";
@@ -224,23 +225,30 @@ export function CourierSmsSimulation() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
-      <header className="flex flex-wrap items-start justify-between gap-5">
-        <div className="max-w-2xl">
-          <p className="font-mono text-xs tracking-[0.1em] text-signal">{simulation.briefing.label}</p>
-          <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-ice sm:text-4xl">
-            {simulation.briefing.title}
-          </h1>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-muted sm:text-base">
-            {simulation.briefing.description}
-          </p>
-        </div>
-        <p className="border border-signal/30 px-3 py-2 font-mono text-xs text-signal">{simulation.safeNote}</p>
-      </header>
+      {state.stage === "briefing" ? (
+        <BriefingBanner onBegin={startModule} scenario={scenario} simulation={simulation} />
+      ) : (
+        <header className="flex flex-wrap items-start justify-between gap-5">
+          <div className="max-w-2xl">
+            <p className="font-mono text-xs tracking-[0.1em] text-signal">{simulation.briefing.label}</p>
+            <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-ice sm:text-4xl">
+              {simulation.briefing.title}
+            </h1>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-muted sm:text-base">
+              {simulation.briefing.description}
+            </p>
+          </div>
+          <p className="border border-signal/30 px-3 py-2 font-mono text-xs text-signal">{simulation.safeNote}</p>
+        </header>
+      )}
 
       <StageProgress activeStage={state.stage} simulation={simulation} />
 
       {state.stage === "briefing" ? (
-        <BriefingPanel simulation={simulation} onBegin={startModule} />
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-b border-navy-700 pb-6">
+          <span className="font-mono text-xs text-muted">{simulation.briefing.checkpointCount}</span>
+          <DeviceAction onClick={startModule}>{simulation.briefing.begin}</DeviceAction>
+        </div>
       ) : (
         <>
           <div className="relative mt-7 grid gap-7 lg:grid-cols-2 lg:gap-12">
@@ -295,13 +303,12 @@ function StageProgress({ activeStage, simulation }: { activeStage: SimulationSta
           <li
             key={checkpoint}
             aria-current={isActive ? "step" : undefined}
-            className={`min-w-0 border-b-2 px-2 py-3 font-mono text-[11px] leading-4 sm:px-3 ${
-              isActive
+            className={`min-w-0 border-b-2 px-2 py-3 font-mono text-[11px] leading-4 sm:px-3 ${isActive
                 ? "border-signal text-signal"
                 : isComplete
                   ? "border-ice/50 text-ice"
                   : "border-transparent text-muted"
-            }`}
+              }`}
           >
             <span className="hidden sm:inline">{isComplete ? "✓ " : `${index + 1} `}</span>
             {simulation.checkpoints[checkpoint]}
@@ -312,11 +319,47 @@ function StageProgress({ activeStage, simulation }: { activeStage: SimulationSta
   );
 }
 
-function BriefingPanel({ simulation, onBegin }: { simulation: SimulationMessages; onBegin: () => void }) {
+function BriefingBanner({
+  onBegin,
+  scenario,
+  simulation,
+}: {
+  onBegin: () => void;
+  scenario: ScenarioCopy;
+  simulation: SimulationMessages;
+}) {
+  const points = [
+    scenario.senderInspectionTitle,
+    scenario.linkInspectionTitle,
+    simulation.decide.title,
+  ];
   return (
-    <section className="mt-6 flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-6">
-      <span className="font-mono text-xs text-muted">{simulation.briefing.checkpointCount}</span>
-      <DeviceAction onClick={onBegin}>{simulation.briefing.begin}</DeviceAction>
+    <section aria-label={simulation.briefing.title} className="container-level-2 relative overflow-hidden">
+      <Image alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover object-right" fill sizes="100vw" src="/media/sms-phishing.webp" unoptimized />
+      <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-navy-950 via-navy-950/85 to-transparent" />
+      <div className="relative p-6 sm:p-8 lg:max-w-2xl">
+        <p className="font-mono text-xs tracking-[0.14em] text-signal">{simulation.briefing.label}</p>
+        <h1 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-ice sm:text-5xl">
+          {simulation.briefing.title}
+        </h1>
+        <p className="mt-4 max-w-xl text-sm leading-7 text-muted sm:text-base">
+          {simulation.briefing.description}
+        </p>
+        <p className="mt-5 inline-block border border-signal/30 px-3 py-2 font-mono text-xs text-signal">
+          {simulation.safeNote}
+        </p>
+        <ol className="mt-7 border-t border-navy-700/80">
+          {points.map((point, index) => (
+            <li className="flex items-baseline gap-3 border-b border-navy-700/80 py-3" key={point}>
+              <span className="font-mono text-[11px] text-signal">0{index + 1}</span>
+              <span className="text-sm text-ice">{point}</span>
+            </li>
+          ))}
+        </ol>
+        <button className="mt-7 font-mono text-xs text-muted hover:text-ice" onClick={onBegin} type="button">
+          {simulation.briefing.begin} →
+        </button>
+      </div>
     </section>
   );
 }
@@ -356,9 +399,14 @@ function VictimDevice({
 
   return (
     <section className="mx-auto w-full max-w-[25rem]" aria-label={simulation.devices.victim}>
-      <p className="mb-3 font-mono text-xs tracking-[0.1em] text-muted">{simulation.devices.victim}</p>
-      <div className="rounded-[2.2rem] border-[7px] border-navy-700 bg-navy-950 p-2 shadow-panel">
-        <div className="min-h-[39rem] overflow-hidden rounded-[1.65rem] border border-white/[0.08] bg-navy-950">
+      <div className="flex items-center justify-between mb-3 px-1">
+        <p className="font-mono text-xs tracking-[0.12em] text-muted uppercase font-medium">
+          [ {simulation.devices.victim} ]
+        </p>
+        <span className="font-mono text-[10px] text-signal/70">WORKSTATION DISPATCH</span>
+      </div>
+      <div className="container-level-3 device-phone rounded-[2rem] p-2.5">
+        <div className="device-screen rounded-[1.5rem] bg-navy-950">
           {state.verificationOpen ? (
             <TrustedCourierApp
               checked={verificationChecked}
@@ -375,7 +423,7 @@ function VictimDevice({
                 <p className="text-center font-mono text-[10px] text-muted">{scenario.timestamp}</p>
                 <MessageBubble scenario={scenario} simulation={simulation} />
               </div>
-              <div className="border-t border-white/[0.08] bg-navy-950 p-4">
+              <div className="border-t border-navy-700/80 bg-navy-950 p-4">
                 {state.stage === "receive" ? (
                   <DeviceAction onClick={onContinueReceive}>{simulation.receive.action}</DeviceAction>
                 ) : null}
@@ -517,9 +565,8 @@ function InspectButton({ active, label, onClick }: { active: boolean; label: str
   return (
     <button
       aria-pressed={active}
-      className={`min-h-11 border px-3 py-2 text-left font-mono text-xs ${
-        active ? "border-signal/50 text-signal" : "border-white/[0.1] text-ice hover:border-signal/50"
-      }`}
+      className={`min-h-11 border px-3 py-2 text-left font-mono text-xs ${active ? "border-signal/50 text-signal" : "border-white/[0.1] text-ice hover:border-signal/50"
+        }`}
       disabled={active}
       type="button"
       onClick={onClick}
@@ -542,7 +589,7 @@ function TrustedCourierApp({
   simulation: SimulationMessages;
 }) {
   return (
-    <div className="min-h-[39rem] bg-[#e7eee9] px-5 py-6 text-[#16241e]">
+    <div className="min-h-full bg-[#e7eee9] px-5 py-6 text-[#16241e]">
       <div className="mx-auto h-1.5 w-16 rounded-full bg-[#789084]" />
       <div className="mt-8 flex items-center justify-between">
         <p className="font-mono text-xs font-bold tracking-[0.12em]">{simulation.verify.appTitle}</p>
@@ -644,7 +691,7 @@ function VictimOutcome({ decision, simulation }: { decision: Decision; simulatio
         : simulation.outcomes.verifyOfficial;
 
   return (
-    <div className="min-h-[39rem] bg-navy-900 px-5 py-6">
+    <div className="min-h-full bg-navy-900 px-5 py-6">
       <p className="font-mono text-xs text-muted">{simulation.devices.victim}</p>
       <h2 className="mt-10 text-2xl font-semibold text-ice">{choice.label}</h2>
       {decision === "open_link" ? (
@@ -711,18 +758,23 @@ function AttackerDevice({
 
   return (
     <section className="mx-auto w-full max-w-[25rem]" aria-label={simulation.devices.attacker}>
-      <p className="mb-3 font-mono text-xs tracking-[0.1em] text-muted">{simulation.devices.attacker}</p>
-      <div className="rounded-[2.2rem] border-[7px] border-[#101922] bg-[#05090d] p-2 shadow-panel">
-        <div className="min-h-[39rem] overflow-hidden rounded-[1.65rem] border border-white/[0.08] bg-[#070d13]">
+      <div className="flex items-center justify-between mb-3 px-1">
+        <p className="font-mono text-xs tracking-[0.12em] text-muted uppercase font-medium">
+          [ {simulation.devices.attacker} ]
+        </p>
+        <span className="font-mono text-[10px] text-warning/80">LIVE TELEMETRY MONITOR</span>
+      </div>
+      <div className="container-level-3 device-phone rounded-[2rem] p-2.5">
+        <div className="device-screen rounded-[1.5rem] bg-[#05090d]">
           <div className="flex justify-center pt-2">
             <span aria-hidden="true" className="h-1.5 w-16 rounded-full bg-navy-700" />
           </div>
-          <div className="border-b border-white/[0.08] px-4 pb-4 pt-5">
+          <div className="border-b border-navy-700/80 px-4 pb-4 pt-5">
             <div className="flex items-center justify-between gap-3">
               <p className="font-mono text-xs font-bold tracking-[0.08em] text-ice">
                 {simulation.console.campaignTitle}
               </p>
-              <span className="font-mono text-[10px] text-signal">
+              <span className="font-mono text-[10px] text-signal font-medium">
                 {isRetryOutcome ? simulation.console.roundRetry : simulation.console.roundPrimary}
               </span>
             </div>
@@ -739,10 +791,12 @@ function AttackerDevice({
           </div>
           <div className="px-4 py-5">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-mono text-[10px] tracking-[0.1em] text-muted">{simulation.console.liveLogLabel}</p>
-              <span className="font-mono text-[10px] text-warning">{status}</span>
+              <p className="font-mono text-[10px] tracking-[0.1em] text-muted uppercase">{simulation.console.liveLogLabel}</p>
+              <span className="font-mono text-[10px] text-warning font-semibold border border-warning/30 px-2 py-0.5 bg-warning/5">
+                {status}
+              </span>
             </div>
-            <ol className="mt-4 min-h-[17rem] space-y-2 border-l border-white/[0.12] pl-3" aria-live="polite">
+            <ol className="mt-4 min-h-[17rem] space-y-2 border-l border-navy-700/80 pl-3" aria-live="polite">
               {allEvents.map((event, index) => (
                 <li key={`${event}-${index}`} className="font-mono text-[11px] leading-5 text-ice">
                   <span className="mr-2 text-muted">[{eventTime(index)}]</span>
@@ -750,24 +804,24 @@ function AttackerDevice({
                 </li>
               ))}
             </ol>
-            <div className="mt-4 border-t border-white/[0.08] pt-3">
-              <p className="font-mono text-[10px] text-muted">{simulation.console.nextActionLabel}</p>
+            <div className="mt-4 border-t border-navy-700/80 pt-3">
+              <p className="font-mono text-[10px] text-muted uppercase">{simulation.console.nextActionLabel}</p>
               <p className="mt-1 font-mono text-xs leading-5 text-ice">
                 {nextActionFor(state, decision, simulation, isRetryOutcome)}
               </p>
             </div>
           </div>
           {decision && traceFinished && feedback ? (
-            <div className="border-t border-white/[0.08] bg-navy-950/90">
-              <div aria-hidden="true" className="mx-auto mt-2 h-1 w-10 rounded-full bg-white/20" />
-              <div className="flex items-start justify-between gap-4 px-4 pb-4 pt-3">
+            <div className="border-t border-navy-700/80 bg-navy-950/95 p-3">
+              <div aria-hidden="true" className="mx-auto mt-1 mb-2 h-1 w-10 rounded-full bg-white/20" />
+              <div className="flex items-start justify-between gap-4 px-2 pb-2">
                 <div>
-                  <p className="font-mono text-[10px] text-signal">{simulation.reveal.notificationLabel}</p>
+                  <p className="font-mono text-[10px] tracking-[0.1em] text-signal font-bold uppercase">{simulation.reveal.notificationLabel}</p>
                   <p className="mt-1 text-xs leading-5 text-ice">{feedback.whatHappened}</p>
                 </div>
                 <button
                   aria-expanded={analysisExpanded}
-                  className="shrink-0 font-mono text-xs text-signal"
+                  className="shrink-0 font-mono text-xs text-signal hover:underline"
                   type="button"
                   onClick={() => setAnalysisExpanded((expanded) => !expanded)}
                 >
@@ -778,13 +832,13 @@ function AttackerDevice({
             </div>
           ) : null}
           {decision && traceFinished && state.stage !== "complete" ? (
-            <div className="border-t border-white/[0.08] px-4 py-4">
+            <div className="border-t border-navy-700/80 px-4 py-4">
               <button
-                className="font-mono text-xs text-muted hover:text-ice"
+                className="font-mono text-xs text-signal hover:text-signal/80 flex items-center gap-2"
                 type="button"
                 onClick={onAdvanceOutcome}
               >
-                {isRetryOutcome ? simulation.reveal.finish : simulation.reveal.retry}{" "}
+                <span>{isRetryOutcome ? simulation.reveal.finish : simulation.reveal.retry}</span>
                 <span aria-hidden="true">→</span>
               </button>
             </div>
@@ -799,7 +853,7 @@ function CampaignField({ label, value, wide = false }: { label: string; value: s
   return (
     <div className={wide ? "col-span-2" : ""}>
       <dt className="text-muted">{label}</dt>
-      <dd className="mt-1 text-ice">{value}</dd>
+      <dd className="mt-1 text-ice font-medium">{value}</dd>
     </div>
   );
 }
@@ -812,19 +866,25 @@ function AnalysisPanel({
   simulation: SimulationMessages;
 }) {
   return (
-    <dl className="border-t border-white/[0.08] px-4 py-4">
-      <AnalysisRow label={simulation.reveal.fields.whatHappened} value={feedback.whatHappened} />
-      <AnalysisRow label={simulation.reveal.fields.attackerObjective} value={feedback.attackerObjective} />
-      <AnalysisRow label={simulation.reveal.fields.technique} value={feedback.technique} />
-      <AnalysisRow label={simulation.reveal.fields.saferResponse} value={feedback.saferResponse} />
-    </dl>
+    <div className="forensic-diagnostic-panel p-3.5 my-2">
+      <div className="flex items-center justify-between border-b border-navy-700/80 pb-2 mb-3">
+        <span className="font-mono text-[10px] tracking-[0.14em] text-signal font-bold">ANALYSIS COMPLETE</span>
+        <span className="font-mono text-[10px] text-muted uppercase">FORENSIC DIAGNOSTIC</span>
+      </div>
+      <dl className="space-y-3">
+        <AnalysisRow label={simulation.reveal.fields.whatHappened} value={feedback.whatHappened} />
+        <AnalysisRow label={simulation.reveal.fields.attackerObjective} value={feedback.attackerObjective} />
+        <AnalysisRow label={simulation.reveal.fields.technique} value={feedback.technique} />
+        <AnalysisRow label={simulation.reveal.fields.saferResponse} value={feedback.saferResponse} />
+      </dl>
+    </div>
   );
 }
 
 function AnalysisRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="font-mono text-[10px] text-muted">{label}</dt>
+      <dt className="font-mono text-[10px] text-muted uppercase tracking-wider">{label}</dt>
       <dd className="mt-1 text-xs leading-5 text-ice">{value}</dd>
     </div>
   );
@@ -852,7 +912,7 @@ function CompletionSummary({
           </p>
         ) : null}
       </div>
-      <Link className="font-mono text-xs text-signal" href="/">
+      <Link className="font-mono text-xs text-signal" href="/dashboard">
         {simulation.complete.backHome} →
       </Link>
     </section>

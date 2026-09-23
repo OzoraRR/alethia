@@ -158,6 +158,20 @@ export function getSessionId(): string {
 }
 
 /**
+ * Operator callsign chosen on the login page. Displayed on the dossier.
+ */
+export function getCallsign(): string | null {
+  const raw = safeGetItem<string | null>(STORAGE_KEYS.CALLSIGN, null, (v): v is string | null =>
+    v === null || typeof v === "string",
+  );
+  return raw && raw.trim() ? raw.trim() : null;
+}
+
+export function saveCallsign(callsign: string): void {
+  safeSetItem(STORAGE_KEYS.CALLSIGN, callsign.trim().slice(0, 24));
+}
+
+/**
  * Resets the active session and clears stored session key.
  */
 export function clearAnonymousSession(): void {
