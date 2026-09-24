@@ -1,7 +1,6 @@
 "use client";
 
 import { createClient } from "../../lib/supabase/client";
-import { getOrCreateAnonymousSession } from "../../lib/session/session";
 import type { MasteryState, ModuleId, PracticeProgress, RetryResult } from "./progress";
 
 export const practiceEventTypes = [
@@ -187,8 +186,10 @@ export async function persistProgressSnapshot({
     if (!auth) return localOnly("no_session");
 
     const occurredAt = new Date().toISOString();
+    const profileWrite = await ensureProfile(auth);
     const writes: Array<Promise<RemoteSyncResult>> = [
-      ensureProfile(auth),
+      Promise.resolve(profileWrite),
+      syncProfileStats(auth, progress),
       inspectMutation(
         "update module progress",
         auth.client.from("user_module_progress").upsert(
@@ -289,11 +290,16 @@ export async function persistPracticeEvent({
 async function getAuthContext(): Promise<AuthContext | null> {
   const client = getSafeClient();
   if (!client) return null;
-  const session = await getOrCreateAnonymousSession();
-  if (session && session.isRemote) {
-    return { client, userId: session.sessionId };
-  }
-  return null;
+
+  // Always verify the live Supabase user here. A synchronous local challenge
+  // ID may have populated the app session cache, but it must never decide
+  // which remote account receives progress writes.
+  const result = (await withTimeout(client.auth.getUser())) as {
+    data: { user: { id: string; is_anonymous?: boolean } | null };
+    error: unknown;
+  };
+  if (result.error || !result.data.user) return null;
+  return { client, userId: result.data.user.id };
 }
 
 function getSafeClient() {
@@ -304,12 +310,40 @@ function getSafeClient() {
   }
 }
 
+function fallbackProfileUsername(userId: string): string {
+  return `operator_${userId.replace(/-/g, "").slice(0, 15)}`;
+}
+
 async function ensureProfile(auth: AuthContext): Promise<RemoteSyncResult> {
   return inspectMutation(
     "ensure profile",
     auth.client
       .from("profiles")
-      .upsert({ id: auth.userId, preferred_locale: "id" }, { onConflict: "id", ignoreDuplicates: true }),
+      .upsert(
+        {
+          id: auth.userId,
+          username: fallbackProfileUsername(auth.userId),
+          preferred_locale: "id",
+        },
+        { onConflict: "id", ignoreDuplicates: true },
+      ),
+  );
+}
+
+async function syncProfileStats(auth: AuthContext, progress: PracticeProgress): Promise<RemoteSyncResult> {
+  return inspectMutation(
+    "sync profile stats",
+    auth.client
+      .from("profiles")
+      .update({
+        mastery: progress.mastery,
+        modules_completed: progress.modulesCompleted,
+        current_streak: progress.currentStreak,
+        longest_streak: progress.longestStreak,
+        freezes_remaining: progress.freezesRemaining,
+        badges: progress.badges,
+      })
+      .eq("id", auth.userId),
   );
 }
 
