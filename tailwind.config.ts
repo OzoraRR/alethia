@@ -30,8 +30,8 @@ const config: Config = {
         mono: ["var(--font-mono)"],
       },
       boxShadow: {
-        panel: "0 20px 60px rgba(0, 0, 0, 0.22)",
-        signal: "0 0 0 1px var(--signal-dim), 0 0 28px rgba(166, 232, 107, 0.08)",
+        panel: "0 20px 60px rgba(0, 0, 0, 0.4)",
+        signal: "0 0 0 1px var(--signal-dim), 0 0 28px rgba(166, 232, 107, 0.12)",
       },
     },
   },
@@ -39,4 +39,3 @@ const config: Config = {
 };
 
 export default config;
-

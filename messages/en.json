@@ -757,6 +757,110 @@
     "avatarNoSession": "Sign in to save an avatar.",
     "avatarInvalid": "Use a PNG, JPG, or WebP up to 2 MB.",
     "avatarFailed": "The avatar could not be saved.",
-    "avatarSaved": "Avatar updated."
+    "avatarSaved": "Avatar updated.",
+    "activityTitle": "Investigation activity",
+    "activitySubtitle": "Practice trail in a GitHub-style grid.",
+    "reportActivity": "Report activity",
+    "reportActivityHint": "Completed practice is recorded as reports.",
+    "statModules": "modules",
+    "statStreak": "streak",
+    "statBadges": "badges",
+    "completed": "Completed",
+    "pending": "Not started",
+    "emptyReports": "Start one module to see your first report.",
+    "viewReports": "View reports"
+  },
+  "landing": {
+    "eyebrow": "SECURITY PRACTICE PLATFORM",
+    "title": "Learn the trick before it tricks you.",
+    "description": "Alethia is a cybersecurity practice space: SMS phishing simulations, marketplace social engineering, and community reports. All fictional, all safe, all repeatable.",
+    "start": "Start",
+    "enter": "Enter",
+    "safe": "SAFE SIMULATION · No real data",
+    "worldsEyebrow": "PRACTICE WORLDS",
+    "worldsTitle": "Three worlds, one habit: verify.",
+    "rolesEyebrow": "TWO ROLES",
+    "rolesTitle": "Start as a Student, rise to Investigator.",
+    "studentTitle": "Student",
+    "studentDesc": "File reports with evidence and risk reasons. Reports enter the moderation queue.",
+    "investigatorTitle": "Investigator",
+    "investigatorDesc": "Complete 1 module with a safe response to unlock investigations and signal confirms.",
+    "stepsEyebrow": "HOW TO PLAY",
+    "howTitle": "Three steps inside.",
+    "finalTitle": "Ready to test your instincts?",
+    "finalDesc": "Pick an operator callsign and start your first drill.",
+    "worlds": [
+      {
+        "title": "Cyber Attack Simulations",
+        "desc": "Interactive drills to spot & respond to SMS phishing, marketplace scams, and malicious documents.",
+        "meta": "FEATURE 01 · SIMULATION",
+        "status": "Active"
+      },
+      {
+        "title": "Progress & Streak Tracking",
+        "desc": "Watch your skills grow, keep a daily drill streak, and earn achievement badges.",
+        "meta": "FEATURE 02 · PROGRESS",
+        "status": "Active"
+      },
+      {
+        "title": "Report Hub & Operator Profile",
+        "desc": "Learn attack patterns from the community & grow your operator profile with a personal level system.",
+        "meta": "FEATURE 03 · COMMUNITY",
+        "status": "Active"
+      }
+    ],
+    "steps": [
+      {
+        "title": "Pick a callsign",
+        "desc": "Enter as an anonymous operator. No email, no password."
+      },
+      {
+        "title": "Play the simulations",
+        "desc": "Face courier texts and marketplace offers inside simulated phones."
+      },
+      {
+        "title": "Level up",
+        "desc": "Safe responses unlock the Investigator role and your metamorphosis."
+      }
+    ],
+    "chooseWorld": "Choose your world",
+    "prevWorld": "Previous world",
+    "nextWorld": "Next world"
+  },
+  "login": {
+    "eyebrow": "OPERATOR GATE",
+    "title": "Enter the practice space.",
+    "description": "Register once, then log in with username or email. Accounts live in your browser, not on our servers.",
+    "tabLogin": "Log in",
+    "tabRegister": "Register",
+    "usernameLabel": "USERNAME",
+    "usernamePlaceholder": "e.g. signal_ops",
+    "identifierLabel": "USERNAME OR EMAIL",
+    "identifierPlaceholder": "callsign or email",
+    "emailLabel": "EMAIL",
+    "emailPlaceholder": "name@example.com",
+    "passLabel": "PASSWORD",
+    "passPlaceholder": "min. 8 characters",
+    "confirmLabel": "CONFIRM PASSWORD",
+    "loginSubmit": "Enter practice",
+    "registerSubmit": "Create operator account",
+    "back": "← Back",
+    "usernameInvalid": "Username, 3–24 chars: letters, numbers, underscores.",
+    "emailInvalid": "That email format looks off.",
+    "passwordShort": "Password needs at least 8 characters.",
+    "passwordMismatch": "Password confirmation does not match.",
+    "usernameTaken": "Username is already taken in this browser.",
+    "emailTaken": "Email is already registered in this browser.",
+    "invalidCredentials": "Wrong username/email or password.",
+    "unavailable": "Browser crypto is unavailable. Try another browser.",
+    "localNote": "Local practice accounts: credentials are never sent anywhere.",
+    "overlayWelcome": "Welcome back, Chief!",
+    "overlayWelcomeDesc": "Log in to continue your drills, streak, and investigations.",
+    "overlayGoRegister": "Create account",
+    "overlayHello": "Hello, Operator!",
+    "overlayHelloDesc": "Register to unlock the practice space, roles, and your metamorphosis.",
+    "overlayGoLogin": "Log in",
+    "switchToRegister": "No account yet? > Register",
+    "switchToLogin": "Already have one? > Log in"
   }
 }

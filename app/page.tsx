@@ -1,35 +1,25 @@
-import Image from "next/image";
 import Link from "next/link";
-import { AppShell } from "@/components/layout/app-shell";
-import { DashboardModuleStatus, DashboardOperatorProfile, DashboardStreak } from "@/features/progress/progress-views";
+import { LandingJourney } from "@/components/landing/landing-journey";
 import { getMessages } from "@/lib/i18n";
 
-export default function DashboardPage() {
-  const { dashboard } = getMessages();
-
+export default function LandingPage() {
+  const { brand, landing } = getMessages();
   return (
-    <AppShell activeRoute="dashboard">
-      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
-        <h1 className="text-3xl font-semibold tracking-tight text-ice sm:text-4xl">{dashboard.greeting}</h1>
-        <DashboardStreak />
-        <div className="home-layout mt-10">
-          <section className="module-collection home-layout__modules" aria-label={dashboard.moduleTitle}>
-            <Link aria-label={`${dashboard.moduleTitle}. ${dashboard.startPractice}`} className="module-frame module-frame--equal" href="/simulation/courier-sms">
-              <Image alt="" className="module-frame__media" fill priority sizes="(min-width: 1024px) 55vw, 100vw" src="/media/sms-phishing.webp" />
-              <div className="module-frame__copy"><h2>{dashboard.moduleTitle}</h2><p>{dashboard.moduleDescription}</p></div>
-            </Link>
-            <Link aria-label={`${dashboard.socialTitle}. ${dashboard.openModule}`} className="module-frame module-frame--equal" href="/simulation/social-engineering">
-              <Image alt="" className="module-frame__media" fill sizes="(min-width: 1024px) 55vw, 100vw" src="/media/social-engineering.webp" />
-              <div className="module-frame__copy"><h2>{dashboard.socialTitle}</h2><p>{dashboard.socialDescription}</p></div>
-            </Link>
-            <Link aria-label={`${dashboard.fileTitle}. ${dashboard.openModule}`} className="module-frame module-frame--equal bg-navy-850" href="/simulation/executable-file">
-              <div className="module-frame__copy"><h2>{dashboard.fileTitle}</h2><p>{dashboard.fileDescription}</p></div>
-            </Link>
-          </section>
-          <DashboardOperatorProfile />
+    <div className="min-h-screen bg-navy-950 text-ice">
+      <header className="border-b border-navy-700">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
+          <span className="flex items-center gap-3">
+            <span aria-hidden="true" className="brand-mark">A_</span>
+            <span className="font-mono text-sm font-bold tracking-[0.2em]">{brand.name}</span>
+          </span>
+          <Link className="btn-tactile" href="/login">{landing.enter} →</Link>
         </div>
-        <p className="sr-only"><DashboardModuleStatus /></p>
-      </div>
-    </AppShell>
+      </header>
+
+      <LandingJourney landing={landing} />
+      <footer className="border-t border-navy-700 px-5 py-4 sm:px-8">
+        <p className="mx-auto max-w-7xl font-mono text-[11px] text-muted">ALETHIA · HUMAN-CENTRED SECURITY PRACTICE</p>
+      </footer>
+    </div>
   );
 }
