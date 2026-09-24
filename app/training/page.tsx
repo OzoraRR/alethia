@@ -18,8 +18,10 @@ export default function TrainingPage() {
             <Image alt="" className="module-frame__media" fill sizes="(min-width: 1024px) 50vw, 100vw" src="/media/social-engineering.webp" />
             <div className="module-frame__copy"><h2>{training.socialTitle}</h2><p>{training.socialDescription}</p></div>
           </Link>
+          <Link aria-label={`${training.fileTitle}. ${training.openModule}`} className="module-frame module-frame--equal bg-navy-850" href="/simulation/executable-file">
+            <div className="module-frame__copy"><h2>{training.fileModuleNumber} · {training.fileTitle}</h2><p>{training.fileDescription}</p></div>
+          </Link>
         </section>
-        <section className="training-future"><p>{training.futureSmsTitle}</p><span>{training.soon}</span></section>
       </div>
     </AppShell>
   );

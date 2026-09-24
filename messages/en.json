@@ -70,6 +70,8 @@
     "nextModuleLabel": "NEXT MODULE",
     "socialTitle": "Marketplace Social Engineering",
     "socialDescription": "Recognise when trust and a channel shift are used to push a payment.",
+    "fileTitle": "Malicious Document",
+    "fileDescription": "Inspect the source, context, and extension before opening a file.",
     "clickHere": "Click here",
     "openModule": "Open module",
     "operatorLabel": "OPERATOR LEVEL",
@@ -360,6 +362,44 @@
       "mastery": "Mastery status: Familiar",
       "support": "Safer decisions are a habit you can practise, not a one-time test.",
       "backHome": "Back to dashboard"
+    },
+    "redesign": {
+      "label": "MODULE 01 · SMS PHISHING", "title": "An urgent delivery message", "description": "You are waiting for a parcel. This SMS tries to make you act before checking its details.",
+      "safeNote": "SAFE SIMULATION · All data and routes are fictional", "begin": "Open sample SMS", "checkpoints": ["Message", "Inspect", "Verify", "Respond", "Analysis"],
+      "scenario": {
+        "senderName": "ParcelPath", "senderNumber": "+1 202-555-0184", "timestamp": "Today · 16:32", "trackingNumber": "PP-240923-4821",
+        "message": "Parcel PP-240923-4821 is held. Confirm your address before 17:15 to avoid a delivery delay today.", "link": "parcel-check[.]example/confirm",
+        "redirectChain": ["parcel-check[.]example/confirm", "status-check[.]example/r/4821", "courier-portal[.]example/address"]
+      },
+      "message": { "label": "SMS · SAMPLE", "recipient": "RECIPIENT · SMS", "copy": "Copy", "copied": "Copied", "inspect": "Inspect message evidence" },
+      "inspect": {
+        "title": "Inspect visible evidence", "description": "Copy or type the three values from the SMS. This only compares fictional training data.",
+        "sender": "Sender number", "link": "Visible link", "tracking": "Tracking number", "submit": "Run simulated inspection", "back": "Back to SMS",
+        "incomplete": "Enter all three values before running the inspection.", "match": "Matches the sample SMS", "mismatch": "Does not match the sample SMS", "resultTitle": "Inspection result",
+        "senderResult": "The sender number does not prove a relationship with the claimed courier.", "linkResult": "The hostname and path do not match a channel you already know.",
+        "trackingResult": "The tracking code looks structured, but that does not prove the sender’s link is safe.", "redirect": "Simulated route", "continue": "Continue to verification options"
+      },
+      "verify": {
+        "title": "Verify through a trusted channel", "description": "This differs from inspecting the SMS: check whether the delivery claim exists in a channel you opened yourself.",
+        "open": "Open simulated courier portal", "skip": "Choose a response without verifying", "portal": "COURIER PORTAL · SIMULATION", "placeholder": "Enter tracking number", "check": "Check tracking",
+        "result": "No active order matches this tracking number.", "sampleMismatch": "Enter the tracking number shown in the sample SMS to check its claim.", "lesson": "Use an app, order history, or official contact you already know—not a link or number from the SMS.", "close": "Continue to response"
+      },
+      "decide": {
+        "title": "Choose a response", "description": "The evidence you saw remains available; you do not need to repeat inspection to try another response.",
+        "options": {
+          "openLink": { "label": "Open the SMS link", "description": "Follow the route supplied by the message." }, "official": { "label": "Continue through the official courier channel", "description": "Use a channel you opened yourself." },
+          "ignore": { "label": "Delete and ignore", "description": "Stop interacting with the message." }, "report": { "label": "Mark and report", "description": "Stop the message and use device reporting." },
+          "reply": { "label": "Reply to the sender", "description": "Keep the conversation on the sender’s channel." }
+        }
+      },
+      "analysis": {
+        "label": "ROUTE ANALYSIS · SIMULATION", "observed": "What you observed", "matters": "Why it matters", "action": "Protective action", "status": "STATUS", "control": "CONTROL", "currentRoute": "CURRENT ROUTE", "pending": "AWAITING RESPONSE", "receiveRoute": "Message received; the sender route is not opened.", "inspectRoute": "Visible values are being compared with the sample SMS.", "verifyRoute": "The delivery claim can be tested through a channel opened independently.", "decisionRoute": "Evidence is available to support a response.",
+        "unsafeObserved": "The message used a courier identity, tracking code, link, and short deadline.", "unsafeMatters": "Opening or replying keeps you on a route selected by the sender.",
+        "safeObserved": "The number, host, path, and tracking claim can be checked without opening the link.", "safeMatters": "A channel you open yourself separates the courier claim from the sender’s route.",
+        "safeAction": "Use the official app or order history; delete or report suspicious SMS messages.", "tryAnother": "Try another response", "finish": "Finish practice",
+        "outcomes": { "unsafe": { "status": "SIMULATED ROUTE OPEN", "control": "Sender control increases", "next": "The sender could try to request further details. No real data is requested." }, "safe": { "status": "SENDER ROUTE INTERRUPTED", "control": "Sender control decreases", "next": "There is no further action from the SMS route." } }
+      },
+      "complete": { "title": "Practice complete", "description": "You separated evidence in a message from verifying a claim through a trusted channel.", "modules": "modules complete", "sync": "Saved on this device; synchronization will be retried.", "back": "Back to dashboard" }
     }
   },
   "socialEngineering": {
@@ -558,6 +598,36 @@
       "title": "Practice complete",
       "description": "The same pattern can appear in offers, refunds, or payment handlers.",
       "backHome": "Back to dashboard"
+    },
+    "redesign": {
+      "label": "MODULE 02 · SOCIAL ENGINEERING", "title": "Ordinary-looking information trails",
+      "description": "Connect synthetic information to see how small exposures can create context useful for manipulation.",
+      "safeNote": "SAFE SIMULATION · Every profile and artifact is fictional", "begin": "Open evidence board",
+      "checkpoints": ["Board", "Connect", "Threat model", "Reduce exposure", "Analysis"],
+      "board": {
+        "title": "Synthetic evidence board", "description": "Select information that could be public. No real people, accounts, or sites can be searched.",
+        "continue": "Connect selected information", "requirement": "Select at least two artifacts to see combined exposure.", "selected": "selected",
+        "artifacts": [
+          { "id": "profile", "title": "Community profile", "value": "Nara Pratama · event volunteer", "clue": "Public role" },
+          { "id": "routine", "title": "Event post", "value": "Volunteer orientation every Wednesday evening", "clue": "Routine" },
+          { "id": "handle", "title": "Username", "value": "@nara.shares", "clue": "Repeated identity" },
+          { "id": "contact", "title": "Public contact", "value": "nara[at]community.example", "clue": "Contact channel" },
+          { "id": "interest", "title": "Mentioned interest", "value": "Children’s book drive", "clue": "Personal context" }
+        ]
+      },
+      "connect": { "title": "Combined information", "description": "One artifact is rarely enough. Together, a role, routine, and contact channel narrow a person’s context.", "inferenceLabel": "Defensive inference", "inference": "The selected information could make a community- or event-themed message seem more relevant to its recipient.", "continue": "Build threat model" },
+      "model": { "title": "Compact threat model", "description": "Use selected information to assess what needs protection, not to compose an attack message.", "asset": "Asset", "assetValue": "Trust in community communication", "exposure": "Exposed information", "exposureValue": "Selected role, routine, and contact details", "abuse": "Possible misuse", "abuseValue": "A relevant-looking message could push a rushed response", "impact": "Potential impact", "impactValue": "Time, data, or decisions could be directed to an untrusted channel", "continue": "Choose exposure reduction" },
+      "defend": {
+        "title": "Reduce exposure", "description": "Choose the change that most directly reduces this combined public context.",
+        "options": [
+          { "id": "limit", "label": "Limit routine details in public posts", "description": "Reduce time information that can be combined." },
+          { "id": "separate", "label": "Separate usernames across contexts", "description": "Reduce direct links between profiles." },
+          { "id": "verify", "label": "Verify community-themed messages through a known channel", "description": "Do not treat familiar context as proof." }
+        ],
+        "continue": "See defensive impact", "requirement": "Choose one defensive change to continue."
+      },
+      "analysis": { "title": "Exposure analysis", "observed": "Selected exposure", "matters": "Why the combination matters", "action": "Selected change", "none": "No artifacts selected yet.", "choose": "Choose a defensive change after building the threat model.", "summary": "Reducing one or more public clues makes convincing-looking context harder to assemble.", "finish": "Finish practice" },
+      "complete": { "title": "Practice complete", "description": "You mapped synthetic exposure to an asset, impact, and defensive change.", "modules": "modules complete", "sync": "Saved on this device; synchronization will be retried.", "back": "Back to dashboard" }
     }
   },
   "training": {
@@ -573,6 +643,9 @@
     "socialModuleNumber": "MODULE 02",
     "socialTitle": "Marketplace Social Engineering",
     "socialDescription": "Recognise when trust and a channel shift are used to request something unusual.",
+    "fileModuleNumber": "MODULE 03",
+    "fileTitle": "Malicious Document",
+    "fileDescription": "Inspect the source, context, and extension before opening a file.",
     "futureSmsTitle": "More signals",
     "futureSmsDescription": "Practice variations to strengthen sender and link inspection.",
     "futureModuleNumber": "02",
@@ -636,6 +709,15 @@
         "description": "Stop the route before it expands."
       }
     ]
+  },
+  "executableFile": {
+    "label": "MODULE 03 · MALICIOUS DOCUMENT", "title": "Malicious Document", "description": "This message offers an urgent delivery document. Inspect the source, filename, and extension before acting.",
+    "safeNote": "SAFE SIMULATION · No real file is available or executed", "begin": "Open sample message", "recipient": "RECIPIENT · MESSAGE", "checkpoints": ["Message", "Inspect", "Respond", "Analysis"],
+    "scenario": { "sender": "billing-notify@delivery-docs[.]example", "timestamp": "Today · 11:08", "message": "A delivery invoice needs review before 12:00. Download the document to update its status.", "fileName": "Delivery_Invoice_2026.pdf.exe", "extension": ".exe", "link": "delivery-archive[.]example/Delivery_Invoice_2026.pdf.exe" },
+    "inspect": { "title": "Inspect file details", "description": "The complete filename and actual extension matter. Every detail is fictional and cannot be downloaded.", "source": "Source", "file": "Complete filename", "extension": "Actual extension", "link": "Simulated route", "note": "An .exe extension is not automatically malicious, but an unexpected file from an untrusted source should be stopped and verified.", "continue": "Choose a response" },
+    "decide": { "title": "Choose a response", "options": { "open": { "label": "Open or download the file", "description": "Continue the simulated file route." }, "verify": { "label": "Verify through an official channel", "description": "Check the order or sender through a channel you already know." }, "ignore": { "label": "Delete or ignore", "description": "Stop interacting with the message and file." }, "report": { "label": "Report the message", "description": "Mark the message through a trusted reporting path." } } },
+    "analysis": { "label": "FILE ANALYSIS · SIMULATION", "status": "STATUS", "impact": "IMPACT", "pending": "AWAITING RESPONSE", "risky": "SIMULATED RISKY ROUTE", "interrupted": "FILE ROUTE INTERRUPTED", "unsafe": "Opening or downloading an unexpected file advances a risky route. No real file is created, downloaded, or run.", "safe": "An official channel or ending interaction interrupts the file route before a device action occurs.", "why": "Why it matters", "whyValue": "A filename can hide its actual extension; the source and context still need inspection.", "safer": "Safer action", "saferValue": "Do not open an unexpected file. Verify the claim through a trusted channel, then report it if appropriate.", "finish": "Finish practice" },
+    "complete": { "title": "Practice complete", "description": "You checked the source, context, and extension before choosing a response.", "modules": "modules complete", "sync": "Saved on this device; synchronization will be retried.", "back": "Back to dashboard" }
   },
   "profile": {
     "eyebrow": "OPERATOR PROFILE",

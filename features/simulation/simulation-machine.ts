@@ -1,9 +1,9 @@
-import type { Decision, InspectionSignal, SimulationStage } from "./types";
+import type { Decision, SimulationStage } from "./types";
 
 export type SimulationState = {
   stage: SimulationStage;
-  inspectedSignals: InspectionSignal[];
-  retryInspectedSignals: InspectionSignal[];
+  inspectionComplete: boolean;
+  verificationComplete: boolean;
   verificationOpen: boolean;
   decision: Decision | null;
   retryDecision: Decision | null;
@@ -11,21 +11,20 @@ export type SimulationState = {
 
 export type SimulationAction =
   | { type: "start_module" }
-  | { type: "continue_receive" }
-  | { type: "inspect_signal"; signal: InspectionSignal }
-  | { type: "continue_inspect" }
+  | { type: "open_inspection" }
+  | { type: "complete_inspection" }
   | { type: "open_trusted_channel" }
-  | { type: "confirm_verification" }
+  | { type: "complete_verification" }
+  | { type: "continue_to_decision" }
   | { type: "select_decision"; decision: Decision }
   | { type: "start_retry" }
-  | { type: "inspect_retry_signal"; signal: InspectionSignal }
   | { type: "select_retry_decision"; decision: Decision }
   | { type: "complete_module" };
 
 export const initialSimulationState: SimulationState = {
   stage: "briefing",
-  inspectedSignals: [],
-  retryInspectedSignals: [],
+  inspectionComplete: false,
+  verificationComplete: false,
   verificationOpen: false,
   decision: null,
   retryDecision: null,
@@ -38,25 +37,18 @@ export function simulationReducer(
   switch (action.type) {
     case "start_module":
       return state.stage === "briefing" ? { ...state, stage: "receive" } : state;
-    case "continue_receive":
+    case "open_inspection":
       return state.stage === "receive" ? { ...state, stage: "inspect" } : state;
-    case "inspect_signal":
-      if (state.stage !== "inspect" || state.inspectedSignals.includes(action.signal)) {
-        return state;
-      }
-
-      return {
-        ...state,
-        inspectedSignals: [...state.inspectedSignals, action.signal],
-      };
-    case "continue_inspect":
-      return state.stage === "inspect" && state.inspectedSignals.length > 0
-        ? { ...state, stage: "verify" }
-        : state;
+    case "complete_inspection":
+      return state.stage === "inspect" ? { ...state, inspectionComplete: true, stage: "verify" } : state;
     case "open_trusted_channel":
       return state.stage === "verify" ? { ...state, verificationOpen: true } : state;
-    case "confirm_verification":
+    case "complete_verification":
       return state.stage === "verify" && state.verificationOpen
+        ? { ...state, verificationComplete: true }
+        : state;
+    case "continue_to_decision":
+      return state.stage === "verify"
         ? { ...state, stage: "decide", verificationOpen: false }
         : state;
     case "select_decision":
@@ -65,19 +57,10 @@ export function simulationReducer(
         : state;
     case "start_retry":
       return state.stage === "reveal" && state.retryDecision === null
-        ? { ...state, stage: "retry", retryDecision: null, retryInspectedSignals: [] }
+        ? { ...state, stage: "retry", retryDecision: null }
         : state;
-    case "inspect_retry_signal":
-      if (state.stage !== "retry" || state.retryInspectedSignals.includes(action.signal)) {
-        return state;
-      }
-
-      return {
-        ...state,
-        retryInspectedSignals: [...state.retryInspectedSignals, action.signal],
-      };
     case "select_retry_decision":
-      return state.stage === "retry" && state.retryInspectedSignals.length > 0
+      return state.stage === "retry"
         ? { ...state, stage: "reveal", retryDecision: action.decision }
         : state;
     case "complete_module":

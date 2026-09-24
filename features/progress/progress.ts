@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import type { Decision } from "@/features/simulation/types";
 import { loadRemoteProgress, persistProgressSnapshot, type RemoteProgress } from "./supabase-persistence";
 
-export const moduleIds = ["courier-sms", "social-engineering"] as const;
+export const moduleIds = ["courier-sms", "social-engineering", "executable-file"] as const;
 export type ModuleId = (typeof moduleIds)[number];
 export const masteryStates = ["not_started", "familiar", "skilled", "needs_practice"] as const;
 export type MasteryState = (typeof masteryStates)[number];
@@ -12,6 +12,7 @@ export type RetryResult = "safe" | "unsafe" | null;
 export type PracticeProgress = {
   courierSmsCompleted: boolean;
   socialEngineeringCompleted: boolean;
+  executableFileCompleted: boolean;
   modulesCompleted: number;
   mastery: MasteryState;
   currentStreak: number;
@@ -26,7 +27,7 @@ type CompletionHabits = Partial<PracticeProgress["habits"]>;
 const progressStorageKey = "alethia:practice-progress:v1";
 
 export const defaultProgress: PracticeProgress = {
-  courierSmsCompleted: false, socialEngineeringCompleted: false, modulesCompleted: 0, mastery: "not_started", currentStreak: 0, longestStreak: 0, freezesRemaining: 1, lastQualifyingDate: null, lastRetryResult: null,
+  courierSmsCompleted: false, socialEngineeringCompleted: false, executableFileCompleted: false, modulesCompleted: 0, mastery: "not_started", currentStreak: 0, longestStreak: 0, freezesRemaining: 1, lastQualifyingDate: null, lastRetryResult: null,
   habits: { inspect: false, verify: false, report: false }, badges: [],
 };
 
@@ -37,7 +38,7 @@ export function loadProgress(): PracticeProgress {
 export function saveProgress(progress: PracticeProgress): void { if (typeof window === "undefined") return; try { window.localStorage.setItem(progressStorageKey, JSON.stringify(progress)); } catch { /* Local progress never blocks a simulation. */ } }
 
 export function recordCourierSmsCompletion({ retryDecision, completedAt = localDateKey() }: { retryDecision: Decision; completedAt?: string; attemptId?: string | null }): PracticeProgress {
-  return recordModuleCompletion({ moduleId: "courier-sms", outcome: retryDecision === "open_link" ? "unsafe" : "safe", completedAt, habits: { inspect: true, verify: true, report: retryDecision === "report_delete" } });
+  return recordModuleCompletion({ moduleId: "courier-sms", outcome: retryDecision === "open_link" || retryDecision === "reply_sender" ? "unsafe" : "safe", completedAt, habits: { inspect: true, verify: true, report: retryDecision === "report_message" } });
 }
 
 export function recordModuleCompletion({ moduleId, outcome, completedAt = localDateKey(), habits = {} }: { moduleId: ModuleId; outcome: Exclude<RetryResult, null>; completedAt?: string; habits?: CompletionHabits }): PracticeProgress {
@@ -46,12 +47,14 @@ export function recordModuleCompletion({ moduleId, outcome, completedAt = localD
   const nextStreak = calculateNextStreak(currentProgress, completedAt);
   const courierSmsCompleted = moduleId === "courier-sms" ? true : currentProgress.courierSmsCompleted;
   const socialEngineeringCompleted = moduleId === "social-engineering" ? true : currentProgress.socialEngineeringCompleted;
+  const executableFileCompleted = moduleId === "executable-file" ? true : currentProgress.executableFileCompleted;
   const nextProgress: PracticeProgress = {
     ...currentProgress,
     courierSmsCompleted,
     socialEngineeringCompleted,
-    modulesCompleted: Number(courierSmsCompleted) + Number(socialEngineeringCompleted),
-    mastery: isFirstModuleCompletion ? "familiar" : outcome === "unsafe" ? "needs_practice" : "skilled",
+    executableFileCompleted,
+    modulesCompleted: Number(courierSmsCompleted) + Number(socialEngineeringCompleted) + Number(executableFileCompleted),
+    mastery: moduleId === "courier-sms" ? (isFirstModuleCompletion ? "familiar" : outcome === "unsafe" ? "needs_practice" : "skilled") : currentProgress.mastery,
     currentStreak: nextStreak.currentStreak,
     longestStreak: nextStreak.longestStreak,
     freezesRemaining: nextStreak.freezesRemaining,
@@ -95,13 +98,15 @@ function synchronizeLocalCompletions(localProgress: PracticeProgress, snapshot =
 function mergeProgress(localProgress: PracticeProgress, remoteProgress: RemoteProgress): PracticeProgress {
   const courierSmsCompleted = localProgress.courierSmsCompleted || remoteProgress.courierSmsCompleted;
   const socialEngineeringCompleted = localProgress.socialEngineeringCompleted || remoteProgress.socialEngineeringCompleted;
-  const localHasCompletion = hasCompletion(localProgress);
+  const executableFileCompleted = localProgress.executableFileCompleted || remoteProgress.executableFileCompleted;
+  const localHasCourierCompletion = localProgress.courierSmsCompleted;
   return {
     ...localProgress,
     courierSmsCompleted,
     socialEngineeringCompleted,
-    modulesCompleted: Number(courierSmsCompleted) + Number(socialEngineeringCompleted),
-    mastery: localHasCompletion && localProgress.mastery !== "not_started" ? localProgress.mastery : remoteProgress.mastery,
+    executableFileCompleted,
+    modulesCompleted: Number(courierSmsCompleted) + Number(socialEngineeringCompleted) + Number(executableFileCompleted),
+    mastery: localHasCourierCompletion && localProgress.mastery !== "not_started" ? localProgress.mastery : remoteProgress.mastery,
     currentStreak: localProgress.lastQualifyingDate ? localProgress.currentStreak : remoteProgress.currentStreak,
     longestStreak: Math.max(localProgress.longestStreak, remoteProgress.longestStreak),
     freezesRemaining: localProgress.lastQualifyingDate ? localProgress.freezesRemaining : remoteProgress.freezesRemaining,
@@ -111,8 +116,11 @@ function mergeProgress(localProgress: PracticeProgress, remoteProgress: RemotePr
     badges: [...new Set([...localProgress.badges, ...remoteProgress.badges])],
   };
 }
-function isModuleComplete(progress: PracticeProgress, moduleId: ModuleId) { return moduleId === "courier-sms" ? progress.courierSmsCompleted : progress.socialEngineeringCompleted; }
-function hasCompletion(progress: PracticeProgress) { return progress.courierSmsCompleted || progress.socialEngineeringCompleted; }
+function isModuleComplete(progress: PracticeProgress, moduleId: ModuleId) {
+  if (moduleId === "courier-sms") return progress.courierSmsCompleted;
+  if (moduleId === "social-engineering") return progress.socialEngineeringCompleted;
+  return progress.executableFileCompleted;
+}
 function calculateNextStreak(progress: PracticeProgress, completedAt: string) {
   if (!progress.lastQualifyingDate) return { currentStreak: 1, longestStreak: Math.max(progress.longestStreak, 1), freezesRemaining: progress.freezesRemaining };
   const daysSinceLastCompletion = daysBetween(progress.lastQualifyingDate, completedAt);
@@ -125,9 +133,10 @@ function normalizeProgress(value: unknown): PracticeProgress {
   if (!isRecord(value)) return defaultProgress;
   const courierSmsCompleted = value.courierSmsCompleted === true;
   const socialEngineeringCompleted = value.socialEngineeringCompleted === true;
+  const executableFileCompleted = value.executableFileCompleted === true;
   const habits = isRecord(value.habits) ? value.habits : {};
   return {
-    courierSmsCompleted, socialEngineeringCompleted, modulesCompleted: Number(courierSmsCompleted) + Number(socialEngineeringCompleted), mastery: isMasteryState(value.mastery) ? value.mastery : defaultProgress.mastery, currentStreak: nonNegativeInteger(value.currentStreak), longestStreak: nonNegativeInteger(value.longestStreak), freezesRemaining: Math.min(nonNegativeInteger(value.freezesRemaining), 1), lastQualifyingDate: typeof value.lastQualifyingDate === "string" ? value.lastQualifyingDate : null, lastRetryResult: value.lastRetryResult === "safe" || value.lastRetryResult === "unsafe" ? value.lastRetryResult : null,
+    courierSmsCompleted, socialEngineeringCompleted, executableFileCompleted, modulesCompleted: Number(courierSmsCompleted) + Number(socialEngineeringCompleted) + Number(executableFileCompleted), mastery: isMasteryState(value.mastery) ? value.mastery : defaultProgress.mastery, currentStreak: nonNegativeInteger(value.currentStreak), longestStreak: nonNegativeInteger(value.longestStreak), freezesRemaining: Math.min(nonNegativeInteger(value.freezesRemaining), 1), lastQualifyingDate: typeof value.lastQualifyingDate === "string" ? value.lastQualifyingDate : null, lastRetryResult: value.lastRetryResult === "safe" || value.lastRetryResult === "unsafe" ? value.lastRetryResult : null,
     habits: { inspect: habits.inspect === true, verify: habits.verify === true, report: habits.report === true }, badges: Array.isArray(value.badges) ? value.badges.filter((badge): badge is string => typeof badge === "string") : [],
   };
 }

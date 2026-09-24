@@ -22,6 +22,9 @@ export default function DashboardPage() {
               <Image alt="" className="module-frame__media" fill sizes="(min-width: 1024px) 55vw, 100vw" src="/media/social-engineering.webp" />
               <div className="module-frame__copy"><h2>{dashboard.socialTitle}</h2><p>{dashboard.socialDescription}</p></div>
             </Link>
+            <Link aria-label={`${dashboard.fileTitle}. ${dashboard.openModule}`} className="module-frame module-frame--equal bg-navy-850" href="/simulation/executable-file">
+              <div className="module-frame__copy"><h2>{dashboard.fileTitle}</h2><p>{dashboard.fileDescription}</p></div>
+            </Link>
           </section>
           <DashboardOperatorProfile />
         </div>
