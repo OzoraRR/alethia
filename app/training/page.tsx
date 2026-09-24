@@ -14,7 +14,7 @@ export default function TrainingPage() {
           <div className="flex items-center gap-3 font-mono text-xs text-signal font-bold uppercase tracking-widest">
             <span>02 / EXERCISE INDEX</span>
             <span className="text-navy-700">·</span>
-            <span className="text-muted">2 ACTIVE PRACTICE SCENARIOS</span>
+            <span className="text-muted">3 ACTIVE PRACTICE SCENARIOS</span>
           </div>
           <h1 className="mt-3 text-3xl font-bold tracking-tight text-ice sm:text-5xl">
             {training.title}
@@ -86,13 +86,42 @@ export default function TrainingPage() {
             </div>
           </article>
 
+          {/* Cell 03 — Malicious Document (live) */}
+          <article className="container-level-2 exercise-card group relative min-h-[22rem] overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-navy-900 via-navy-950 to-[#162b2a]" />
+            <div className="relative flex min-h-[22rem] flex-col justify-between p-6">
+              <div>
+                <div className="flex items-center justify-between font-mono text-[11px] text-muted">
+                  <span className="font-bold text-signal">EXERCISE 03</span>
+                  <span>DOCUMENT ANALYSIS</span>
+                </div>
+                <h2 className="mt-3 text-xl font-bold text-ice transition-colors group-hover:text-signal">
+                  {training.fileTitle}
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-muted">
+                  {training.fileDescription}
+                </p>
+              </div>
+              <div className="mt-6 flex items-center justify-between border-t border-navy-700 pt-4 font-mono text-xs">
+                <span className="font-bold text-signal">READY</span>
+                <Link
+                  aria-label={`${training.fileTitle}. ${training.openModule}`}
+                  className="btn-tactile btn-tactile-primary px-4 py-1.5"
+                  href="/simulation/executable-file"
+                >
+                  OPEN <span aria-hidden="true" className="ml-1">→</span>
+                </Link>
+              </div>
+            </div>
+          </article>
+
           {/* Cells 03–09 — locked future slots */}
-          {Array.from({ length: 7 }, (_, i) => (
+          {Array.from({ length: 6 }, (_, i) => (
             <article className="container-level-2 relative min-h-[22rem] p-6 opacity-70" key={`locked-${i}`} aria-label={`${training.futureSmsTitle} ${training.soon}`}>
               <div className="flex min-h-[19rem] flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between font-mono text-[11px] text-muted">
-                    <span className="font-bold">EXERCISE {String(i + 3).padStart(2, "0")}</span>
+                    <span className="font-bold">EXERCISE {String(i + 4).padStart(2, "0")}</span>
                     <span>CLASSIFIED</span>
                   </div>
                   <h2 className="mt-3 text-xl font-bold text-ice">

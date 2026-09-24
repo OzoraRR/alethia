@@ -1,6 +1,6 @@
 <svg width="320" height="260" viewBox="0 0 320 260" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs><filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-  
+
   <g>
     <polygon points="144,146.0 160,154.0 160,184.0 144,176.0" fill="#101C2C"/>
     <polygon points="160,154.0 176,146.0 176,176.0 160,184.0" fill="#16283D"/>
