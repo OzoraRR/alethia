@@ -213,6 +213,9 @@ export function CourierSmsSimulation() {
       dispatch({ type: "complete_module" });
       return;
     }
+    setVerificationChecked(false);
+    recordEvent("retry_started", "retry_started", "reveal", { variant: "retry" });
+    dispatch({ type: "start_retry" });
   };
   return (
     <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
