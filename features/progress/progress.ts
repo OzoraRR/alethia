@@ -55,6 +55,30 @@ export function saveProgress(progress: PracticeProgress): void {
   safeSetItem(STORAGE_KEYS.PROGRESS, progress);
 }
 
+/**
+ * Pushes local anonymous progress to the newly authenticated account and then
+ * reconciles it with any remote rows that already exist. The local snapshot is
+ * retained when Supabase is offline, so registration never discards practice.
+ */
+export async function mergeLocalProgressIntoAccount(): Promise<PracticeProgress> {
+  const localProgress = loadProgress();
+
+  await Promise.all(
+    moduleIds
+      .filter((moduleId) => isModuleComplete(localProgress, moduleId))
+      .map((moduleId) =>
+        persistProgressSnapshot({ progress: localProgress, moduleId }),
+      ),
+  );
+
+  const remoteProgress = await loadRemoteProgress();
+  const mergedProgress = remoteProgress
+    ? mergeProgress(localProgress, remoteProgress)
+    : localProgress;
+  saveProgress(mergedProgress);
+  return mergedProgress;
+}
+
 export function recordCourierSmsCompletion({
   retryDecision,
   completedAt = localDateKey(),

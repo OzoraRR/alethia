@@ -12,6 +12,7 @@ export const STORAGE_KEYS = {
   REPORTS: "alethia:practice-reports:v1",
   CALLSIGN: "alethia:operator-callsign:v1",
   ACCOUNTS: "alethia:operator-accounts:v1",
+  ACCOUNT_ID: "alethia:active-account:v1",
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS] | (string & {});
