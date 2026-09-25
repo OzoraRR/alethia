@@ -1,19 +1,17 @@
 export const socialEngineeringStages = [
   "briefing",
-  "context",
-  "trust",
-  "channel_shift",
-  "pressure",
-  "decide",
+  "board",
+  "connect",
+  "model",
+  "defend",
   "reveal",
-  "retry",
   "complete",
 ] as const;
 
 export type SocialEngineeringStage = (typeof socialEngineeringStages)[number];
+export type SocialArtifactId = "profile" | "routine" | "handle" | "contact" | "interest";
+export type MitigationId = "limit" | "separate" | "verify";
+
+export type SocialEngineeringDecision = "comply_with_request" | "verify_independently" | "report_offer" | "stay_on_platform";
 export type SocialEngineeringSignal = "seller" | "payment";
-export type SocialEngineeringDecision =
-  | "stay_on_platform"
-  | "report_offer"
-  | "comply_with_request"
-  | "verify_independently";
+export type StoredSocialEngineeringStage = "context" | "trust" | "channel_shift" | "pressure" | "decide" | "retry";

@@ -70,6 +70,8 @@
     "nextModuleLabel": "MODUL BERIKUTNYA",
     "socialTitle": "Marketplace Social Engineering",
     "socialDescription": "Kenali saat kepercayaan dan perpindahan kanal dipakai untuk mendorong pembayaran.",
+    "fileTitle": "Malicious Document",
+    "fileDescription": "Periksa sumber, konteks, dan ekstensi sebelum membuka berkas.",
     "clickHere": "Klik di sini",
     "openModule": "Buka modul",
     "operatorLabel": "LEVEL OPERATOR",
@@ -360,6 +362,49 @@
       "mastery": "Status mastery: Mengenal",
       "support": "Keputusan aman adalah kebiasaan yang bisa dilatih, bukan ujian sekali jadi.",
       "backHome": "Kembali ke beranda"
+    },
+    "redesign": {
+      "label": "MODUL 01 · SMS PHISHING",
+      "title": "Pesan pengiriman yang mendesak",
+      "description": "Kamu sedang menunggu paket. SMS ini mencoba membuatmu bertindak sebelum memeriksa detailnya.",
+      "safeNote": "SIMULASI AMAN · Semua data dan rute bersifat fiktif",
+      "begin": "Buka SMS contoh",
+      "checkpoints": ["Pesan", "Periksa", "Verifikasi", "Respons", "Analisis"],
+      "scenario": {
+        "senderName": "LacakKilat", "senderNumber": "+62 811-0000-4821", "timestamp": "Hari ini · 16.32", "trackingNumber": "LK-240923-4821",
+        "message": "Paket dengan resi LK-240923-4821 tertahan. Konfirmasi alamat sebelum 17.15 agar pengiriman hari ini tidak tertunda.",
+        "link": "paket-lacak[.]id/konfirmasi",
+        "redirectChain": ["paket-lacak[.]id/konfirmasi", "cek-status[.]example/r/4821", "portal-kurir[.]example/alamat"]
+      },
+      "message": { "label": "SMS · CONTOH", "recipient": "PENERIMA · SMS", "copy": "Salin", "copied": "Tersalin", "inspect": "Periksa bukti di pesan" },
+      "inspect": {
+        "title": "Periksa bukti yang terlihat", "description": "Salin atau ketik tiga nilai dari SMS. Pemeriksaan ini hanya membandingkan data fiktif di latihan.",
+        "sender": "Nomor pengirim", "link": "Tautan yang terlihat", "tracking": "Nomor resi", "submit": "Jalankan pemeriksaan simulasi", "back": "Kembali ke SMS",
+        "incomplete": "Masukkan ketiga nilai sebelum menjalankan pemeriksaan.", "match": "Cocok dengan SMS contoh", "mismatch": "Tidak sama dengan nilai di SMS contoh", "resultTitle": "Hasil pemeriksaan",
+        "senderResult": "Nomor pengirim tidak membuktikan hubungan dengan kurir yang diklaim.", "linkResult": "Hostname dan jalur tidak cocok dengan kanal yang sudah kamu kenal.",
+        "trackingResult": "Resi tampak terstruktur, tetapi itu bukan bukti bahwa tautan pengirim aman.", "redirect": "Rute simulasi", "continue": "Lanjut ke opsi verifikasi"
+      },
+      "verify": {
+        "title": "Verifikasi lewat kanal tepercaya", "description": "Ini berbeda dari memeriksa SMS: cek apakah klaim pengiriman ada di kanal yang kamu buka sendiri.",
+        "open": "Buka portal kurir simulasi", "skip": "Tentukan respons tanpa verifikasi", "portal": "PORTAL KURIR · SIMULASI", "placeholder": "Masukkan nomor resi", "check": "Cek resi",
+        "result": "Tidak ada pesanan aktif yang cocok dengan resi ini.", "sampleMismatch": "Masukkan resi yang terlihat pada SMS contoh untuk memeriksa klaimnya.", "lesson": "Gunakan aplikasi, riwayat pesanan, atau kontak resmi yang sudah kamu kenal—bukan tautan atau nomor dari SMS.", "close": "Lanjut ke respons"
+      },
+      "decide": {
+        "title": "Tentukan respons", "description": "Bukti yang sudah kamu lihat tetap tersedia; kamu tidak perlu mengulang pemeriksaan untuk mencoba respons lain.",
+        "options": {
+          "openLink": { "label": "Buka tautan di SMS", "description": "Ikuti rute yang disediakan pesan." }, "official": { "label": "Lanjut lewat kanal kurir resmi", "description": "Gunakan kanal yang kamu buka sendiri." },
+          "ignore": { "label": "Hapus dan abaikan", "description": "Berhenti berinteraksi dengan pesan." }, "report": { "label": "Tandai lalu laporkan", "description": "Hentikan pesan dan gunakan pelaporan perangkat." },
+          "reply": { "label": "Balas pengirim", "description": "Mempertahankan percakapan pada kanal pengirim." }
+        }
+      },
+      "analysis": {
+        "label": "ANALISIS RUTE · SIMULASI", "observed": "Yang terlihat", "matters": "Mengapa penting", "action": "Tindakan yang melindungi", "status": "STATUS", "control": "KONTROL", "currentRoute": "RUTE SAAT INI", "pending": "MENUNGGU RESPONS", "receiveRoute": "Pesan masuk; rute pengirim belum dibuka.", "inspectRoute": "Nilai yang terlihat sedang dibandingkan dengan SMS contoh.", "verifyRoute": "Klaim pengiriman dapat diuji melalui kanal yang dibuka sendiri.", "decisionRoute": "Bukti tersedia untuk mendukung respons.",
+        "unsafeObserved": "Pesan memakai identitas kurir, resi, tautan, dan batas waktu singkat.", "unsafeMatters": "Membuka atau membalas mempertahankanmu di rute yang dipilih pengirim.",
+        "safeObserved": "Nomor, host, jalur, dan klaim resi dapat diperiksa tanpa membuka tautan.", "safeMatters": "Kanal yang kamu buka sendiri memisahkan klaim kurir dari rute pengirim.",
+        "safeAction": "Gunakan aplikasi atau riwayat pesanan resmi; hapus atau laporkan SMS yang mencurigakan.", "tryAnother": "Coba respons lain", "finish": "Selesaikan latihan",
+        "outcomes": { "unsafe": { "status": "RUTE TERSIMULASI TERBUKA", "control": "Kontrol pengirim bertambah", "next": "Pengirim dapat mencoba meminta detail lebih lanjut. Tidak ada data nyata diminta." }, "safe": { "status": "RUTE PENGIRIM TERPUTUS", "control": "Kontrol pengirim berkurang", "next": "Tidak ada langkah lanjutan dari rute SMS." } }
+      },
+      "complete": { "title": "Latihan selesai", "description": "Kamu membedakan bukti di pesan dari verifikasi klaim melalui kanal tepercaya.", "modules": "modul selesai", "sync": "Tersimpan di perangkat ini; sinkronisasi akan dicoba lagi.", "back": "Kembali ke beranda" }
     }
   },
   "socialEngineering": {
@@ -558,6 +603,36 @@
       "title": "Latihan selesai",
       "description": "Pola yang sama dapat muncul dalam penawaran, refund, atau perantara pembayaran.",
       "backHome": "Kembali ke beranda"
+    },
+    "redesign": {
+      "label": "MODUL 02 · REKAYASA SOSIAL", "title": "Jejak informasi yang terlihat biasa",
+      "description": "Hubungkan informasi sintetis untuk melihat bagaimana paparan kecil dapat membentuk konteks yang berguna bagi manipulasi.",
+      "safeNote": "SIMULASI AMAN · Seluruh profil dan artefak bersifat fiktif", "begin": "Buka papan bukti",
+      "checkpoints": ["Papan", "Hubungkan", "Model ancaman", "Kurangi paparan", "Analisis"],
+      "board": {
+        "title": "Papan bukti sintetis", "description": "Pilih informasi yang dapat terlihat publik. Tidak ada pencarian terhadap orang, akun, atau situs nyata.",
+        "continue": "Hubungkan informasi yang dipilih", "requirement": "Pilih setidaknya dua artefak untuk melihat kombinasi paparan.", "selected": "dipilih",
+        "artifacts": [
+          { "id": "profile", "title": "Profil komunitas", "value": "Nara Pratama · relawan acara", "clue": "Peran publik" },
+          { "id": "routine", "title": "Unggahan acara", "value": "Orientasi relawan tiap Rabu malam", "clue": "Rutinitas" },
+          { "id": "handle", "title": "Nama pengguna", "value": "@nara.berbagi", "clue": "Identitas berulang" },
+          { "id": "contact", "title": "Kontak publik", "value": "nara[at]komunitas.example", "clue": "Saluran kontak" },
+          { "id": "interest", "title": "Minat yang disebut", "value": "Penggalangan buku anak", "clue": "Konteks personal" }
+        ]
+      },
+      "connect": { "title": "Kombinasi informasi", "description": "Satu artefak jarang cukup. Bersama-sama, peran, rutinitas, dan saluran kontak mempersempit konteks seseorang.", "inferenceLabel": "Yang dapat disimpulkan secara defensif", "inference": "Informasi yang dipilih dapat membuat pesan bertema komunitas atau acara terlihat lebih relevan bagi penerima.", "continue": "Susun model ancaman" },
+      "model": { "title": "Model ancaman ringkas", "description": "Gunakan informasi yang dipilih untuk menilai apa yang perlu dilindungi, bukan untuk menyusun pesan serangan.", "asset": "Aset", "assetValue": "Kepercayaan pada komunikasi komunitas", "exposure": "Informasi terekspos", "exposureValue": "Detail peran, rutinitas, dan kontak yang dipilih", "abuse": "Potensi penyalahgunaan", "abuseValue": "Pesan yang tampak relevan dapat mendorong respons tergesa-gesa", "impact": "Dampak potensial", "impactValue": "Waktu, data, atau keputusan dapat diarahkan ke kanal yang tidak tepercaya", "continue": "Pilih pengurangan paparan" },
+      "defend": {
+        "title": "Kurangi paparan", "description": "Pilih perubahan yang paling langsung mengurangi gabungan konteks publik ini.",
+        "options": [
+          { "id": "limit", "label": "Batasi detail rutinitas pada unggahan publik", "description": "Kurangi informasi waktu yang dapat digabungkan." },
+          { "id": "separate", "label": "Pisahkan nama pengguna antar konteks", "description": "Kurangi tautan langsung antar profil." },
+          { "id": "verify", "label": "Verifikasi pesan bertema komunitas lewat kanal yang sudah dikenal", "description": "Jangan menjadikan konteks yang familiar sebagai bukti." }
+        ],
+        "continue": "Lihat dampak defensif", "requirement": "Pilih satu perubahan defensif untuk melanjutkan."
+      },
+      "analysis": { "title": "Analisis paparan", "observed": "Paparan yang dipilih", "matters": "Mengapa kombinasi ini penting", "action": "Perubahan yang dipilih", "none": "Belum ada artefak dipilih.", "choose": "Pilih perubahan defensif setelah menyusun model ancaman.", "summary": "Mengurangi satu atau lebih petunjuk publik membuat konteks yang tampak meyakinkan lebih sulit dibangun.", "finish": "Selesaikan latihan" },
+      "complete": { "title": "Latihan selesai", "description": "Kamu memetakan paparan sintetis menjadi aset, dampak, dan perubahan defensif.", "modules": "modul selesai", "sync": "Tersimpan di perangkat ini; sinkronisasi akan dicoba lagi.", "back": "Kembali ke beranda" }
     }
   },
   "training": {
@@ -573,6 +648,9 @@
     "socialModuleNumber": "MODUL 02",
     "socialTitle": "Marketplace Social Engineering",
     "socialDescription": "Kenali saat kepercayaan dan perpindahan kanal dipakai untuk meminta sesuatu yang tidak biasa.",
+    "fileModuleNumber": "MODUL 03",
+    "fileTitle": "Malicious Document",
+    "fileDescription": "Periksa sumber, konteks, dan ekstensi sebelum membuka berkas.",
     "futureSmsTitle": "Sinyal lainnya",
     "futureSmsDescription": "Variasi latihan untuk memperkuat pemeriksaan pengirim dan tautan.",
     "futureModuleNumber": "02",
@@ -636,6 +714,15 @@
         "description": "Hentikan rute sebelum meluas."
       }
     ]
+  },
+  "executableFile": {
+    "label": "MODUL 03 · MALICIOUS DOCUMENT", "title": "Malicious Document", "description": "Pesan ini menawarkan dokumen pengiriman yang mendesak. Periksa sumber, nama file, dan ekstensi sebelum bertindak.",
+    "safeNote": "SIMULASI AMAN · Tidak ada berkas nyata yang tersedia atau dijalankan", "begin": "Buka pesan contoh", "recipient": "PENERIMA · PESAN", "checkpoints": ["Pesan", "Periksa", "Respons", "Analisis"],
+    "scenario": { "sender": "billing-notify@dokumen-kirim[.]example", "timestamp": "Hari ini · 11.08", "message": "Invoice pengiriman perlu ditinjau sebelum 12.00. Unduh dokumen untuk memperbarui status.", "fileName": "Invoice_Pengiriman_2026.pdf.exe", "extension": ".exe", "link": "arsip-kirim[.]example/Invoice_Pengiriman_2026.pdf.exe" },
+    "inspect": { "title": "Periksa detail berkas", "description": "Nama file lengkap dan ekstensi sebenarnya penting. Semua detail ini fiktif dan tidak dapat diunduh.", "source": "Sumber", "file": "Nama file lengkap", "extension": "Ekstensi sebenarnya", "link": "Rute simulasi", "note": "Ekstensi .exe bukan otomatis berbahaya, tetapi berkas tak terduga dari sumber tidak tepercaya perlu dihentikan dan diverifikasi.", "continue": "Tentukan respons" },
+    "decide": { "title": "Tentukan respons", "options": { "open": { "label": "Buka atau unduh berkas", "description": "Meneruskan rute berkas simulasi." }, "verify": { "label": "Verifikasi lewat kanal resmi", "description": "Periksa pesanan atau pengirim pada kanal yang sudah dikenal." }, "ignore": { "label": "Hapus atau abaikan", "description": "Hentikan interaksi dengan pesan dan berkas." }, "report": { "label": "Laporkan pesan", "description": "Tandai pesan melalui jalur pelaporan yang tepercaya." } } },
+    "analysis": { "label": "ANALISIS BERKAS · SIMULASI", "status": "STATUS", "impact": "DAMPAK", "pending": "MENUNGGU RESPONS", "risky": "RUTE BERISIKO TERSIMULASI", "interrupted": "RUTE BERKAS TERPUTUS", "unsafe": "Membuka atau mengunduh berkas tak terduga membuat rute berisiko maju. Tidak ada berkas nyata yang dibuat, diunduh, atau dijalankan.", "safe": "Kanal resmi atau penghentian interaksi memutus rute berkas sebelum ada tindakan pada perangkat.", "why": "Mengapa penting", "whyValue": "Nama file dapat menyamarkan ekstensi sebenarnya; sumber dan konteks tetap perlu diperiksa.", "safer": "Tindakan lebih aman", "saferValue": "Jangan buka berkas yang tidak diharapkan. Verifikasi klaim lewat kanal tepercaya, lalu laporkan bila perlu.", "finish": "Selesaikan latihan" },
+    "complete": { "title": "Latihan selesai", "description": "Kamu memeriksa sumber, konteks, dan ekstensi sebelum menentukan respons.", "modules": "modul selesai", "sync": "Tersimpan di perangkat ini; sinkronisasi akan dicoba lagi.", "back": "Kembali ke beranda" }
   },
   "profile": {
     "eyebrow": "PROFIL LATIHAN",

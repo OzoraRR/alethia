@@ -6,6 +6,7 @@ import type {
   SocialEngineeringDecision,
   SocialEngineeringSignal,
   SocialEngineeringStage,
+  StoredSocialEngineeringStage,
 } from "../social-engineering/types";
 import { safeGetItem, safeRemoveItem, safeSetItem, STORAGE_KEYS } from "../../lib/storage/safe-storage";
 
@@ -25,8 +26,8 @@ export type StoredCourierChallenge = {
 
 export type StoredSocialChallenge = {
   sessionId: string;
-  stage: SocialEngineeringStage;
-  primarySignals: SocialEngineeringSignal[];
+  stage: SocialEngineeringStage | StoredSocialEngineeringStage;
+  primarySignals: (SocialEngineeringSignal | "profile" | "routine" | "handle" | "contact" | "interest")[];
   retrySignals: SocialEngineeringSignal[];
   decision: SocialEngineeringDecision | null;
   retryDecision: SocialEngineeringDecision | null;
@@ -52,8 +53,14 @@ const validCourierStages = new Set<SimulationStage>([
   "complete",
 ]);
 
-const validSocialStages = new Set<SocialEngineeringStage>([
+const validSocialStages = new Set<SocialEngineeringStage | StoredSocialEngineeringStage>([
   "briefing",
+  "context",
+  "trust",
+  "channel_shift",
+  "pressure",
+  "decide",
+  "retry",
   "context",
   "trust",
   "channel_shift",

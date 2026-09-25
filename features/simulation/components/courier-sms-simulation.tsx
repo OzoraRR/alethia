@@ -22,13 +22,14 @@ import { getSessionId } from "@/lib/session/session";
 import { getMessages, type Messages } from "@/lib/i18n";
 import { courierScenarios, type CourierScenarioCopy } from "../scenario-data";
 import { initialSimulationState, simulationReducer, type SimulationState } from "../simulation-machine";
-import { type Decision, type SimulationStage } from "../types";
+import type { Decision, SimulationStage } from "../types";
 
 type SimulationMessages = Messages["simulation"];
 type ScenarioCopy = SimulationMessages["scenarios"][CourierScenarioCopy];
-type ChoiceKey = "openLink" | "verifyOfficial" | "reportDelete";
+type Copy = Messages["simulation"]["redesign"];
+type InspectionValues = { sender: string; link: string; tracking: string };
 
-const decisionOptions: ReadonlyArray<{ choiceKey: ChoiceKey; decision: Decision; marker: string }> = [
+const decisionOptions: ReadonlyArray<{ choiceKey: "openLink" | "verifyOfficial" | "reportDelete"; decision: Decision; marker: string }> = [
   { choiceKey: "openLink", decision: "open_link", marker: "↗" },
   { choiceKey: "verifyOfficial", decision: "verify_official_channel", marker: "✓" },
   { choiceKey: "reportDelete", decision: "report_delete", marker: "×" },
@@ -45,20 +46,17 @@ const learnerCheckpointIndex: Record<SimulationStage, number> = {
   retry: 3,
   complete: 4,
 };
-const choiceKeyByDecision: Record<Decision, ChoiceKey> = {
-  open_link: "openLink",
-  verify_official_channel: "verifyOfficial",
-  report_delete: "reportDelete",
-};
-
 // Hydration-safe: state is restored from localStorage after mount via useEffect
 
 export function CourierSmsSimulation() {
   const messages = getMessages();
   const simulation = messages.simulation;
+  const copy = simulation.redesign;
   const [state, dispatch] = useReducer(simulationReducer, initialSimulationState);
+  const [inspectionOpen, setInspectionOpen] = useState(false);
+  const [inspectionValues, setInspectionValues] = useState<InspectionValues>({ sender: "", link: "", tracking: "" });
+  const [inspectionSubmitted, setInspectionSubmitted] = useState(false);
   const [verificationChecked, setVerificationChecked] = useState<boolean>(false);
-  const [mounted, setMounted] = useState(false);
   const completionRecorded = useRef(false);
   const hasStartedRef = useRef(false);
   const attemptIdRef = useRef<string | null>(null);
@@ -77,6 +75,8 @@ export function CourierSmsSimulation() {
           stage: saved.stage,
           inspectedSignals: saved.inspectedSignals ?? [],
           retryInspectedSignals: saved.retryInspectedSignals ?? [],
+          inspectionComplete: saved.stage !== "briefing" && saved.stage !== "receive" && saved.stage !== "inspect",
+          verificationComplete: ["decide", "reveal", "retry", "complete"].includes(saved.stage),
           verificationOpen: saved.verificationOpen ?? false,
           decision: saved.decision ?? null,
           retryDecision: saved.retryDecision ?? null,
@@ -86,8 +86,6 @@ export function CourierSmsSimulation() {
       attemptIdRef.current = saved.attemptId ?? null;
       hasStartedRef.current = saved.stage !== "briefing";
     }
-    setMounted(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isRetryScenario = state.stage === "retry" || state.retryDecision !== null || state.stage === "complete";
@@ -158,16 +156,13 @@ export function CourierSmsSimulation() {
   }, [recordEvent, state.retryDecision, state.stage]);
 
   useEffect(() => {
-    if (state.stage === "reveal" && activeDecision) {
-      const metadata = { choice: activeDecision };
-      const round = state.retryDecision ? "retry" : "primary";
-      recordEvent(`attacker-pov:${activeDecision}:${round}`, "attacker_pov_viewed", "reveal", metadata);
-      recordEvent(`feedback:${activeDecision}:${round}`, "feedback_viewed", "reveal", metadata);
-    }
-  }, [activeDecision, recordEvent, state.retryDecision, state.stage]);
+    if (!activeDecision || state.stage !== "reveal") return;
+    recordEvent(`decision-view:${activeDecision}`, "attacker_pov_viewed", "reveal", { choice: activeDecision });
+    recordEvent(`feedback:${activeDecision}`, "feedback_viewed", "reveal", { choice: activeDecision });
+  }, [activeDecision, recordEvent, state.stage]);
 
   useEffect(() => {
-    if (state.stage !== "complete" || state.retryDecision === null || completionRecorded.current) return;
+    if (state.stage !== "complete" || !state.retryDecision || completionRecorded.current) return;
     completionRecorded.current = true;
     const outcome = state.retryDecision === "open_link" ? "unsafe" : "safe";
     recordEvent("module_completed", "module_completed", "complete", { outcome });
@@ -187,12 +182,12 @@ export function CourierSmsSimulation() {
       .catch(() => setSyncStatus("local_only"));
   }, [ensureAttempt, recordEvent, state.retryDecision, state.stage]);
 
-  const startModule = () => {
+  const begin = () => {
     hasStartedRef.current = true;
-    recordEvent("module_started", "module_started", "briefing");
+    recordEvent("module-started", "module_started", "briefing");
     dispatch({ type: "start_module" });
   };
-
+  const startModule = begin;
   const selectPrimaryDecision = (decision: Decision) => {
     recordEvent("decision:primary", "decision_selected", "decide", { choice: decision });
     dispatch({ type: "select_decision", decision });
@@ -222,7 +217,6 @@ export function CourierSmsSimulation() {
     recordEvent("retry_started", "retry_started", "reveal", { variant: "retry" });
     dispatch({ type: "start_retry" });
   };
-
   return (
     <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
       {state.stage === "briefing" ? (
@@ -258,13 +252,26 @@ export function CourierSmsSimulation() {
             />
             <VictimDevice
               activeDecision={activeDecision}
+              copy={copy}
+              inspectionSubmitted={inspectionSubmitted}
               onCheckTrustedChannel={checkTrustedChannel}
               onContinueInspect={() => dispatch({ type: "continue_inspect" })}
-              onContinueReceive={() => dispatch({ type: "continue_receive" })}
+              onContinueReceive={() => {
+                setInspectionOpen(true);
+                dispatch({ type: "continue_receive" });
+              }}
               onConfirmTrustedChannel={() => dispatch({ type: "confirm_verification" })}
-              onInspectSignal={(signal) => inspectSignal(signal, state.stage === "retry")}
+              onInspectSignal={(signal) => {
+                setInspectionOpen(true);
+                inspectSignal(signal, state.stage === "retry");
+              }}
               onOpenTrustedChannel={openTrustedChannel}
               onSelectDecision={state.stage === "retry" ? selectRetryDecision : selectPrimaryDecision}
+              inspectionOpen={inspectionOpen}
+              inspectionValues={inspectionValues}
+              onInspectionChange={(field, value) => setInspectionValues((current) => ({ ...current, [field]: value }))}
+              onInspectionSubmit={() => setInspectionSubmitted(true)}
+              onCloseInspection={() => setInspectionOpen(false)}
               scenario={scenario}
               simulation={simulation}
               state={state}
@@ -366,6 +373,7 @@ function BriefingBanner({
 
 function VictimDevice({
   activeDecision,
+  copy,
   onCheckTrustedChannel,
   onContinueInspect,
   onContinueReceive,
@@ -373,12 +381,19 @@ function VictimDevice({
   onInspectSignal,
   onOpenTrustedChannel,
   onSelectDecision,
+  inspectionOpen,
+  inspectionValues,
+  onInspectionChange,
+  onInspectionSubmit,
+  onCloseInspection,
+  inspectionSubmitted,
   scenario,
   simulation,
   state,
   verificationChecked,
 }: {
   activeDecision: Decision | null;
+  copy: Copy;
   onCheckTrustedChannel: () => void;
   onContinueInspect: () => void;
   onContinueReceive: () => void;
@@ -386,6 +401,12 @@ function VictimDevice({
   onInspectSignal: (signal: "sender" | "link") => void;
   onOpenTrustedChannel: () => void;
   onSelectDecision: (decision: Decision) => void;
+  inspectionOpen: boolean;
+  inspectionValues: InspectionValues;
+  onInspectionChange: (field: keyof InspectionValues, value: string) => void;
+  onInspectionSubmit: () => void;
+  onCloseInspection: () => void;
+  inspectionSubmitted: boolean;
   scenario: ScenarioCopy;
   simulation: SimulationMessages;
   state: SimulationState;
@@ -429,12 +450,19 @@ function VictimDevice({
                 ) : null}
                 {state.stage === "inspect" || state.stage === "retry" ? (
                   <InspectionControls
+                    copy={copy}
                     hasLink={hasLink}
                     hasSender={hasSender}
                     isRetry={isRetry}
                     onContinue={onContinueInspect}
                     onInspect={onInspectSignal}
                     onSelectDecision={onSelectDecision}
+                    inspectionOpen={inspectionOpen}
+                    inspectionValues={inspectionValues}
+                    onInspectionChange={onInspectionChange}
+                    onInspectionSubmit={onInspectionSubmit}
+                    onCloseInspection={onCloseInspection}
+                    inspectionSubmitted={inspectionSubmitted}
                     scenario={scenario}
                     simulation={simulation}
                   />
@@ -457,6 +485,7 @@ function VictimDevice({
   );
 }
 
+function Input({ label, onChange, value }: { label: string; onChange: (event: React.ChangeEvent<HTMLInputElement>) => void; value: string }) { return <label className="block font-mono text-[10px] text-muted">{label}<input className="mt-2 w-full border border-navy-700 bg-navy-900 px-3 py-2 text-xs text-ice" value={value} onChange={onChange} /></label>; }
 function SmsHeader({ scenario, simulation }: { scenario: ScenarioCopy; simulation: SimulationMessages }) {
   return (
     <>
@@ -504,21 +533,35 @@ function MessageBubble({ scenario, simulation }: { scenario: ScenarioCopy; simul
 }
 
 function InspectionControls({
+  copy,
   hasLink,
   hasSender,
   isRetry,
   onContinue,
   onInspect,
   onSelectDecision,
+  inspectionOpen,
+  inspectionValues,
+  onInspectionChange,
+  onInspectionSubmit,
+  onCloseInspection,
+  inspectionSubmitted,
   scenario,
   simulation,
 }: {
+  copy: Copy;
   hasLink: boolean;
   hasSender: boolean;
   isRetry: boolean;
   onContinue: () => void;
   onInspect: (signal: "sender" | "link") => void;
   onSelectDecision: (decision: Decision) => void;
+  inspectionOpen: boolean;
+  inspectionValues: InspectionValues;
+  onInspectionChange: (field: keyof InspectionValues, value: string) => void;
+  onInspectionSubmit: () => void;
+  onCloseInspection: () => void;
+  inspectionSubmitted: boolean;
   scenario: ScenarioCopy;
   simulation: SimulationMessages;
 }) {
@@ -542,6 +585,22 @@ function InspectionControls({
         <div className="border-l-2 border-warning/50 pl-3">
           <p className="font-mono text-[11px] text-warning">{scenario.linkInspectionTitle}</p>
           <p className="mt-1 text-xs leading-5 text-muted">{scenario.linkInspectionBody}</p>
+        </div>
+      ) : null}
+      {inspectionOpen ? (
+        <div className="border border-signal/30 bg-navy-950 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="font-mono text-[10px] text-signal">{copy.message.label}</p>
+            <button className="font-mono text-[10px] text-signal" type="button" onClick={onCloseInspection}>{copy.inspect.back}</button>
+          </div>
+          <p className="mt-2 text-xs leading-5 text-muted">{copy.inspect.description}</p>
+          <div className="mt-3 space-y-3">
+            <Input label={copy.inspect.sender} onChange={(event) => onInspectionChange("sender", event.target.value)} value={inspectionValues.sender} />
+            <Input label={copy.inspect.link} onChange={(event) => onInspectionChange("link", event.target.value)} value={inspectionValues.link} />
+            <Input label={copy.inspect.tracking} onChange={(event) => onInspectionChange("tracking", event.target.value)} value={inspectionValues.tracking} />
+          </div>
+          <button className="mt-3 min-h-10 border border-signal px-3 font-mono text-xs text-signal" type="button" onClick={onInspectionSubmit}>{copy.inspect.submit}</button>
+          {inspectionSubmitted ? <p className="mt-2 text-xs text-muted">{copy.inspect.resultTitle}</p> : null}
         </div>
       ) : null}
       <p className="text-xs leading-5 text-muted">
@@ -682,7 +741,8 @@ function DeviceAction({
 }
 
 function VictimOutcome({ decision, simulation }: { decision: Decision; simulation: SimulationMessages }) {
-  const choice = simulation.decide.choices[choiceKeyByDecision[decision]];
+  const choiceKey = decision === "open_link" ? "openLink" : decision === "verify_official_channel" ? "verifyOfficial" : "reportDelete";
+  const choice = simulation.decide.choices[choiceKey];
   const outcome =
     decision === "open_link"
       ? simulation.outcomes.openLink

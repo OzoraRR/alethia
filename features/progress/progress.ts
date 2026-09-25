@@ -9,7 +9,7 @@ import {
   type RemoteProgress,
 } from "./supabase-persistence";
 
-export const moduleIds = ["courier-sms", "social-engineering"] as const;
+export const moduleIds = ["courier-sms", "social-engineering", "executable-file"] as const;
 export type ModuleId = (typeof moduleIds)[number];
 export const masteryStates = ["not_started", "familiar", "skilled", "needs_practice"] as const;
 export type MasteryState = (typeof masteryStates)[number];
@@ -18,6 +18,7 @@ export type RetryResult = "safe" | "unsafe" | null;
 export type PracticeProgress = {
   courierSmsCompleted: boolean;
   socialEngineeringCompleted: boolean;
+  executableFileCompleted: boolean;
   modulesCompleted: number;
   mastery: MasteryState;
   currentStreak: number;
@@ -34,6 +35,7 @@ type CompletionHabits = Partial<PracticeProgress["habits"]>;
 export const defaultProgress: PracticeProgress = {
   courierSmsCompleted: false,
   socialEngineeringCompleted: false,
+  executableFileCompleted: false,
   modulesCompleted: 0,
   mastery: "not_started",
   currentStreak: 0,
@@ -46,9 +48,7 @@ export const defaultProgress: PracticeProgress = {
 };
 
 export function loadProgress(): PracticeProgress {
-  return safeGetItem(STORAGE_KEYS.PROGRESS, defaultProgress, (val): val is PracticeProgress => {
-    return isRecord(val);
-  });
+  return safeGetItem(STORAGE_KEYS.PROGRESS, defaultProgress, (val): val is PracticeProgress => isRecord(val));
 }
 
 export function saveProgress(progress: PracticeProgress): void {
@@ -65,12 +65,12 @@ export function recordCourierSmsCompletion({
 }): PracticeProgress {
   return recordModuleCompletion({
     moduleId: "courier-sms",
-    outcome: retryDecision === "open_link" ? "unsafe" : "safe",
+    outcome: retryDecision === "open_link" || retryDecision === "reply_sender" ? "unsafe" : "safe",
     completedAt,
     habits: {
       inspect: true,
       verify: true,
-      report: retryDecision === "report_delete",
+      report: retryDecision === "report_delete" || retryDecision === "report_message",
     },
   });
 }
@@ -93,17 +93,15 @@ export function recordModuleCompletion({
     moduleId === "courier-sms" ? true : currentProgress.courierSmsCompleted;
   const socialEngineeringCompleted =
     moduleId === "social-engineering" ? true : currentProgress.socialEngineeringCompleted;
-
+  const executableFileCompleted =
+    moduleId === "executable-file" ? true : currentProgress.executableFileCompleted;
   const nextProgress: PracticeProgress = {
     ...currentProgress,
     courierSmsCompleted,
     socialEngineeringCompleted,
-    modulesCompleted: Number(courierSmsCompleted) + Number(socialEngineeringCompleted),
-    mastery: isFirstModuleCompletion
-      ? "familiar"
-      : outcome === "unsafe"
-        ? "needs_practice"
-        : "skilled",
+    executableFileCompleted,
+    modulesCompleted: Number(courierSmsCompleted) + Number(socialEngineeringCompleted) + Number(executableFileCompleted),
+    mastery: moduleId === "courier-sms" ? (isFirstModuleCompletion ? "familiar" : outcome === "unsafe" ? "needs_practice" : "skilled") : currentProgress.mastery,
     currentStreak: nextStreak.currentStreak,
     longestStreak: nextStreak.longestStreak,
     freezesRemaining: nextStreak.freezesRemaining,
@@ -177,7 +175,6 @@ export function useLocalProgress(): PracticeProgress {
 export function resetProgress(): void {
   saveProgress(defaultProgress);
 }
-
 function synchronizeLocalCompletions(localProgress: PracticeProgress, snapshot = localProgress) {
   moduleIds
     .filter((moduleId) => isModuleComplete(localProgress, moduleId))
@@ -194,15 +191,17 @@ export function mergeProgress(
     localProgress.courierSmsCompleted || remoteProgress.courierSmsCompleted;
   const socialEngineeringCompleted =
     localProgress.socialEngineeringCompleted || remoteProgress.socialEngineeringCompleted;
-  const localHasCompletion = hasCompletion(localProgress);
-
+  const executableFileCompleted =
+    localProgress.executableFileCompleted || Boolean(remoteProgress.executableFileCompleted);
+  const localHasCourierCompletion = localProgress.courierSmsCompleted;
   return {
     ...localProgress,
     courierSmsCompleted,
     socialEngineeringCompleted,
-    modulesCompleted: Number(courierSmsCompleted) + Number(socialEngineeringCompleted),
+    executableFileCompleted,
+    modulesCompleted: Number(courierSmsCompleted) + Number(socialEngineeringCompleted) + Number(executableFileCompleted),
     mastery:
-      localHasCompletion && localProgress.mastery !== "not_started"
+      localHasCourierCompletion && localProgress.mastery !== "not_started"
         ? localProgress.mastery
         : remoteProgress.mastery,
     currentStreak: localProgress.lastQualifyingDate
@@ -222,15 +221,10 @@ export function mergeProgress(
     badges: [...new Set([...localProgress.badges, ...remoteProgress.badges])],
   };
 }
-
 function isModuleComplete(progress: PracticeProgress, moduleId: ModuleId) {
-  return moduleId === "courier-sms"
-    ? progress.courierSmsCompleted
-    : progress.socialEngineeringCompleted;
-}
-
-function hasCompletion(progress: PracticeProgress) {
-  return progress.courierSmsCompleted || progress.socialEngineeringCompleted;
+  if (moduleId === "courier-sms") return progress.courierSmsCompleted;
+  if (moduleId === "social-engineering") return progress.socialEngineeringCompleted;
+  return progress.executableFileCompleted;
 }
 
 export function calculateNextStreak(progress: PracticeProgress, completedAt: string) {
@@ -270,12 +264,14 @@ export function normalizeProgress(value: unknown): PracticeProgress {
   if (!isRecord(value)) return defaultProgress;
   const courierSmsCompleted = value.courierSmsCompleted === true;
   const socialEngineeringCompleted = value.socialEngineeringCompleted === true;
+  const executableFileCompleted = value.executableFileCompleted === true;
   const habits = isRecord(value.habits) ? value.habits : {};
 
   return {
     courierSmsCompleted,
     socialEngineeringCompleted,
-    modulesCompleted: Number(courierSmsCompleted) + Number(socialEngineeringCompleted),
+    executableFileCompleted,
+    modulesCompleted: Number(courierSmsCompleted) + Number(socialEngineeringCompleted) + Number(executableFileCompleted),
     mastery: isMasteryState(value.mastery) ? value.mastery : defaultProgress.mastery,
     currentStreak: nonNegativeInteger(value.currentStreak),
     longestStreak: nonNegativeInteger(value.longestStreak),
