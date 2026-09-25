@@ -26,11 +26,7 @@ export function DashboardStreak() {
   return (
     <section className="dashboard-streak" aria-label={formatStreak(progress.currentStreak, messages.progress)}>
       <div className="dashboard-streak__head">
-        <span className="dashboard-streak__title">STREAK TELEMETRY</span>
-        <span className="dashboard-streak__status">
-          <AvatarVisual avatarUrl={avatarUrl} className="dashboard-streak__avatar" round />
-          <span className="text-signal font-bold">● ACTIVE</span>
-        </span>
+        <span className="dashboard-streak__title">DAILY STREAK</span>
       </div>
       <div className="dashboard-streak__body">
         <Image alt="" aria-hidden="true" className="dashboard-streak__visual" height={144} src="/media/streak.webp" unoptimized width={144} />
@@ -114,7 +110,7 @@ export function DashboardOperatorProfile() {
 
       <div className="mt-8 border-t border-navy-700 pt-4">
         <Link className="btn-tactile w-full justify-center text-center font-mono text-xs" href="/profile">
-          OPERATOR DOSSIER CONSOLE →
+          OPERATOR CONSOLE →
         </Link>
       </div>
     </section>

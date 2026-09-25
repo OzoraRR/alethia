@@ -121,7 +121,7 @@ export default function LoginPage() {
       </div>
       <div className="neuro-center">
         <div className={`neuro-gateway ${mode === "register" ? "neuro--register" : ""}`}>
-          <div className="neuro-tabs" role="tablist" aria-label={login.eyebrow}>
+          <div className="neuro-tabs" role="tablist">
             {(["login", "register"] as const).map((m) => (
               <button
                 aria-selected={mode === m}

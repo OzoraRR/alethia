@@ -1,13 +1,13 @@
 {
   "brand": {
     "name": "Alethia",
-    "descriptor": "Latihan keamanan yang humanis"
+    "descriptor": "Latihan keamanan yang humuanis"
   },
   "common": {
     "primaryNavigation": "Navigasi utama",
     "foundation": "RUANG LATIHAN",
     "simulationOnly": "SIMULASI AMAN",
-    "noRealData": "Tidak ada data nyata yang dikumpulkan",
+    "noRealData": "No Real Data ",
     "comingSoon": "Segera hadir",
     "available": "Tersedia",
     "backHome": "Kembali ke beranda"
@@ -47,7 +47,7 @@
   },
   "dashboard": {
     "eyebrow": "BERANDA LATIHAN",
-    "greeting": "Selamat datang, Chief.",
+    "greeting": "Selamat datang, ",
     "summary": "Bangun kebiasaan berhenti, memeriksa, dan memverifikasi.",
     "currentChallenge": "Latihan saat ini",
     "moduleNumber": "MODUL 01",
@@ -777,7 +777,7 @@
   },
   "landing": {
     "eyebrow": "PLATFORM LATIHAN KEAMANAN",
-    "title": "Belajar menipu sebelum tertipu.",
+    "title": "The State Of Being Hidden",
     "description": "Alethia adalah ruang latihan keamanan siber: simulasi SMS phishing, rekayasa sosial marketplace, dan laporan komunitas. Semua fiktif, semua aman, semua bisa diulang.",
     "start": "Mulai",
     "enter": "Masuk",
@@ -797,20 +797,20 @@
     "worlds": [
       {
         "title": "Simulasi Serangan Siber",
-        "desc": "Latihan interaktif mengenali & merespons SMS phishing, penipuan marketplace, dan dokumen berbahaya.",
-        "meta": "FITUR 01 · SIMULASI",
+        "desc": "Latihan interaktif mengenali & merespons berbagai tipuan yang ada di internet.",
+        "meta": "SIMULASI",
         "status": "Aktif"
       },
       {
         "title": "Progress & Streak Tracking",
         "desc": "Pantau perkembangan skill, konsistensi latihan harian, dan raih badge pencapaian.",
-        "meta": "FITUR 02 · PROGRESS",
+        "meta": "PROGRESS",
         "status": "Aktif"
       },
       {
         "title": "Report Hub & Profil Operator",
-        "desc": "Pelajari pola serangan dari komunitas & kembangkan profil operator dengan sistem level personal.",
-        "meta": "FITUR 03 · KOMUNITAS",
+        "desc": "Pelajari pola serangan dari komunitas & kembangkan profil dengan sistem level personal.",
+        "meta": "KOMUNITAS",
         "status": "Aktif"
       }
     ],
@@ -833,37 +833,52 @@
     "nextWorld": "Dunia berikutnya"
   },
   "login": {
+<<<<<<< Updated upstream
     "eyebrow": "GERBANG OPERATOR",
     "title": "Masuk ke ruang latihan.",
     "description": "Daftar sekali, lalu masuk dengan username atau email. Akun tersimpan di perambanmu, bukan di server kami.",
     "tabLogin": "Masuk",
     "tabRegister": "Daftar",
+=======
+    "tabLogin": "Login",
+    "tabRegister": "Register",
+>>>>>>> Stashed changes
     "usernameLabel": "USERNAME",
-    "usernamePlaceholder": "mis. sinyal_ops",
+    "usernamePlaceholder": "username",
     "identifierLabel": "USERNAME ATAU EMAIL",
-    "identifierPlaceholder": "nama sandi atau email",
+    "identifierPlaceholder": "username atau email",
     "emailLabel": "EMAIL",
-    "emailPlaceholder": "nama@contoh.id",
+    "emailPlaceholder": "contoh@gmail.com",
     "passLabel": "SANDI",
     "passPlaceholder": "min. 8 karakter",
     "confirmLabel": "KONFIRMASI SANDI",
-    "loginSubmit": "Masuk ke latihan",
-    "registerSubmit": "Buat akun operator",
+    "loginSubmit": "Login",
+    "registerSubmit": "Register Akun",
     "back": "← Kembali",
     "usernameInvalid": "Username 3–24 karakter: huruf, angka, garis bawah.",
     "emailInvalid": "Format email tidak valid.",
     "passwordShort": "Sandi minimal 8 karakter.",
     "passwordMismatch": "Konfirmasi sandi tidak sama.",
+<<<<<<< Updated upstream
     "usernameTaken": "Username sudah dipakai di peramban ini.",
     "emailTaken": "Email sudah terdaftar di peramban ini.",
     "invalidCredentials": "Username/email atau sandi salah.",
     "unavailable": "Keamanan peramban tidak tersedia. Coba browser lain.",
     "localNote": "Akun latihan lokal: kredensial tidak pernah dikirim ke mana pun.",
     "overlayWelcome": "Selamat datang kembali, Chief!",
+=======
+    "usernameTaken": "Username sudah dipakai oleh orang lain.",
+    "emailTaken": "Email sudah terdaftar.",
+    "invalidCredentials": "Email/Username atau sandi yang Anda masukkan salah.",
+    "emailConfirmationRequired": "Pendaftaran berhasil. Periksa email Anda untuk mengonfirmasi akun sebelum masuk.",
+    "rateLimited": "Terlalu banyak percobaan. Tunggu beberapa menit sebelum mencoba lagi.",
+    "unavailable": "Akun tidak tersedia. Silahkan daftar terlebih dahulu.",
+    "localNote": " ",
+    "overlayWelcome": "Selamat datang kembali, World!",
+>>>>>>> Stashed changes
     "overlayWelcomeDesc": "Masuk untuk lanjutkan latihan, streak, dan investigasimu.",
     "overlayGoRegister": "Buat akun",
-    "overlayHello": "Halo, Operator!",
-    "overlayHelloDesc": "Daftar untuk membuka ruang latihan, peran, dan metamorfosismu.",
+    "overlayHello": "Hello, World!",
     "overlayGoLogin": "Masuk",
     "switchToRegister": "Belum punya akun? > Daftar",
     "switchToLogin": "Sudah punya akun? > Masuk"

@@ -47,7 +47,7 @@
   },
   "dashboard": {
     "eyebrow": "OPERATOR HOME",
-    "greeting": "Welcome, Chief.",
+    "greeting": "Welcome, ",
     "summary": "One short practice to build the habit of pausing, inspecting, and verifying.",
     "currentChallenge": "Current challenge",
     "moduleNumber": "MODULE 01",

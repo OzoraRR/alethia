@@ -1,6 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
+import { useState } from "react";
+import { useAuthProfile } from "@/features/profile/auth-profile";
 import {
   DashboardModuleStatus,
   DashboardOperatorProfile,
@@ -10,6 +14,9 @@ import { getMessages } from "@/lib/i18n";
 
 export default function DashboardPage() {
   const { dashboard } = getMessages();
+  const { state, profile, isLoading, isAuthenticated, error: profileError, signOut } = useAuthProfile();
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
 
   return (
     <AppShell activeRoute="dashboard">
@@ -18,12 +25,13 @@ export default function DashboardPage() {
         <div className="container-level-0 border-b border-navy-700 pb-6">
           <div className="flex flex-wrap items-baseline justify-between gap-4 font-mono text-xs">
             <span className="text-signal font-bold tracking-widest uppercase">
-              01 / OPERATOR WORKSTATION
+              01 / WORKSTATION
             </span>
-            <span className="text-muted">SESSION 04 · PRACTICE MODE</span>
           </div>
           <h1 className="mt-3 text-3xl font-bold tracking-tight text-ice sm:text-5xl">
-            {dashboard.greeting}
+            {profile?.username
+              ? `${dashboard.greeting}${profile.username}`
+              : dashboard.greeting.trim().replace(/,$/, "")}
           </h1>
         </div>
 
