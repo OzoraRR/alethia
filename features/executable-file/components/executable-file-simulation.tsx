@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { recordModuleCompletion, type PracticeProgress } from "@/features/progress/progress";
+import { recordModuleCompletion, recordModuleStart, type PracticeProgress } from "@/features/progress/progress";
 import { persistPracticeEvent, persistProgressSnapshot, startPracticeAttempt, type PracticeAttemptResult, type PracticeEventMetadata, type PracticeEventType, type RemoteSyncResult } from "@/features/progress/supabase-persistence";
 import { getMessages, type Messages } from "@/lib/i18n";
 import { executableFileReducer, initialExecutableFileState, type ExecutableFileState } from "../simulation-machine";
@@ -42,7 +42,7 @@ export function ExecutableFileSimulation() {
     recordEvent("module-completed", "module_completed", "complete", { outcome });
     void ensureAttempt().then(({ attemptId: id }) => id ? persistProgressSnapshot({ progress: next, moduleId: "executable-file", attemptId: id }) : { status: "local_only" as const }).then((result) => setSyncStatus(result.status)).catch(() => setSyncStatus("local_only"));
   }, [ensureAttempt, recordEvent, state.decision, state.stage]);
-  const begin = () => { recordEvent("module-started", "module_started", "briefing"); dispatch({ type: "start" }); };
+  const begin = () => { recordModuleStart("executable-file"); recordEvent("module-started", "module_started", "briefing"); dispatch({ type: "start" }); };
   const inspect = () => { recordEvent("source-inspected", "sender_inspected", "inspect", { source: "simulated_message" }); recordEvent("file-inspected", "link_inspected", "inspect", { file: "simulated" }); dispatch({ type: "inspect" }); };
   const choose = (decision: FileDecision) => { recordEvent("decision", "decision_selected", "decide", { choice: decision }); recordEvent("analysis", "attacker_pov_viewed", "reveal", { choice: decision }); dispatch({ type: "select", decision }); };
   const unsafe = state.decision === "open";

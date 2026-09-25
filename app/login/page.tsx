@@ -5,8 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { getMessages } from "@/lib/i18n";
-import { getOrCreateAnonymousSession, saveCallsign } from "@/lib/session/session";
-import { login as loginAccount, register as registerAccount, type AuthError } from "@/lib/auth/accounts";
+import {
+  clearUserScopedState,
+  getActiveAccountId,
+  saveCallsign,
+  setActiveAccountId,
+} from "@/lib/session/session";
+import { mergeLocalProgressIntoAccount } from "@/features/progress/progress";
+import { login as loginAccount, register as registerAccount, type Account, type AuthError } from "@/lib/auth/accounts";
 
 const GLYPHS = "!<>-_/[]{}=+*^?#01";
 
@@ -60,13 +66,30 @@ export default function LoginPage() {
     username_taken: login.usernameTaken,
     email_taken: login.emailTaken,
     invalid_credentials: login.invalidCredentials,
+    email_confirmation_required: login.emailConfirmationRequired,
+    rate_limited: login.rateLimited,
     unavailable: login.unavailable,
   };
 
-  async function enter(username_: string) {
-    await getOrCreateAnonymousSession();
-    saveCallsign(username_);
-    router.push("/dashboard");
+  async function enter(account: Account) {
+    const accountId = account.id ?? account.username;
+    const previousAccountId = getActiveAccountId();
+
+    // Never upload a previous account's local snapshot to a different account.
+    // A missing marker means the snapshot is anonymous and eligible for merge.
+    if (previousAccountId && previousAccountId !== accountId) {
+      clearUserScopedState();
+    } else {
+      // Merge the anonymous/account snapshot before entering the authenticated
+      // workspace. The merge is resilient and keeps local data if the network
+      // is temporarily unavailable.
+      await mergeLocalProgressIntoAccount();
+    }
+
+    setActiveAccountId(accountId);
+    saveCallsign(account.username);
+    router.replace("/dashboard");
+    router.refresh();
   }
 
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
@@ -79,7 +102,9 @@ export default function LoginPage() {
         setError(result.error);
         return;
       }
-      await enter(result.account.username);
+      await enter(result.account);
+    } catch {
+      setError("unavailable");
     } finally {
       setBusy(false);
     }
@@ -95,7 +120,9 @@ export default function LoginPage() {
         setError(result.error);
         return;
       }
-      await enter(result.account.username);
+      await enter(result.account);
+    } catch {
+      setError("unavailable");
     } finally {
       setBusy(false);
     }
@@ -140,11 +167,11 @@ export default function LoginPage() {
             <h1 className="neuro-title">{login.tabLogin}</h1>
             <label className="neuro-label">
               {login.identifierLabel}
-              <input autoComplete="username" className="neuro-input" onChange={(e) => setIdentifier(e.target.value)} placeholder={login.identifierPlaceholder} value={identifier} />
+              <input autoComplete="username" className="neuro-input" name="identifier" onChange={(e) => setIdentifier(e.target.value)} placeholder={login.identifierPlaceholder} required value={identifier} />
             </label>
             <label className="neuro-label">
               {login.passLabel}
-              <input autoComplete="current-password" className="neuro-input" onChange={(e) => setPassword(e.target.value)} placeholder={login.passPlaceholder} type="password" value={password} />
+              <input autoComplete="current-password" className="neuro-input" minLength={8} name="password" onChange={(e) => setPassword(e.target.value)} placeholder={login.passPlaceholder} required type="password" value={password} />
             </label>
             {mode === "login" && error ? <p className="neuro-error" role="alert">{errorText[error]}</p> : null}
             <button className="neuro-submit" disabled={busy} type="submit">
@@ -157,19 +184,19 @@ export default function LoginPage() {
             <h1 className="neuro-title">{login.tabRegister}</h1>
             <label className="neuro-label">
               {login.usernameLabel}
-              <input autoComplete="username" className="neuro-input" maxLength={24} onChange={(e) => setUsername(e.target.value)} placeholder={login.usernamePlaceholder} value={username} />
+              <input autoComplete="username" className="neuro-input" maxLength={24} minLength={3} name="username" onChange={(e) => setUsername(e.target.value)} pattern="[A-Za-z0-9_]{3,24}" placeholder={login.usernamePlaceholder} required value={username} />
             </label>
             <label className="neuro-label">
               {login.emailLabel}
-              <input autoComplete="email" className="neuro-input" onChange={(e) => setEmail(e.target.value)} placeholder={login.emailPlaceholder} type="email" value={email} />
+              <input autoComplete="email" className="neuro-input" name="email" onChange={(e) => setEmail(e.target.value)} placeholder={login.emailPlaceholder} required type="email" value={email} />
             </label>
             <label className="neuro-label">
               {login.passLabel}
-              <input autoComplete="new-password" className="neuro-input" onChange={(e) => setPassword(e.target.value)} placeholder={login.passPlaceholder} type="password" value={password} />
+              <input autoComplete="new-password" className="neuro-input" minLength={8} name="password" onChange={(e) => setPassword(e.target.value)} placeholder={login.passPlaceholder} required type="password" value={password} />
             </label>
             <label className="neuro-label">
               {login.confirmLabel}
-              <input autoComplete="new-password" className="neuro-input" onChange={(e) => setConfirm(e.target.value)} placeholder={login.passPlaceholder} type="password" value={confirm} />
+              <input autoComplete="new-password" className="neuro-input" minLength={8} name="confirmPassword" onChange={(e) => setConfirm(e.target.value)} placeholder={login.passPlaceholder} required type="password" value={confirm} />
             </label>
             {mode === "register" && error ? <p className="neuro-error" role="alert">{errorText[error]}</p> : null}
             <button className="neuro-submit" disabled={busy} type="submit">

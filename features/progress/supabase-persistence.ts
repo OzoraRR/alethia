@@ -1,8 +1,14 @@
 "use client";
 
 import { createClient } from "../../lib/supabase/client";
-import { getOrCreateAnonymousSession } from "../../lib/session/session";
-import type { MasteryState, ModuleId, PracticeProgress, RetryResult } from "./progress";
+import type {
+  MasteryState,
+  ModuleId,
+  ModuleProgressMap,
+  ModuleProgressSnapshot,
+  PracticeProgress,
+  RetryResult,
+} from "./progress";
 
 export const practiceEventTypes = [
   "module_started",
@@ -25,7 +31,7 @@ export type PracticeAttemptResult = RemoteSyncResult & { attemptId: string | nul
 export type RemoteProgress = {
   courierSmsCompleted: boolean;
   socialEngineeringCompleted: boolean;
-  executableFileCompleted?: boolean;
+  executableFileCompleted: boolean;
   modulesCompleted: number;
   mastery: MasteryState;
   currentStreak: number;
@@ -34,6 +40,7 @@ export type RemoteProgress = {
   lastQualifyingDate: string | null;
   lastRetryResult: RetryResult;
   habits: PracticeProgress["habits"];
+  moduleProgress?: ModuleProgressMap;
   badges: string[];
 };
 type AuthContext = { client: NonNullable<ReturnType<typeof createClient>>; userId: string };
@@ -47,6 +54,11 @@ type ModuleProgressRow = {
   inspect_practised: unknown;
   verify_practised: unknown;
   report_practised: unknown;
+  score: unknown;
+  progress_percentage: unknown;
+  started_at: unknown;
+  completed_at: unknown;
+  updated_at: unknown;
 };
 
 const REQUEST_TIMEOUT_MS = 5000;
@@ -82,6 +94,17 @@ export async function startPracticeAttempt(
       logSyncFailure("create practice attempt", error);
       return { attemptId: null, ...localOnly("remote_error") };
     }
+
+    const progressResult = await withTimeout<{ error: unknown }>(
+      auth.client.rpc("begin_module_progress", { requested_module_id: moduleId }) as unknown as PromiseLike<{
+        error: unknown;
+      }>,
+    );
+    if (progressResult.error) {
+      logSyncFailure("start module progress", progressResult.error);
+      return { attemptId: data.id, ...localOnly("remote_error") };
+    }
+
     return { attemptId: data.id, status: "synced" };
   } catch (error) {
     logSyncFailure("create practice attempt", error);
@@ -98,7 +121,7 @@ export async function loadRemoteProgress(): Promise<RemoteProgress | null> {
       Promise.all([
         auth.client
           .from("user_module_progress")
-          .select("module_id, status, mastery_level, last_practised_at, inspect_practised, verify_practised, report_practised")
+          .select("module_id, status, mastery_level, last_practised_at, inspect_practised, verify_practised, report_practised, score, progress_percentage, started_at, completed_at, updated_at")
           .eq("user_id", auth.userId),
         auth.client
           .from("user_streaks")
@@ -141,6 +164,11 @@ export async function loadRemoteProgress(): Promise<RemoteProgress | null> {
     const courierSmsCompleted = courierProgress?.status === "completed";
     const socialEngineeringCompleted = socialProgress?.status === "completed";
     const executableFileCompleted = executableFileProgress?.status === "completed";
+    const moduleProgress: ModuleProgressMap = {
+      "courier-sms": moduleProgressSnapshot(courierProgress),
+      "social-engineering": moduleProgressSnapshot(socialProgress),
+      "executable-file": moduleProgressSnapshot(executableFileProgress),
+    };
 
     if (!courierProgress && !socialProgress && !executableFileProgress && !streak && !latestAttempt && badges.length === 0) {
       return null;
@@ -165,6 +193,7 @@ export async function loadRemoteProgress(): Promise<RemoteProgress | null> {
         verify: courierProgress?.verify_practised === true,
         report: courierProgress?.report_practised === true,
       },
+      moduleProgress,
       badges,
     };
   } catch (error) {
@@ -187,8 +216,10 @@ export async function persistProgressSnapshot({
     if (!auth) return localOnly("no_session");
 
     const occurredAt = new Date().toISOString();
+    const profileWrite = await ensureProfile(auth);
     const writes: Array<Promise<RemoteSyncResult>> = [
-      ensureProfile(auth),
+      Promise.resolve(profileWrite),
+      syncProfileStats(auth, progress),
       inspectMutation(
         "update module progress",
         auth.client.from("user_module_progress").upsert(
@@ -197,6 +228,11 @@ export async function persistProgressSnapshot({
             module_id: moduleId,
             status: "completed",
             mastery_level: moduleId === "courier-sms" ? progress.mastery : "not_started",
+            progress_percentage: 100,
+            score: null,
+            started_at: progress.moduleProgress[moduleId].startedAt ?? occurredAt,
+            completed_at: occurredAt,
+            updated_at: occurredAt,
             last_practised_at: occurredAt,
             inspect_practised: progress.habits.inspect,
             verify_practised: progress.habits.verify,
@@ -289,11 +325,16 @@ export async function persistPracticeEvent({
 async function getAuthContext(): Promise<AuthContext | null> {
   const client = getSafeClient();
   if (!client) return null;
-  const session = await getOrCreateAnonymousSession();
-  if (session && session.isRemote) {
-    return { client, userId: session.sessionId };
-  }
-  return null;
+
+  // Always verify the live Supabase user here. A synchronous local challenge
+  // ID may have populated the app session cache, but it must never decide
+  // which remote account receives progress writes.
+  const result = (await withTimeout(client.auth.getUser())) as {
+    data: { user: { id: string; is_anonymous?: boolean } | null };
+    error: unknown;
+  };
+  if (result.error || !result.data.user) return null;
+  return { client, userId: result.data.user.id };
 }
 
 function getSafeClient() {
@@ -304,12 +345,39 @@ function getSafeClient() {
   }
 }
 
+function fallbackProfileUsername(userId: string): string {
+  return `operator_${userId.replace(/-/g, "").slice(0, 15)}`;
+}
+
 async function ensureProfile(auth: AuthContext): Promise<RemoteSyncResult> {
   return inspectMutation(
     "ensure profile",
     auth.client
       .from("profiles")
-      .upsert({ id: auth.userId, preferred_locale: "id" }, { onConflict: "id", ignoreDuplicates: true }),
+      .upsert(
+        {
+          id: auth.userId,
+          username: fallbackProfileUsername(auth.userId),
+          preferred_locale: "id",
+        },
+        { onConflict: "id", ignoreDuplicates: true },
+      ),
+  );
+}
+
+async function syncProfileStats(auth: AuthContext, progress: PracticeProgress): Promise<RemoteSyncResult> {
+  return inspectMutation(
+    "sync profile stats",
+    auth.client
+      .from("profiles")
+      .update({
+        mastery: progress.mastery,
+        modules_completed: progress.modulesCompleted,
+        current_streak: progress.currentStreak,
+        longest_streak: progress.longestStreak,
+        freezes_remaining: progress.freezesRemaining,
+      })
+      .eq("id", auth.userId),
   );
 }
 
@@ -355,6 +423,43 @@ function isMasteryState(value: unknown): value is MasteryState {
     value === "skilled" ||
     value === "needs_practice"
   );
+}
+
+function moduleProgressSnapshot(row: ModuleProgressRow | undefined): ModuleProgressSnapshot {
+  const status =
+    row?.status === "completed" || row?.status === "in_progress" || row?.status === "not_started"
+      ? row.status
+      : "not_started";
+  const rawProgress = boundedInteger(row?.progress_percentage, 0, 100);
+  const progressPercentage =
+    status === "completed"
+      ? 100
+      : status === "in_progress"
+        ? Math.max(rawProgress, 1)
+        : 0;
+  const score =
+    typeof row?.score === "number" && Number.isInteger(row.score) && row.score >= 0 && row.score <= 100
+      ? row.score
+      : null;
+
+  return {
+    status,
+    score,
+    progressPercentage,
+    startedAt: nullableTimestamp(row?.started_at),
+    completedAt: nullableTimestamp(row?.completed_at),
+    updatedAt: nullableTimestamp(row?.updated_at),
+  };
+}
+
+function nullableTimestamp(value: unknown): string | null {
+  return typeof value === "string" && !Number.isNaN(Date.parse(value)) ? value : null;
+}
+
+function boundedInteger(value: unknown, minimum: number, maximum: number): number {
+  return typeof value === "number" && Number.isInteger(value)
+    ? Math.min(Math.max(value, minimum), maximum)
+    : minimum;
 }
 
 function nonNegativeInteger(value: unknown): number {

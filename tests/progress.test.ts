@@ -5,6 +5,7 @@ import {
   saveProgress,
   recordCourierSmsCompletion,
   recordModuleCompletion,
+  recordModuleStart,
   calculateNextStreak,
   normalizeProgress,
   mergeProgress,
@@ -32,10 +33,30 @@ describe("Progress Persistence and Streak Layer", () => {
       currentStreak: 2,
       longestStreak: 2,
     };
-    saveProgress(updated);
+    const normalized = normalizeProgress(updated);
+    saveProgress(normalized);
 
     const loaded = loadProgress();
-    assert.deepEqual(loaded, updated);
+    assert.deepEqual(loaded, normalized);
+    assert.equal(loaded.moduleProgress["courier-sms"].status, "completed");
+    assert.equal(loaded.moduleProgress["courier-sms"].progressPercentage, 100);
+  });
+
+  test("tracks not-started, in-progress, and completed module state", () => {
+    assert.equal(loadProgress().moduleProgress["social-engineering"].status, "not_started");
+
+    const started = recordModuleStart("social-engineering", "2026-09-22T08:00:00.000Z");
+    assert.equal(started.moduleProgress["social-engineering"].status, "in_progress");
+    assert.equal(started.moduleProgress["social-engineering"].progressPercentage, 1);
+
+    const completed = recordModuleCompletion({
+      moduleId: "social-engineering",
+      outcome: "safe",
+      completedAt: "2026-09-22",
+    });
+    assert.equal(completed.moduleProgress["social-engineering"].status, "completed");
+    assert.equal(completed.moduleProgress["social-engineering"].progressPercentage, 100);
+    assert.ok(completed.moduleProgress["social-engineering"].completedAt);
   });
 
   test("calculates streaks accurately across consecutive days and freezes", () => {
@@ -112,6 +133,7 @@ describe("Progress Persistence and Streak Layer", () => {
     const remote = {
       courierSmsCompleted: false,
       socialEngineeringCompleted: true,
+      executableFileCompleted: false,
       modulesCompleted: 1,
       mastery: "skilled" as const,
       currentStreak: 5,

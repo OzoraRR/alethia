@@ -1,46 +1,109 @@
-import { safeGetItem, safeSetItem, STORAGE_KEYS } from "@/lib/storage/safe-storage";
+import { createClient } from "@/lib/supabase/client";
 import type { PracticeProgress } from "../progress/progress";
 
-export type ReportRange = "monthly" | "all";
-export type ReportSort = "newest" | "oldest" | "title" | "top" | "review";
+export type ReportSort = "newest" | "oldest" | "top";
+export type ReportScope = "all" | "mine";
 export type Role = "investigator" | "student";
-export type ReviewStatus = "queued" | "approved";
+export type ReviewStatus = "queued" | "approved" | "rejected";
 
 export type LaporanReport = {
   id: string;
+  userId: string;
+  moduleId: string | null;
+  attemptId: string | null;
   title: string;
   category: string;
   channel: string;
   pattern: string;
   author: string;
   createdAt: string;
+  updatedAt: string;
   status: string;
   review: ReviewStatus;
   evidence: string;
   whyRisky: string;
   url?: string;
   screenshot?: string;
+  signalScore: number;
+  hasSignaled: boolean;
+  isOwner: boolean;
 };
 
 export type InvestigationNote = {
   id: string;
+  reportId: string;
   authorRole: Role;
   text: string;
   createdAt: string;
 };
 
+export type ReportInput = {
+  title: string;
+  category: string;
+  channel: string;
+  pattern: string;
+  evidence: string;
+  whyRisky: string;
+  url?: string;
+  screenshot?: string;
+  moduleId?: string;
+  attemptId?: string;
+};
+
+export type UpdateReportInput = Omit<
+  ReportInput,
+  "moduleId" | "attemptId"
+> & {
+  removeScreenshot?: boolean;
+};
+
 export const REPORT_CATEGORIES = ["SMS phishing", "Marketplace scam", "Account impersonation"] as const;
 export const REPORT_CHANNELS = ["Text message", "Marketplace chat", "Direct message"] as const;
 export const REPORT_PATTERNS = ["Urgency", "Trust transfer", "Channel shift", "Unusual payment request"] as const;
-
 export const MAX_SCREENSHOT_BYTES = 500 * 1024;
 
-const DAY_MS = 86_400_000;
-const SIGNAL_KEY = "alethia:report-signals:v1";
-const NOTES_KEY = "alethia:report-notes:v1";
+const REPORT_SELECT =
+  "id, user_id, module_id, attempt_id, title, category, channel, pattern, author_username, created_at, updated_at, status, review_status, evidence, why_risky, defanged_url, screenshot_data_url, signal_score";
 
-function daysAgoISO(now: number, days: number): string {
-  return new Date(now - days * DAY_MS).toISOString();
+type ReportRow = {
+  id?: unknown;
+  user_id?: unknown;
+  module_id?: unknown;
+  attempt_id?: unknown;
+  title?: unknown;
+  category?: unknown;
+  channel?: unknown;
+  pattern?: unknown;
+  author_username?: unknown;
+  created_at?: unknown;
+  updated_at?: unknown;
+  status?: unknown;
+  review_status?: unknown;
+  evidence?: unknown;
+  why_risky?: unknown;
+  defanged_url?: unknown;
+  screenshot_data_url?: unknown;
+  signal_score?: unknown;
+};
+
+type NoteRow = {
+  id?: unknown;
+  report_id?: unknown;
+  author_role?: unknown;
+  text?: unknown;
+  created_at?: unknown;
+};
+
+type AuthContext = {
+  client: NonNullable<ReturnType<typeof createClient>>;
+  userId: string;
+};
+
+export class ReportPersistenceError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ReportPersistenceError";
+  }
 }
 
 /** Investigator unlock: 1 completed module + a safe result on the latest attempt. */
@@ -50,259 +113,207 @@ export function getRole(progress: PracticeProgress): Role {
     : "student";
 }
 
-export function seedReports(now = Date.now()): LaporanReport[] {
-  return [
-    {
-      id: "seed-courier-surge",
-      title: "Courier SMS surge with fake redelivery fee",
-      category: "SMS phishing",
-      channel: "Text message",
-      pattern: "Urgency + fake delivery",
-      author: "sinyal_ops",
-      createdAt: daysAgoISO(now, 2),
-      status: "Triaged",
-      review: "approved",
-      evidence: "Three identical texts from +62 811-xxxx within one hour, all linking outside the courier app.",
-      whyRisky: "Urgency plus an off-channel fee route pushes the target to act before verifying.",
-      url: "parcel-track[.]example",
-    },
-    {
-      id: "seed-marketplace-fee",
-      title: "Marketplace deal moved off-platform, verification fee",
-      category: "Marketplace scam",
-      channel: "Marketplace chat",
-      pattern: "Trust transfer + fee",
-      author: "rute_aman",
-      createdAt: daysAgoISO(now, 6),
-      status: "Learning note",
-      review: "approved",
-      evidence: "Seller with 4.9 rating asked to continue on an outside chat, then a Rp75.000 fee appeared.",
-      whyRisky: "Trust borrowed from reviews is used to exit platform protection before the fee request.",
-      url: "safe-pay[.]example",
-    },
-    {
-      id: "seed-impersonation-dm",
-      title: "Support account DM asking to switch channels",
-      category: "Account impersonation",
-      channel: "Direct message",
-      pattern: "Authority + channel shift",
-      author: "kadaluwarsa",
-      createdAt: daysAgoISO(now, 11),
-      status: "Queued",
-      review: "queued",
-      evidence: "DM from an account copying the marketplace helpdesk name, no verified badge.",
-      whyRisky: "Authority impersonation plus a channel shift removes the conversation from platform evidence.",
-      url: "support-check[.]example",
-    },
-    {
-      id: "seed-parcel-deadline",
-      title: "Parcel deadline text with lookalike tracking link",
-      category: "SMS phishing",
-      channel: "Text message",
-      pattern: "Urgency",
-      author: "jeda_dulu",
-      createdAt: daysAgoISO(now, 19),
-      status: "Triaged",
-      review: "approved",
-      evidence: "Link domain differs from the official courier domain by one letter.",
-      whyRisky: "A same-day deadline discourages the independent check that would expose the domain.",
-      url: "lacak-paket[.]example",
-    },
-    {
-      id: "seed-refund-deposit",
-      title: "Refund pretext requesting a security deposit",
-      category: "Marketplace scam",
-      channel: "Marketplace chat",
-      pattern: "Unusual payment request",
-      author: "verifikasi_mandiri",
-      createdAt: daysAgoISO(now, 34),
-      status: "Learning note",
-      review: "approved",
-      evidence: "Refund flow invented a deposit step not present on the marketplace help page.",
-      whyRisky: "Reverses the refund direction: the buyer is asked to pay before receiving anything.",
-      url: "refund-bantu[.]example",
-    },
-    {
-      id: "seed-otp-forward",
-      title: "Courier follow-up asking to forward an OTP code",
-      category: "Account impersonation",
-      channel: "Text message",
-      pattern: "Authority + urgency",
-      author: "lapor_hapus",
-      createdAt: daysAgoISO(now, 52),
-      status: "Queued",
-      review: "queued",
-      evidence: "Second message arrived minutes after the first, requesting the code just sent by the real service.",
-      whyRisky: "OTP forwarding hands account access over; urgency blocks a callback to the real courier.",
-      url: "kode-otp[.]example",
-    },
-  ];
-}
+export async function loadReports(
+  sort: ReportSort,
+  scope: ReportScope = "all",
+): Promise<LaporanReport[]> {
+  const auth = await requireAuthContext();
+  let request = auth.client
+    .from("practice_reports")
+    .select(REPORT_SELECT)
+    .limit(200);
 
-function isLaporanReport(val: unknown): val is LaporanReport {
-  if (typeof val !== "object" || val === null) return false;
-  const r = val as Record<string, unknown>;
-  return (
-    typeof r.id === "string" &&
-    typeof r.title === "string" &&
-    typeof r.category === "string" &&
-    typeof r.channel === "string" &&
-    typeof r.pattern === "string" &&
-    typeof r.author === "string" &&
-    typeof r.createdAt === "string" &&
-    typeof r.status === "string"
+  if (scope === "mine") {
+    request = request.eq("user_id", auth.userId);
+  }
+
+  if (sort === "newest") {
+    request = request.order("created_at", { ascending: false }).order("id", { ascending: false });
+  } else if (sort === "oldest") {
+    request = request.order("created_at", { ascending: true }).order("id", { ascending: true });
+  } else {
+    request = request.order("signal_score", { ascending: false }).order("created_at", { ascending: false });
+  }
+
+  const [reportResult, signalResult] = await Promise.all([
+    request,
+    auth.client.from("report_signals").select("report_id").eq("user_id", auth.userId),
+  ]);
+
+  if (reportResult.error) {
+    throw new ReportPersistenceError("Laporan tidak dapat dimuat dari database.");
+  }
+  if (signalResult.error) {
+    console.warn("[Alethia] report signal state was not synchronized.");
+  }
+
+  const signaledIds = new Set(
+    ((signalResult.data ?? []) as Array<{ report_id?: unknown }>)
+      .map((row) => row.report_id)
+      .filter((value): value is string => typeof value === "string"),
   );
+
+  return ((reportResult.data ?? []) as ReportRow[])
+    .map((row) =>
+      normalizeReport(
+        row,
+        signaledIds.has(asString(row.id) ?? ""),
+        asString(row.user_id) === auth.userId,
+      ),
+    )
+    .filter((report): report is LaporanReport => report !== null);
 }
 
-function isReportList(val: unknown): val is LaporanReport[] {
-  return Array.isArray(val) && val.every(isLaporanReport);
-}
-
-function normalizeReport(r: LaporanReport): LaporanReport {
-  return {
-    ...r,
-    review: r.review === "approved" ? "approved" : "queued",
-    evidence: typeof r.evidence === "string" ? r.evidence : "",
-    whyRisky: typeof r.whyRisky === "string" ? r.whyRisky : "",
+export async function saveUserReport(input: ReportInput): Promise<LaporanReport> {
+  const auth = await requireAuthContext();
+  const payload = {
+    user_id: auth.userId,
+    module_id: input.moduleId ?? null,
+    attempt_id: input.attemptId ?? null,
+    source: "manual",
+    ...validatedReportContent(input),
+    screenshot_data_url: input.screenshot ?? null,
   };
-}
 
-export function loadUserReports(): LaporanReport[] {
-  return safeGetItem(STORAGE_KEYS.REPORTS, [], isReportList)
-    .filter((r) => r.id.startsWith("user-"))
-    .map(normalizeReport);
-}
+  const { data, error } = await auth.client
+    .from("practice_reports")
+    .insert(payload)
+    .select(REPORT_SELECT)
+    .single();
 
-export function saveUserReport(input: {
-  title: string;
-  category: string;
-  channel: string;
-  pattern: string;
-  evidence: string;
-  whyRisky: string;
-  url?: string;
-  screenshot?: string;
-}): LaporanReport {
-  const report: LaporanReport = {
-    id: `user-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`,
-    title: input.title.trim(),
-    category: input.category,
-    channel: input.channel,
-    pattern: input.pattern,
-    author: "you",
-    createdAt: new Date().toISOString(),
-    status: "Queued for developer review",
-    review: "queued",
-    evidence: input.evidence.trim(),
-    whyRisky: input.whyRisky.trim(),
-    url: input.url ? defang(input.url) : undefined,
-    screenshot: input.screenshot,
-  };
-  const existing = safeGetItem(STORAGE_KEYS.REPORTS, [], isReportList);
-  safeSetItem(STORAGE_KEYS.REPORTS, [report, ...existing].slice(0, 50));
+  if (error || !data) {
+    console.warn("[Alethia] practice report insert failed.", reportErrorCode(error));
+    throw new ReportPersistenceError("Laporan gagal disimpan. Silakan coba lagi.");
+  }
+
+  const report = normalizeReport(data as ReportRow, false, true);
+  if (!report) throw new ReportPersistenceError("Respons database laporan tidak valid.");
   return report;
 }
 
-export function loadAllReports(now = Date.now()): LaporanReport[] {
-  const seen = new Set<string>();
-  return [...loadUserReports(), ...seedReports(now)].filter((r) =>
-    seen.has(r.id) ? false : (seen.add(r.id), true),
-  );
+export async function updateUserReport(
+  reportId: string,
+  input: UpdateReportInput,
+): Promise<LaporanReport> {
+  const auth = await requireAuthContext();
+  const { data, error } = await auth.client
+    .from("practice_reports")
+    .update({
+      ...validatedReportContent(input),
+      screenshot_data_url: input.removeScreenshot ? null : input.screenshot ?? null,
+    })
+    .eq("id", reportId)
+    .eq("user_id", auth.userId)
+    .select(REPORT_SELECT)
+    .single();
+
+  if (error || !data) {
+    console.warn("[Alethia] practice report update failed.", reportErrorCode(error));
+    throw new ReportPersistenceError("Laporan tidak dapat diperbarui.");
+  }
+
+  const report = normalizeReport(data as ReportRow, false, true);
+  if (!report) throw new ReportPersistenceError("Respons database laporan tidak valid.");
+  return report;
 }
 
-/* Signals: investigator-only endorsements, one per report per browser. */
+export async function deleteUserReport(reportId: string): Promise<void> {
+  const auth = await requireAuthContext();
+  const { data, error } = await auth.client
+    .from("practice_reports")
+    .delete()
+    .eq("id", reportId)
+    .eq("user_id", auth.userId)
+    .select("id")
+    .maybeSingle();
 
-function isIdList(val: unknown): val is string[] {
-  return Array.isArray(val) && val.every((v) => typeof v === "string");
+  if (error) {
+    console.warn("[Alethia] practice report delete failed.", reportErrorCode(error));
+    throw new ReportPersistenceError("Laporan tidak dapat dihapus.");
+  }
+  if (!data) throw new ReportPersistenceError("Laporan tidak ditemukan atau bukan milik Anda.");
 }
 
-export function loadSignals(): string[] {
-  return safeGetItem<string[]>(SIGNAL_KEY, [], isIdList);
-}
+export async function toggleReportSignal(
+  reportId: string,
+): Promise<{ active: boolean; signalScore: number }> {
+  const auth = await requireAuthContext();
+  const existing = await auth.client
+    .from("report_signals")
+    .select("report_id")
+    .eq("report_id", reportId)
+    .eq("user_id", auth.userId)
+    .maybeSingle();
 
-export function hasSignaled(reportId: string): boolean {
-  return loadSignals().includes(reportId);
-}
+  if (existing.error) throw new ReportPersistenceError("Status signal tidak dapat dibaca.");
 
-export function toggleSignal(reportId: string): string[] {
-  const current = loadSignals();
-  const next = current.includes(reportId)
-    ? current.filter((id) => id !== reportId)
-    : [...current, reportId];
-  safeSetItem(SIGNAL_KEY, next);
-  return next;
-}
+  if (existing.data) {
+    const removal = await auth.client
+      .from("report_signals")
+      .delete()
+      .eq("report_id", reportId)
+      .eq("user_id", auth.userId);
+    if (removal.error) throw new ReportPersistenceError("Signal tidak dapat dibatalkan.");
+  } else {
+    const addition = await auth.client
+      .from("report_signals")
+      .insert({ report_id: reportId, user_id: auth.userId });
+    if (addition.error) throw new ReportPersistenceError("Signal tidak dapat disimpan.");
+  }
 
-function seedSignalCounts(): Record<string, number> {
+  const scoreResult = await auth.client
+    .from("practice_reports")
+    .select("signal_score")
+    .eq("id", reportId)
+    .single();
+  if (scoreResult.error) throw new ReportPersistenceError("Jumlah signal tidak dapat dimuat.");
+
   return {
-    "seed-courier-surge": 18,
-    "seed-marketplace-fee": 12,
-    "seed-impersonation-dm": 4,
-    "seed-parcel-deadline": 9,
-    "seed-refund-deposit": 7,
-    "seed-otp-forward": 2,
+    active: !existing.data,
+    signalScore: nonNegativeInteger(scoreResult.data?.signal_score),
   };
 }
 
-export function signalCount(reportId: string): number {
-  const base = seedSignalCounts()[reportId] ?? 0;
-  return base + (hasSignaled(reportId) ? 1 : 0);
+export async function loadNotes(reportId: string): Promise<InvestigationNote[]> {
+  const auth = await requireAuthContext();
+  const { data, error } = await auth.client
+    .from("report_investigation_notes")
+    .select("id, report_id, author_role, text, created_at")
+    .eq("report_id", reportId)
+    .order("created_at", { ascending: true })
+    .limit(200);
+
+  if (error) throw new ReportPersistenceError("Catatan investigasi tidak dapat dimuat.");
+  return ((data ?? []) as NoteRow[])
+    .map(normalizeNote)
+    .filter((note): note is InvestigationNote => note !== null);
 }
 
-/* Investigation notes, stored locally per report. */
+export async function addNote(
+  reportId: string,
+  role: Role,
+  text: string,
+): Promise<InvestigationNote> {
+  const auth = await requireAuthContext();
+  const normalizedText = text.trim();
+  if (normalizedText.length < 4) throw new ReportPersistenceError("Catatan minimal 4 karakter.");
 
-function isNoteList(val: unknown): val is InvestigationNote[] {
-  return (
-    Array.isArray(val) &&
-    val.every(
-      (n) =>
-        typeof n === "object" &&
-        n !== null &&
-        typeof (n as InvestigationNote).text === "string",
-    )
-  );
+  const { data, error } = await auth.client
+    .from("report_investigation_notes")
+    .insert({ report_id: reportId, user_id: auth.userId, author_role: role, text: normalizedText })
+    .select("id, report_id, author_role, text, created_at")
+    .single();
+
+  if (error || !data) {
+    console.warn("[Alethia] investigation note insert failed.", reportErrorCode(error));
+    throw new ReportPersistenceError("Catatan gagal disimpan.");
+  }
+  const note = normalizeNote(data as NoteRow);
+  if (!note) throw new ReportPersistenceError("Respons database catatan tidak valid.");
+  return note;
 }
 
-function isNoteMap(val: unknown): val is Record<string, InvestigationNote[]> {
-  if (typeof val !== "object" || val === null) return false;
-  return Object.values(val as Record<string, unknown>).every(isNoteList);
-}
-
-export function loadNotes(reportId: string): InvestigationNote[] {
-  const all = safeGetItem<Record<string, InvestigationNote[]>>(NOTES_KEY, {}, isNoteMap);
-  return all[reportId] ?? [];
-}
-
-export function addNote(reportId: string, role: Role, text: string): InvestigationNote[] {
-  const note: InvestigationNote = {
-    id: `${Date.now().toString(36)}-${Math.floor(Math.random() * 1e4).toString(36)}`,
-    authorRole: role,
-    text: text.trim(),
-    createdAt: new Date().toISOString(),
-  };
-  const all = safeGetItem<Record<string, InvestigationNote[]>>(NOTES_KEY, {}, isNoteMap);
-  const next = { ...all, [reportId]: [...(all[reportId] ?? []), note].slice(-30) };
-  safeSetItem(NOTES_KEY, next);
-  return next[reportId];
-}
-
-export function filterReports(
-  reports: LaporanReport[],
-  range: ReportRange,
-  now = Date.now(),
-): LaporanReport[] {
-  if (range === "all") return reports;
-  const cutoff = now - 30 * DAY_MS;
-  return reports.filter((r) => {
-    const t = Date.parse(r.createdAt);
-    return !Number.isNaN(t) && t >= cutoff;
-  });
-}
-
-/**
- * Layout decides by sort: only top signals gets the featured-cards layout,
- * every other sort renders the compact short-list.
- */
+/** Layout decides by sort: only top signals gets the featured-cards layout. */
 export function isCompactSort(sort: ReportSort): boolean {
   return sort !== "top";
 }
@@ -311,18 +322,11 @@ export function sortReports(reports: LaporanReport[], sort: ReportSort): Laporan
   const copy = [...reports];
   if (sort === "oldest") {
     copy.sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
-  } else if (sort === "title") {
-    copy.sort((a, b) => a.title.localeCompare(b.title));
   } else if (sort === "top") {
     copy.sort(
       (a, b) =>
-        signalCount(b.id) - signalCount(a.id) ||
+        b.signalScore - a.signalScore ||
         Date.parse(b.createdAt) - Date.parse(a.createdAt),
-    );
-  } else if (sort === "review") {
-    const rank = (r: LaporanReport) => (r.review === "queued" ? 0 : 1);
-    copy.sort(
-      (a, b) => rank(a) - rank(b) || Date.parse(a.createdAt) - Date.parse(b.createdAt),
     );
   } else {
     copy.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
@@ -341,4 +345,124 @@ export function fileToDataUrl(file: File): Promise<string | null> {
     reader.onerror = () => resolve(null);
     reader.readAsDataURL(file);
   });
+}
+
+function validatedReportContent(input: ReportInput) {
+  const title = input.title.trim();
+  const evidence = input.evidence.trim();
+  const whyRisky = input.whyRisky.trim();
+
+  if (title.length < 4 || title.length > 160) {
+    throw new ReportPersistenceError("Judul laporan harus terdiri dari 4–160 karakter.");
+  }
+  if (evidence.length < 10 || evidence.length > 5000) {
+    throw new ReportPersistenceError("Bukti harus terdiri dari 10–5000 karakter.");
+  }
+  if (whyRisky.length < 10 || whyRisky.length > 5000) {
+    throw new ReportPersistenceError("Alasan risiko harus terdiri dari 10–5000 karakter.");
+  }
+
+  return {
+    title,
+    category: input.category,
+    channel: input.channel,
+    pattern: input.pattern,
+    evidence,
+    why_risky: whyRisky,
+    defanged_url: input.url?.trim() ? defang(input.url) : null,
+  };
+}
+
+async function requireAuthContext(): Promise<AuthContext> {
+  const client = getClient();
+  if (!client) throw new ReportPersistenceError("Koneksi database laporan belum dikonfigurasi.");
+
+  const result = await client.auth.getUser();
+  if (result.error || !result.data.user) {
+    throw new ReportPersistenceError("Masuk terlebih dahulu untuk menggunakan database laporan.");
+  }
+  return { client, userId: result.data.user.id };
+}
+
+function getClient() {
+  try {
+    return createClient();
+  } catch {
+    return null;
+  }
+}
+
+function normalizeReport(
+  value: ReportRow,
+  hasSignaled: boolean,
+  isOwner: boolean,
+): LaporanReport | null {
+  const id = asString(value.id);
+  const userId = asString(value.user_id);
+  const title = asString(value.title);
+  const category = asString(value.category);
+  const channel = asString(value.channel);
+  const pattern = asString(value.pattern);
+  const author = asString(value.author_username);
+  const createdAt = asTimestamp(value.created_at);
+  const updatedAt = asTimestamp(value.updated_at);
+  const status = asString(value.status);
+  if (!id || !userId || !title || !category || !channel || !pattern || !author || !createdAt || !updatedAt || !status) {
+    return null;
+  }
+
+  return {
+    id,
+    userId,
+    moduleId: asString(value.module_id),
+    attemptId: asString(value.attempt_id),
+    title,
+    category,
+    channel,
+    pattern,
+    author,
+    createdAt,
+    updatedAt,
+    status,
+    review: isReviewStatus(value.review_status) ? value.review_status : "queued",
+    evidence: asString(value.evidence) ?? "",
+    whyRisky: asString(value.why_risky) ?? "",
+    url: asString(value.defanged_url) ?? undefined,
+    screenshot: asString(value.screenshot_data_url) ?? undefined,
+    signalScore: nonNegativeInteger(value.signal_score),
+    hasSignaled,
+    isOwner,
+  };
+}
+
+function normalizeNote(value: NoteRow): InvestigationNote | null {
+  const id = asString(value.id);
+  const reportId = asString(value.report_id);
+  const text = asString(value.text);
+  const createdAt = asTimestamp(value.created_at);
+  if (!id || !reportId || !text || !createdAt) return null;
+  if (value.author_role !== "student" && value.author_role !== "investigator") return null;
+  return { id, reportId, authorRole: value.author_role, text, createdAt };
+}
+
+function isReviewStatus(value: unknown): value is ReviewStatus {
+  return value === "queued" || value === "approved" || value === "rejected";
+}
+
+function asString(value: unknown): string | null {
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function asTimestamp(value: unknown): string | null {
+  return typeof value === "string" && !Number.isNaN(Date.parse(value)) ? value : null;
+}
+
+function nonNegativeInteger(value: unknown): number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : 0;
+}
+
+function reportErrorCode(error: unknown): string {
+  return typeof error === "object" && error !== null && "code" in error
+    ? String(error.code)
+    : "unknown";
 }

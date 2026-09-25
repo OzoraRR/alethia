@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { HeaderAvatar } from "./header-avatar";
+import { DailyActivityProvider } from "@/features/daily/daily-activity-provider";
+import { NotificationBell } from "@/features/daily/notification-bell";
 import { getMessages } from "@/lib/i18n";
 
 type NavKey = "dashboard" | "simulation" | "reports" | "training" | "insights" | "profile";
@@ -19,7 +21,8 @@ export function AppShell({ activeRoute, children }: AppShellProps) {
   const messages = getMessages();
 
   return (
-    <div className="flex min-h-screen flex-col bg-navy-950 text-ice font-sans">
+    <DailyActivityProvider>
+      <div className="flex min-h-screen flex-col bg-navy-950 text-ice font-sans">
       {/* Quiet Command Header Strip */}
       <header className="border-b border-navy-700 bg-navy-950/90 backdrop-blur-sm sticky top-0 z-30">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3.5 sm:px-8">
@@ -68,13 +71,16 @@ export function AppShell({ activeRoute, children }: AppShellProps) {
             </ul>
           </nav>
 
-          {/* Status Metadata Indicator */}
-          <div className="hidden items-center gap-3 font-mono text-[11px] text-muted lg:flex">
-            <span className="flex items-center gap-1.5 text-signal">
-              <span className="h-1.5 w-1.5 rounded-full bg-signal animate-pulse" />
-              SYSTEM ONLINE
-            </span>
-            <HeaderAvatar />
+          {/* Status Metadata + In-App Notification Center */}
+          <div className="flex shrink-0 items-center gap-3">
+            <NotificationBell />
+            <div className="hidden items-center gap-3 font-mono text-[11px] text-muted lg:flex">
+              <span className="flex items-center gap-1.5 text-signal">
+                <span className="h-1.5 w-1.5 rounded-full bg-signal animate-pulse" />
+                SYSTEM ONLINE
+              </span>
+              <HeaderAvatar />
+            </div>
           </div>
         </div>
       </header>
@@ -94,6 +100,7 @@ export function AppShell({ activeRoute, children }: AppShellProps) {
           </span>
         </div>
       </footer>
-    </div>
+      </div>
+    </DailyActivityProvider>
   );
 }

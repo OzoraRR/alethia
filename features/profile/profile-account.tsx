@@ -18,13 +18,15 @@ export function ProfileAccountPanel() {
     setLogoutError(null);
     const result = await signOut();
     if (result.error) setLogoutError(result.error);
+    // Supabase sign-out has completed (or the local projection was cleared in
+    // the hook); always return to the public landing page.
     router.replace("/");
     router.refresh();
     setIsSigningOut(false);
   }
 
   return (
-    <section className="container-level-2 mb-8 p-6 sm:p-7" aria-labelledby="profile-account-heading">
+    <section className="container-level-2 p-6 sm:p-7" aria-labelledby="profile-account-heading">
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-navy-700 pb-4">
         <div>
           <p className="font-mono text-[10px] font-bold tracking-widest text-signal uppercase">

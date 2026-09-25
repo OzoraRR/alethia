@@ -14,6 +14,9 @@ export type SessionData = {
 
 let cachedSession: SessionData | null = null;
 let sessionPromise: Promise<SessionData> | null = null;
+let sessionEpoch = 0;
+
+type SupabaseBrowserClient = NonNullable<ReturnType<typeof createClient>>;
 
 function generateLocalAnonymousId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -43,91 +46,187 @@ function withTimeout<T>(promise: PromiseLike<T>, ms = 4000): Promise<T> {
   ]);
 }
 
+async function discardStaleAnonymousUser(
+  client: SupabaseBrowserClient,
+  userId: string,
+): Promise<void> {
+  try {
+    const { data } = await client.auth.getUser();
+    if (data.user?.id === userId && data.user.is_anonymous) {
+      await client.auth.signOut();
+    }
+  } catch {
+    // The auth client will reconcile the session on its next request.
+  }
+}
+
+function makeLocalSession(now: string, stored?: SessionData | null): SessionData {
+  if (stored) {
+    return {
+      ...stored,
+      lastActiveAt: now,
+    };
+  }
+
+  return {
+    sessionId: generateLocalAnonymousId(),
+    isAnonymous: true,
+    isRemote: false,
+    createdAt: now,
+    lastActiveAt: now,
+  };
+}
+
+/**
+ * Returns a safe value after logout has invalidated an older in-flight
+ * request. It deliberately does not write that value back to storage.
+ */
+function sessionAfterCancellation(now: string): SessionData {
+  const stored = safeGetItem<SessionData | null>(STORAGE_KEYS.SESSION, null, isSessionData);
+  return makeLocalSession(now, stored);
+}
+
+function persistSession(session: SessionData, epoch: number): SessionData {
+  if (epoch === sessionEpoch) {
+    cachedSession = session;
+    safeSetItem(STORAGE_KEYS.SESSION, session);
+  }
+  return session;
+}
+
+function restorePreviousSession(
+  epoch: number,
+  cached: SessionData | null,
+  stored: SessionData | null,
+): void {
+  if (epoch !== sessionEpoch) return;
+  const restored = cached ?? stored;
+  if (restored) {
+    cachedSession = restored;
+    safeSetItem(STORAGE_KEYS.SESSION, restored);
+  }
+}
+
 /**
  * Asynchronously retrieves or initializes an anonymous session.
  * Deduplicates in-flight calls to avoid redundant auth triggers during renders.
  */
 export async function getOrCreateAnonymousSession(): Promise<SessionData> {
-  if (cachedSession) {
-    return cachedSession;
-  }
+  if (cachedSession) return cachedSession;
+  if (sessionPromise) return sessionPromise;
 
-  if (sessionPromise) {
-    return sessionPromise;
-  }
-
-  sessionPromise = (async (): Promise<SessionData> => {
+  const epoch = sessionEpoch;
+  const promise = (async (): Promise<SessionData> => {
     const now = new Date().toISOString();
     const stored = safeGetItem<SessionData | null>(STORAGE_KEYS.SESSION, null, isSessionData);
 
-    // Try Supabase first if available
     try {
       const client = createClient();
       if (client) {
-        // Check for existing Supabase auth user
         const { data: userData } = (await withTimeout(client.auth.getUser())) as {
           data: { user: { id: string; is_anonymous?: boolean } | null };
         };
+        if (epoch !== sessionEpoch) return sessionAfterCancellation(now);
+
         if (userData?.user?.id) {
-          const session: SessionData = {
-            sessionId: userData.user.id,
-            isAnonymous: userData.user.is_anonymous ?? true,
-            isRemote: true,
-            createdAt: stored?.createdAt ?? now,
-            lastActiveAt: now,
-          };
-          cachedSession = session;
-          safeSetItem(STORAGE_KEYS.SESSION, session);
-          return session;
+          return persistSession(
+            {
+              sessionId: userData.user.id,
+              isAnonymous: userData.user.is_anonymous === true,
+              isRemote: true,
+              createdAt: stored?.createdAt ?? now,
+              lastActiveAt: now,
+            },
+            epoch,
+          );
         }
 
-        // Attempt anonymous sign in
+        if (epoch !== sessionEpoch) return sessionAfterCancellation(now);
         const { data: anonData, error: anonError } = (await withTimeout(
           client.auth.signInAnonymously(),
-        )) as { data: { user: { id: string } | null } | null; error: unknown };
+        )) as { data: { user: { id: string; is_anonymous?: boolean } | null } | null; error: unknown };
+        if (epoch !== sessionEpoch) {
+          if (!anonError && anonData?.user?.id) {
+            await discardStaleAnonymousUser(client, anonData.user.id);
+          }
+          return sessionAfterCancellation(now);
+        }
+
         if (!anonError && anonData?.user?.id) {
-          const session: SessionData = {
-            sessionId: anonData.user.id,
-            isAnonymous: true,
-            isRemote: true,
-            createdAt: stored?.createdAt ?? now,
-            lastActiveAt: now,
-          };
-          cachedSession = session;
-          safeSetItem(STORAGE_KEYS.SESSION, session);
-          return session;
+          return persistSession(
+            {
+              sessionId: anonData.user.id,
+              isAnonymous: true,
+              isRemote: true,
+              createdAt: stored?.createdAt ?? now,
+              lastActiveAt: now,
+            },
+            epoch,
+          );
         }
       }
     } catch {
-      // Supabase is offline, unreachable, or unconfigured - fallback to LocalStorage
+      // Supabase is offline, unreachable, or unconfigured. Fall through to the
+      // resilient local anonymous session below.
     }
 
-    // Fallback: LocalStorage session
-    if (stored) {
-      const refreshed: SessionData = {
-        ...stored,
-        lastActiveAt: now,
-      };
-      cachedSession = refreshed;
-      safeSetItem(STORAGE_KEYS.SESSION, refreshed);
-      return refreshed;
-    }
-
-    const newSession: SessionData = {
-      sessionId: generateLocalAnonymousId(),
-      isAnonymous: true,
-      isRemote: false,
-      createdAt: now,
-      lastActiveAt: now,
-    };
-    cachedSession = newSession;
-    safeSetItem(STORAGE_KEYS.SESSION, newSession);
-    return newSession;
+    if (epoch !== sessionEpoch) return sessionAfterCancellation(now);
+    return persistSession(makeLocalSession(now, stored), epoch);
   })().finally(() => {
-    sessionPromise = null;
+    if (sessionPromise === promise) sessionPromise = null;
   });
 
-  return sessionPromise;
+  sessionPromise = promise;
+  return promise;
+}
+
+/**
+ * Refreshes the app-level session from Supabase after sign-up/sign-in. The
+ * epoch increment invalidates a prior anonymous lookup that may still be
+ * resolving, which prevents progress writes from being sent to the old user.
+ */
+export async function syncAuthenticatedSession(): Promise<SessionData | null> {
+  const client = createClient();
+  if (!client) return null;
+
+  const previousCachedSession = cachedSession;
+  const previousStoredSession = safeGetItem<SessionData | null>(STORAGE_KEYS.SESSION, null, isSessionData);
+  sessionEpoch += 1;
+  sessionPromise = null;
+  cachedSession = null;
+  const epoch = sessionEpoch;
+
+  try {
+    const result = (await withTimeout(client.auth.getUser())) as {
+      data: { user: { id: string; is_anonymous?: boolean } | null };
+      error: unknown;
+    };
+    if (epoch !== sessionEpoch) return null;
+    if (result.error) {
+      restorePreviousSession(epoch, previousCachedSession, previousStoredSession);
+      return null;
+    }
+    if (!result.data.user) {
+      safeRemoveItem(STORAGE_KEYS.SESSION);
+      return null;
+    }
+
+    const now = new Date().toISOString();
+    const stored = safeGetItem<SessionData | null>(STORAGE_KEYS.SESSION, null, isSessionData);
+    return persistSession(
+      {
+        sessionId: result.data.user.id,
+        isAnonymous: result.data.user.is_anonymous === true,
+        isRemote: true,
+        createdAt: stored?.createdAt ?? now,
+        lastActiveAt: now,
+      },
+      epoch,
+    );
+  } catch {
+    restorePreviousSession(epoch, previousCachedSession, previousStoredSession);
+    return null;
+  }
 }
 
 /**
@@ -135,34 +234,25 @@ export async function getOrCreateAnonymousSession(): Promise<SessionData> {
  * Returns cached session or stored session ID, or initializes a local one.
  */
 export function getSessionId(): string {
-  if (cachedSession) {
-    return cachedSession.sessionId;
-  }
+  if (cachedSession) return cachedSession.sessionId;
+
   const stored = safeGetItem<SessionData | null>(STORAGE_KEYS.SESSION, null, isSessionData);
   if (stored?.sessionId) {
     cachedSession = stored;
     return stored.sessionId;
   }
-  const localId = generateLocalAnonymousId();
+
   const now = new Date().toISOString();
-  const session: SessionData = {
-    sessionId: localId,
-    isAnonymous: true,
-    isRemote: false,
-    createdAt: now,
-    lastActiveAt: now,
-  };
+  const session = makeLocalSession(now);
   cachedSession = session;
   safeSetItem(STORAGE_KEYS.SESSION, session);
-  return localId;
+  return session.sessionId;
 }
 
-/**
- * Operator callsign chosen on the login page. Displayed on the dossier.
- */
+/** Operator callsign chosen on the login page. Displayed on the dossier. */
 export function getCallsign(): string | null {
-  const raw = safeGetItem<string | null>(STORAGE_KEYS.CALLSIGN, null, (v): v is string | null =>
-    v === null || typeof v === "string",
+  const raw = safeGetItem<string | null>(STORAGE_KEYS.CALLSIGN, null, (value): value is string | null =>
+    value === null || typeof value === "string",
   );
   return raw && raw.trim() ? raw.trim() : null;
 }
@@ -171,17 +261,51 @@ export function saveCallsign(callsign: string): void {
   safeSetItem(STORAGE_KEYS.CALLSIGN, callsign.trim().slice(0, 24));
 }
 
-/**
- * Resets the active session and clears stored session key.
- */
+/** Returns the account that owns the current local user-scoped snapshot. */
+export function getActiveAccountId(): string | null {
+  return safeGetItem<string | null>(STORAGE_KEYS.ACCOUNT_ID, null, (value): value is string | null =>
+    value === null || typeof value === "string",
+  );
+}
+
+/** Marks which authenticated account owns local user-scoped state. */
+export function setActiveAccountId(accountId: string | null): void {
+  if (accountId) safeSetItem(STORAGE_KEYS.ACCOUNT_ID, accountId);
+  else safeRemoveItem(STORAGE_KEYS.ACCOUNT_ID);
+}
+
+/** Clears data that must never cross an account boundary in one browser. */
+export function clearUserScopedState(): void {
+  safeRemoveItem(STORAGE_KEYS.PROGRESS);
+  safeRemoveItem(STORAGE_KEYS.AVATAR);
+  safeRemoveItem(STORAGE_KEYS.ACTIVE_FLOW);
+  safeRemoveItem(STORAGE_KEYS.CHALLENGE_COURIER);
+  safeRemoveItem(STORAGE_KEYS.CHALLENGE_SOCIAL);
+}
+
+/** Resets the active session and invalidates any in-flight session lookup. */
 export function clearAnonymousSession(): void {
+  sessionEpoch += 1;
   cachedSession = null;
   sessionPromise = null;
   safeRemoveItem(STORAGE_KEYS.SESSION);
 }
 
 /**
- * React hook to access and synchronize the anonymous session across components and browser tabs.
+ * Clears authenticated/session-scoped state after logout. User-scoped local
+ * snapshots are removed so a later account cannot inherit them; remote Alethia
+ * progress remains available from Supabase.
+ */
+export function clearActiveSession(): void {
+  clearAnonymousSession();
+  clearUserScopedState();
+  setActiveAccountId(null);
+  safeRemoveItem(STORAGE_KEYS.CALLSIGN);
+}
+
+/**
+ * React hook to access and synchronize the anonymous/authenticated session
+ * across components and browser tabs.
  */
 export function useAnonymousSession(): {
   session: SessionData | null;
@@ -206,17 +330,12 @@ export function useAnonymousSession(): {
       })
       .catch(() => {
         if (active) {
-          const fallback = safeGetItem<SessionData | null>(
-            STORAGE_KEYS.SESSION,
-            null,
-            isSessionData,
-          );
+          const fallback = safeGetItem<SessionData | null>(STORAGE_KEYS.SESSION, null, isSessionData);
           setSession(fallback);
           setIsLoading(false);
         }
       });
 
-    // Cross-tab synchronization
     const handleStorage = (event: StorageEvent) => {
       if (event.key === STORAGE_KEYS.SESSION) {
         if (event.newValue) {
@@ -227,7 +346,7 @@ export function useAnonymousSession(): {
               setSession(parsed);
             }
           } catch {
-            // Ignored
+            // Ignored.
           }
         } else {
           cachedSession = null;
@@ -236,15 +355,10 @@ export function useAnonymousSession(): {
       }
     };
 
-    if (typeof window !== "undefined") {
-      window.addEventListener("storage", handleStorage);
-    }
-
+    if (typeof window !== "undefined") window.addEventListener("storage", handleStorage);
     return () => {
       active = false;
-      if (typeof window !== "undefined") {
-        window.removeEventListener("storage", handleStorage);
-      }
+      if (typeof window !== "undefined") window.removeEventListener("storage", handleStorage);
     };
   }, []);
 

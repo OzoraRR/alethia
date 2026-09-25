@@ -1,5 +1,7 @@
 import { AppShell } from "@/components/layout/app-shell";
+import { AchievementPanel } from "@/features/daily/achievement-panel";
 import { ProfileProgress } from "@/features/progress/progress-views";
+import { ProfileAccountPanel } from "@/features/profile/profile-account";
 import { getMessages } from "@/lib/i18n";
 
 export default function ProfilePage() {
@@ -21,8 +23,10 @@ export default function ProfilePage() {
             {profile.description}
           </p>
         </div>
-        <div className="mt-8">
+        <div className="mt-8 grid gap-6">
+          <ProfileAccountPanel />
           <ProfileProgress />
+          <AchievementPanel />
         </div>
       </div>
     </AppShell>

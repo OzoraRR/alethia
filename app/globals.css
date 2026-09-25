@@ -566,10 +566,20 @@ body {
 .landing-isle--0 { left: 6%; top: 10%; }
 .landing-isle--1 { right: 5%; top: 12%; animation-delay: 1.4s; }
 .landing-isle--2 { left: 8%; bottom: 6%; animation-delay: 2.6s; }
+.landing-isle-btn { background: none; border: 0; padding: 0; cursor: pointer; transition: filter .15s ease; }
+.landing-isle-btn:hover { filter: brightness(1.18); }
+.landing-isle-btn:focus-visible { outline: 2px solid var(--neon-cyan); outline-offset: 4px; }
+.landing-isle__img { display: block; width: 100%; height: auto; }
 @keyframes isle-drift { 50% { transform: translateY(-14px); } }
 .landing-brand { position: absolute; top: 1.25rem; left: 50%; transform: translateX(-50%); z-index: 2; margin: 0; font-family: var(--font-mono); font-size: .8rem; letter-spacing: .5em; text-indent: .5em; color: var(--ice); }
-.landing-world { position: relative; z-index: 2; display: grid; gap: 2rem; align-items: center; width: min(100%, 72rem); padding: 4rem 4.5rem; animation: world-in .35s ease; }
-@keyframes world-in { from { opacity: 0; transform: translateX(18px); } }
+.landing-world { position: relative; z-index: 2; display: grid; gap: 2rem; align-items: center; width: min(100%, 72rem); padding: 4rem 4.5rem; }
+@keyframes world-glitch {
+  0% { opacity: 0; transform: translate(-8px, 3px); filter: drop-shadow(5px 0 var(--neon-cyan)) drop-shadow(-5px 0 var(--neon-violet)); }
+  25% { opacity: .8; transform: translate(7px, -3px); filter: drop-shadow(-5px 0 var(--neon-cyan)) drop-shadow(5px 0 var(--neon-violet)); }
+  50% { opacity: 1; transform: translate(-4px, 2px); filter: drop-shadow(3px 0 var(--neon-cyan)) drop-shadow(-3px 0 var(--neon-violet)); }
+  75% { transform: translate(3px, -1px); filter: drop-shadow(-2px 0 var(--neon-cyan)) drop-shadow(2px 0 var(--neon-violet)); }
+  100% { opacity: 1; transform: none; filter: none; }
+}
 .landing-world__isle { width: min(100%, 34rem); height: auto; animation: isle-drift 6s ease-in-out infinite; }
 .landing-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 3; display: grid; width: 3.5rem; height: 3.5rem; place-items: center; border: 1px solid rgba(230,237,244,.5); border-radius: 999px; background: transparent; color: var(--ice); font-size: 1.6rem; cursor: pointer; transition: border-color .2s ease, color .2s ease; }
 .landing-arrow:hover { border-color: var(--signal); color: var(--signal); }
@@ -590,7 +600,26 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .landing-isle, .landing-world__isle { animation: none; }
-  .landing-world { animation: none; }
+}
+
+/* Zoom whoosh: splash dives into the first island, worlds section lands out of the zoom */
+.landing-vista--out { pointer-events: none; transform-origin: 87% 25%; animation: whoosh-dive .4s cubic-bezier(.45, 0, .65, 1) forwards; }
+@keyframes whoosh-dive {
+  0% { transform: perspective(1100px) scale(1) rotateX(0deg) rotateY(0deg); opacity: 1; filter: blur(0); }
+  55% { opacity: .9; }
+  100% { transform: perspective(650px) scale(2.4) rotateX(7deg) rotateY(-9deg); opacity: 0; filter: blur(6px); }
+}
+.landing-vista--world { transform-origin: 38% 50%; animation: whoosh-land .75s cubic-bezier(.2, .65, .3, 1) both; }
+@keyframes whoosh-land {
+  0% { transform: perspective(650px) scale(2.4) rotateX(7deg) rotateY(-9deg); opacity: 0; filter: blur(6px); }
+  55% { opacity: 1; }
+  100% { transform: perspective(1400px) scale(1) rotateX(0deg) rotateY(0deg); opacity: 1; filter: blur(0); }
+}
+/* slide changes keep the glitch swap; the first arrival does not */
+.landing-world--swap { animation: world-glitch .4s steps(2, end) 1; }
+@media (prefers-reduced-motion: reduce) {
+  .landing-vista--out, .landing-vista--out .landing-splash, .landing-vista--out .landing-isle,
+  .landing-vista--world, .landing-world--swap { animation: none; }
 }
 
 /* Voxel-cyberpunk landing system (landing scope only) */

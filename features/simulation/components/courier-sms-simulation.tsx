@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { recordCourierSmsCompletion, type PracticeProgress } from "@/features/progress/progress";
+import { recordCourierSmsCompletion, recordModuleStart, type PracticeProgress } from "@/features/progress/progress";
 import {
   persistPracticeEvent,
   persistProgressSnapshot,
@@ -184,6 +184,7 @@ export function CourierSmsSimulation() {
 
   const begin = () => {
     hasStartedRef.current = true;
+    recordModuleStart("courier-sms");
     recordEvent("module-started", "module_started", "briefing");
     dispatch({ type: "start_module" });
   };
