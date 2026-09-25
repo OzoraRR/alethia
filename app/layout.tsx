@@ -23,7 +23,11 @@ const pixel = Silkscreen({
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html className={`${tactical.variable} ${pixel.variable}`} lang="id">
+    <html
+      className={`${tactical.variable} ${pixel.variable}`}
+      lang="id"
+      suppressHydrationWarning
+    >
       <body>{children}</body>
     </html>
   );

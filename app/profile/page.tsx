@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { ProfileProgress } from "@/features/progress/progress-views";
+import { ProfileAccountPanel } from "@/features/profile/profile-account";
 import { getMessages } from "@/lib/i18n";
 
 export default function ProfilePage() {
@@ -22,6 +23,7 @@ export default function ProfilePage() {
           </p>
         </div>
         <div className="mt-8">
+          <ProfileAccountPanel />
           <ProfileProgress />
         </div>
       </div>
