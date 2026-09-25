@@ -11,6 +11,17 @@ import {
 
 export const moduleIds = ["courier-sms", "social-engineering", "executable-file"] as const;
 export type ModuleId = (typeof moduleIds)[number];
+export const moduleProgressStatuses = ["not_started", "in_progress", "completed"] as const;
+export type ModuleProgressStatus = (typeof moduleProgressStatuses)[number];
+export type ModuleProgressSnapshot = {
+  status: ModuleProgressStatus;
+  score: number | null;
+  progressPercentage: number;
+  startedAt: string | null;
+  completedAt: string | null;
+  updatedAt: string | null;
+};
+export type ModuleProgressMap = Record<ModuleId, ModuleProgressSnapshot>;
 export const masteryStates = ["not_started", "familiar", "skilled", "needs_practice"] as const;
 export type MasteryState = (typeof masteryStates)[number];
 export type RetryResult = "safe" | "unsafe" | null;
@@ -27,6 +38,7 @@ export type PracticeProgress = {
   lastQualifyingDate: string | null;
   lastRetryResult: RetryResult;
   habits: { inspect: boolean; verify: boolean; report: boolean };
+  moduleProgress: ModuleProgressMap;
   badges: string[];
 };
 
@@ -44,11 +56,21 @@ export const defaultProgress: PracticeProgress = {
   lastQualifyingDate: null,
   lastRetryResult: null,
   habits: { inspect: false, verify: false, report: false },
+  moduleProgress: emptyModuleProgress(),
   badges: [],
 };
 
+export function emptyModuleProgress(): ModuleProgressMap {
+  return {
+    "courier-sms": emptyModuleProgressSnapshot(),
+    "social-engineering": emptyModuleProgressSnapshot(),
+    "executable-file": emptyModuleProgressSnapshot(),
+  };
+}
+
 export function loadProgress(): PracticeProgress {
-  return safeGetItem(STORAGE_KEYS.PROGRESS, defaultProgress, (val): val is PracticeProgress => isRecord(val));
+  const stored = safeGetItem(STORAGE_KEYS.PROGRESS, defaultProgress, isRecord);
+  return normalizeProgress(stored);
 }
 
 export function saveProgress(progress: PracticeProgress): void {
@@ -77,6 +99,33 @@ export async function mergeLocalProgressIntoAccount(): Promise<PracticeProgress>
     : localProgress;
   saveProgress(mergedProgress);
   return mergedProgress;
+}
+
+export function recordModuleStart(
+  moduleId: ModuleId,
+  startedAt = new Date().toISOString(),
+): PracticeProgress {
+  const currentProgress = loadProgress();
+  const currentModule = currentProgress.moduleProgress[moduleId];
+  if (currentModule.status === "completed") return currentProgress;
+
+  const nextProgress: PracticeProgress = {
+    ...currentProgress,
+    moduleProgress: {
+      ...currentProgress.moduleProgress,
+      [moduleId]: {
+        ...currentModule,
+        status: "in_progress",
+        progressPercentage: Math.max(currentModule.progressPercentage, 1),
+        startedAt: currentModule.startedAt ?? startedAt,
+        completedAt: null,
+        updatedAt: startedAt,
+      },
+    },
+  };
+
+  saveProgress(nextProgress);
+  return nextProgress;
 }
 
 export function recordCourierSmsCompletion({
@@ -113,6 +162,8 @@ export function recordModuleCompletion({
   const currentProgress = loadProgress();
   const isFirstModuleCompletion = !isModuleComplete(currentProgress, moduleId);
   const nextStreak = calculateNextStreak(currentProgress, completedAt);
+  const updatedAt = new Date().toISOString();
+  const currentModuleProgress = currentProgress.moduleProgress[moduleId];
   const courierSmsCompleted =
     moduleId === "courier-sms" ? true : currentProgress.courierSmsCompleted;
   const socialEngineeringCompleted =
@@ -135,6 +186,17 @@ export function recordModuleCompletion({
       inspect: currentProgress.habits.inspect || habits.inspect === true,
       verify: currentProgress.habits.verify || habits.verify === true,
       report: currentProgress.habits.report || habits.report === true,
+    },
+    moduleProgress: {
+      ...currentProgress.moduleProgress,
+      [moduleId]: {
+        ...currentModuleProgress,
+        status: "completed",
+        progressPercentage: 100,
+        startedAt: currentModuleProgress.startedAt ?? updatedAt,
+        completedAt: updatedAt,
+        updatedAt,
+      },
     },
     badges: currentProgress.badges.includes("first_practice")
       ? currentProgress.badges
@@ -218,6 +280,7 @@ export function mergeProgress(
   const executableFileCompleted =
     localProgress.executableFileCompleted || Boolean(remoteProgress.executableFileCompleted);
   const localHasCourierCompletion = localProgress.courierSmsCompleted;
+  const moduleProgress = mergeModuleProgress(localProgress, remoteProgress);
   return {
     ...localProgress,
     courierSmsCompleted,
@@ -242,13 +305,20 @@ export function mergeProgress(
       verify: localProgress.habits.verify || remoteProgress.habits.verify,
       report: localProgress.habits.report || remoteProgress.habits.report,
     },
+    moduleProgress,
     badges: [...new Set([...localProgress.badges, ...remoteProgress.badges])],
   };
 }
-function isModuleComplete(progress: PracticeProgress, moduleId: ModuleId) {
-  if (moduleId === "courier-sms") return progress.courierSmsCompleted;
-  if (moduleId === "social-engineering") return progress.socialEngineeringCompleted;
-  return progress.executableFileCompleted;
+type ModuleCompletionFlags = {
+  courierSmsCompleted?: boolean;
+  socialEngineeringCompleted?: boolean;
+  executableFileCompleted?: boolean;
+};
+
+function isModuleComplete(progress: ModuleCompletionFlags, moduleId: ModuleId) {
+  if (moduleId === "courier-sms") return progress.courierSmsCompleted === true;
+  if (moduleId === "social-engineering") return progress.socialEngineeringCompleted === true;
+  return progress.executableFileCompleted === true;
 }
 
 export function calculateNextStreak(progress: PracticeProgress, completedAt: string) {
@@ -290,6 +360,10 @@ export function normalizeProgress(value: unknown): PracticeProgress {
   const socialEngineeringCompleted = value.socialEngineeringCompleted === true;
   const executableFileCompleted = value.executableFileCompleted === true;
   const habits = isRecord(value.habits) ? value.habits : {};
+  const moduleProgress = normalizeModuleProgress(value.moduleProgress);
+  if (courierSmsCompleted) markModuleCompleted(moduleProgress, "courier-sms");
+  if (socialEngineeringCompleted) markModuleCompleted(moduleProgress, "social-engineering");
+  if (executableFileCompleted) markModuleCompleted(moduleProgress, "executable-file");
 
   return {
     courierSmsCompleted,
@@ -311,10 +385,124 @@ export function normalizeProgress(value: unknown): PracticeProgress {
       verify: habits.verify === true,
       report: habits.report === true,
     },
+    moduleProgress,
     badges: Array.isArray(value.badges)
       ? value.badges.filter((badge): badge is string => typeof badge === "string")
       : [],
   };
+}
+
+function emptyModuleProgressSnapshot(): ModuleProgressSnapshot {
+  return {
+    status: "not_started",
+    score: null,
+    progressPercentage: 0,
+    startedAt: null,
+    completedAt: null,
+    updatedAt: null,
+  };
+}
+
+function normalizeModuleProgress(value: unknown): ModuleProgressMap {
+  const candidate = isRecord(value) ? value : {};
+  return Object.fromEntries(
+    moduleIds.map((moduleId) => {
+      const row = isRecord(candidate[moduleId]) ? candidate[moduleId] : {};
+      const rawStatus = row.status;
+      const status = moduleProgressStatuses.includes(rawStatus as ModuleProgressStatus)
+        ? (rawStatus as ModuleProgressStatus)
+        : "not_started";
+      const progressPercentage =
+        status === "completed"
+          ? 100
+          : status === "in_progress"
+            ? Math.min(Math.max(nonNegativeInteger(row.progressPercentage), 1), 99)
+            : 0;
+      const rawScore = row.score;
+      const score =
+        typeof rawScore === "number" && Number.isInteger(rawScore) && rawScore >= 0 && rawScore <= 100
+          ? rawScore
+          : null;
+
+      return [
+        moduleId,
+        {
+          status,
+          score,
+          progressPercentage,
+          startedAt: nullableTimestamp(row.startedAt),
+          completedAt: nullableTimestamp(row.completedAt),
+          updatedAt: nullableTimestamp(row.updatedAt),
+        } satisfies ModuleProgressSnapshot,
+      ];
+    }),
+  ) as ModuleProgressMap;
+}
+
+function mergeModuleProgress(
+  localProgress: PracticeProgress,
+  remoteProgress: RemoteProgress,
+): ModuleProgressMap {
+  const local = normalizeModuleProgress(localProgress.moduleProgress);
+  const remote = normalizeModuleProgress(remoteProgress.moduleProgress);
+
+  return Object.fromEntries(
+    moduleIds.map((moduleId) => {
+      const localRow = local[moduleId];
+      const remoteRow = remote[moduleId];
+      const localComplete = isModuleComplete(localProgress, moduleId);
+      const remoteComplete = isModuleComplete(remoteProgress, moduleId);
+      const isComplete = localComplete || remoteComplete || localRow.status === "completed" || remoteRow.status === "completed";
+      const status: ModuleProgressStatus = isComplete
+        ? "completed"
+        : localRow.status === "in_progress" || remoteRow.status === "in_progress"
+          ? "in_progress"
+          : "not_started";
+      const startedAt = localRow.startedAt ?? remoteRow.startedAt;
+      const completedAt = isComplete
+        ? latestTimestamp(localRow.completedAt, remoteRow.completedAt, localRow.updatedAt, remoteRow.updatedAt)
+        : null;
+
+      return [
+        moduleId,
+        {
+          status,
+          score: remoteRow.score ?? localRow.score,
+          progressPercentage: isComplete
+            ? 100
+            : status === "in_progress"
+              ? Math.max(localRow.progressPercentage, remoteRow.progressPercentage, 1)
+              : 0,
+          startedAt: isComplete ? startedAt ?? completedAt : startedAt,
+          completedAt,
+          updatedAt: latestTimestamp(localRow.updatedAt, remoteRow.updatedAt),
+        } satisfies ModuleProgressSnapshot,
+      ];
+    }),
+  ) as ModuleProgressMap;
+}
+
+function markModuleCompleted(progress: ModuleProgressMap, moduleId: ModuleId): void {
+  const current = progress[moduleId];
+  const updatedAt = current.updatedAt ?? new Date().toISOString();
+  progress[moduleId] = {
+    ...current,
+    status: "completed",
+    progressPercentage: 100,
+    startedAt: current.startedAt ?? updatedAt,
+    completedAt: current.completedAt ?? updatedAt,
+    updatedAt,
+  };
+}
+
+function nullableTimestamp(value: unknown): string | null {
+  return typeof value === "string" && !Number.isNaN(Date.parse(value)) ? value : null;
+}
+
+function latestTimestamp(...values: Array<string | null | undefined>): string | null {
+  return values
+    .filter((value): value is string => typeof value === "string" && !Number.isNaN(Date.parse(value)))
+    .sort((left, right) => Date.parse(right) - Date.parse(left))[0] ?? null;
 }
 
 function localDateKey(date = new Date()): string {

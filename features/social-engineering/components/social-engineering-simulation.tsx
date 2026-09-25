@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { recordModuleCompletion, type PracticeProgress } from "@/features/progress/progress";
+import { recordModuleCompletion, recordModuleStart, type PracticeProgress } from "@/features/progress/progress";
 import { persistPracticeEvent, persistProgressSnapshot, startPracticeAttempt, type PracticeAttemptResult, type PracticeEventMetadata, type PracticeEventType, type RemoteSyncResult } from "@/features/progress/supabase-persistence";
 import { getMessages, type Messages } from "@/lib/i18n";
 import { initialSocialEngineeringState, socialEngineeringReducer, type SocialEngineeringState } from "../simulation-machine";
@@ -43,7 +43,7 @@ export function SocialEngineeringSimulation() {
     void ensureAttempt().then(({ attemptId: id }) => id ? persistProgressSnapshot({ progress: next, moduleId: "social-engineering", attemptId: id }) : { status: "local_only" as const }).then((result) => setSyncStatus(result.status)).catch(() => setSyncStatus("local_only"));
   }, [ensureAttempt, recordEvent, state.mitigation, state.selectedArtifacts.length, state.stage]);
 
-  const begin = () => { recordEvent("module-started", "module_started", "briefing"); dispatch({ type: "start_module" }); };
+  const begin = () => { recordModuleStart("social-engineering"); recordEvent("module-started", "module_started", "briefing"); dispatch({ type: "start_module" }); };
   const selectMitigation = (mitigation: MitigationId) => { recordEvent("mitigation-selected", "decision_selected", "defend", { mitigation }); dispatch({ type: "select_mitigation", mitigation }); };
   const selectedArtifacts = copy.board.artifacts.filter((artifact) => state.selectedArtifacts.includes(artifact.id as SocialArtifactId));
   const selectedMitigation = copy.defend.options.find((option) => option.id === state.mitigation) ?? null;

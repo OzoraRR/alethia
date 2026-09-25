@@ -277,7 +277,6 @@ export function setActiveAccountId(accountId: string | null): void {
 /** Clears data that must never cross an account boundary in one browser. */
 export function clearUserScopedState(): void {
   safeRemoveItem(STORAGE_KEYS.PROGRESS);
-  safeRemoveItem(STORAGE_KEYS.REPORTS);
   safeRemoveItem(STORAGE_KEYS.AVATAR);
   safeRemoveItem(STORAGE_KEYS.ACTIVE_FLOW);
   safeRemoveItem(STORAGE_KEYS.CHALLENGE_COURIER);

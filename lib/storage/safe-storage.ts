@@ -9,7 +9,6 @@ export const STORAGE_KEYS = {
   CHALLENGE_SOCIAL: "alethia:challenge:social-engineering:v1",
   ACTIVE_FLOW: "alethia:active-flow:v1",
   AVATAR: "alethia:avatar:v1",
-  REPORTS: "alethia:practice-reports:v1",
   CALLSIGN: "alethia:operator-callsign:v1",
   ACCOUNTS: "alethia:operator-accounts:v1",
   ACCOUNT_ID: "alethia:active-account:v1",

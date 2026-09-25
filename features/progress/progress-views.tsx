@@ -8,7 +8,7 @@ import { getMessages } from "@/lib/i18n";
 import { useProfileAvatar } from "@/features/profile/avatar-persistence";
 import { getCallsign } from "@/lib/session/session";
 import { buildActivityGrid, getReportActivity } from "@/features/profile/activity";
-import { useLocalProgress, type PracticeProgress } from "./progress";
+import { moduleIds, useLocalProgress, type PracticeProgress } from "./progress";
 
 export function DashboardModuleStatus() {
   const messages = getMessages();
@@ -315,7 +315,7 @@ export function InsightsProgress() {
           <dl className="mt-6 space-y-0 font-mono text-xs">
             <div className="flex items-center justify-between border-t border-navy-700/80 py-3">
               <dt className="text-muted text-[10px] uppercase">{insights.modulesCompleted}</dt>
-              <dd className="m-0 text-ice font-bold">{progress.modulesCompleted} / 2</dd>
+              <dd className="m-0 text-ice font-bold">{progress.modulesCompleted} / {moduleIds.length}</dd>
             </div>
             <div className="flex items-center justify-between border-t border-navy-700/80 py-3">
               <dt className="text-muted text-[10px] uppercase">{insights.streakTimeline}</dt>

@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { getMessages } from "@/lib/i18n";
 import { useLocalProgress } from "@/features/progress/progress";
 import {
@@ -12,50 +12,103 @@ import {
   REPORT_PATTERNS,
   addNote,
   defang,
+  deleteUserReport,
   fileToDataUrl,
-  filterReports,
   getRole,
-  hasSignaled,
   isCompactSort,
-  loadAllReports,
   loadNotes,
+  loadReports,
   saveUserReport,
-  signalCount,
-  sortReports,
-  toggleSignal,
+  toggleReportSignal,
+  updateUserReport,
   type InvestigationNote,
   type LaporanReport,
-  type ReportRange,
+  type ReportScope,
   type ReportSort,
   type Role,
 } from "./reports";
+
+const reportSortOptions: Array<{ value: ReportSort; label: string }> = [
+  { value: "top", label: "Top signals" },
+  { value: "newest", label: "Newest" },
+  { value: "oldest", label: "Oldest" },
+];
 
 export function ReportHub() {
   const messages = getMessages();
   const progress = useLocalProgress();
   const role: Role = getRole(progress);
-  const [range, setRange] = useState<ReportRange>("monthly");
   const [sort, setSort] = useState<ReportSort>("top");
+  const [scope, setScope] = useState<ReportScope>("all");
   const [formOpen, setFormOpen] = useState(false);
+  const [editingReport, setEditingReport] = useState<LaporanReport | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [reports, setReports] = useState<LaporanReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const visible = useMemo(() => {
-    void refreshKey;
-    return sortReports(filterReports(loadAllReports(), range), sort);
-  }, [range, sort, refreshKey]);
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setLoadError(null);
+
+    void loadReports(sort, scope)
+      .then((nextReports) => {
+        if (active) setReports(nextReports);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setReports([]);
+          setLoadError(error instanceof Error ? error.message : "Laporan gagal dimuat.");
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [sort, scope, refreshKey]);
+
+  const refresh = useCallback(() => {
+    setRefreshKey((current) => current + 1);
+  }, []);
 
   const compact = isCompactSort(sort);
-  const [featured, ...rest] = visible;
+  const [featured, ...rest] = reports;
   const cards = rest.slice(0, 4);
   const rows = rest.slice(4);
 
   function toggleExpand(id: string) {
-    setExpandedId((cur) => (cur === id ? null : id));
+    setExpandedId((current) => (current === id ? null : id));
   }
 
-  function refresh() {
-    setRefreshKey((k) => k + 1);
+  function openCreateForm() {
+    setEditingReport(null);
+    setFormOpen(true);
+  }
+
+  function openEditForm(report: LaporanReport) {
+    setEditingReport(report);
+    setFormOpen(true);
+  }
+
+  function closeForm() {
+    setFormOpen(false);
+    setEditingReport(null);
+  }
+
+  function handleSaved(wasEdit: boolean) {
+    closeForm();
+    refresh();
+    if (!wasEdit) setSort("newest");
+  }
+
+  function handleDeleted(reportId: string) {
+    if (expandedId === reportId) setExpandedId(null);
+    refresh();
   }
 
   return (
@@ -72,70 +125,98 @@ export function ReportHub() {
                 : "STUDENT · complete 1 module with a safe response to become Investigator"}
             </p>
           </div>
-          <button className="lp-add" onClick={() => setFormOpen((v) => !v)} type="button">
+          <button className="lp-add" onClick={formOpen ? closeForm : openCreateForm} type="button">
             {formOpen ? "Close" : "Add Report"}
           </button>
         </div>
 
         {formOpen ? (
           <ReportForm
-            onSaved={() => {
-              refresh();
-              setFormOpen(false);
-              setRange("all");
-              setSort("newest");
-            }}
+            key={editingReport?.id ?? "new-report"}
+            onCancel={closeForm}
+            onSaved={() => handleSaved(Boolean(editingReport))}
+            report={editingReport ?? undefined}
           />
         ) : null}
 
-        <div className="lp-filter" role="group" aria-label="Report filters">
-          <div className="lp-tabs" role="tablist" aria-label="Time range">
-            {(["monthly", "all"] as const).map((r) => (
+        <div className="lp-filter" role="group" aria-label="Report ownership and sorting">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-mono text-[10px] tracking-wider text-muted uppercase">Show</span>
+            <div className="lp-tabs" role="group" aria-label="Report ownership">
               <button
-                aria-selected={range === r}
-                className={`lp-tab ${range === r ? "lp-tab--on" : ""}`}
-                key={r}
-                onClick={() => setRange(r)}
-                role="tab"
+                aria-pressed={scope === "all"}
+                className={`lp-tab ${scope === "all" ? "lp-tab--on" : ""}`}
+                onClick={() => setScope("all")}
                 type="button"
               >
-                {r === "monthly" ? "monthly" : "all the time"}
+                All reports
               </button>
-            ))}
+              <button
+                aria-pressed={scope === "mine"}
+                className={`lp-tab ${scope === "mine" ? "lp-tab--on" : ""}`}
+                onClick={() => setScope("mine")}
+                type="button"
+              >
+                My reports
+              </button>
+            </div>
           </div>
-          <label className="lp-sort">
-            <span className="sr-only">Sort reports</span>
-            <select aria-label="Sort reports" onChange={(e) => setSort(e.target.value as ReportSort)} value={sort}>
-              <option value="newest">Sort · Newest</option>
-              <option value="top">Sort · Top signals</option>
-              <option value="review">Sort · Needs review</option>
-              <option value="oldest">Sort · Oldest</option>
-              <option value="title">Sort · Title A–Z</option>
-            </select>
-          </label>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-mono text-[10px] tracking-wider text-muted uppercase">Sort</span>
+            <div className="lp-tabs" role="group" aria-label="Sort reports">
+              {reportSortOptions.map((option) => (
+                <button
+                  aria-pressed={sort === option.value}
+                  className={`lp-tab ${sort === option.value ? "lp-tab--on" : ""}`}
+                  key={option.value}
+                  onClick={() => setSort(option.value)}
+                  type="button"
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {!visible.length ? (
-          <p className="lp-empty">No reports in this range yet. Switch to “all the time” or add the first practice report.</p>
+        {loading ? <p className="lp-empty">Loading reports from the database…</p> : null}
+        {!loading && loadError ? <p className="lp-error">{loadError}</p> : null}
+        {!loading && !loadError && !reports.length ? (
+          <p className="lp-empty">
+            {scope === "mine"
+              ? "You have not created any reports yet."
+              : "No reports are available yet."}
+          </p>
         ) : null}
 
-        {compact ? (
+        {!loading && !loadError && compact ? (
           <ol className="lp-rows lp-rows--all">
-            {visible.map((report, i) => (
+            {reports.map((report, index) => (
               <li key={report.id}>
                 <button className="lp-row" onClick={() => toggleExpand(report.id)} type="button" aria-expanded={expandedId === report.id}>
-                  <span className="lp-row__no">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="lp-row__no">{String(index + 1).padStart(2, "0")}</span>
                   <span className="lp-row__title">{report.title}</span>
-                  <span className="lp-row__signals">▲ {signalCount(report.id)}</span>
-                  <span className="lp-row__user">{report.author}</span>
+                  <span className="lp-row__signals">▲ {report.signalScore}</span>
+                  <span className={report.isOwner ? "font-bold text-signal" : "lp-row__user"}>
+                    {report.isOwner ? "YOUR REPORT" : report.author}
+                  </span>
                 </button>
                 {expandedId === report.id ? (
-                  <ReportDetail onChange={refresh} report={report} role={role} />
+                  <ReportDetail
+                    onChange={refresh}
+                    onDeleted={() => handleDeleted(report.id)}
+                    onEdit={() => openEditForm(report)}
+                    report={report}
+                    role={role}
+                  />
                 ) : null}
               </li>
             ))}
           </ol>
-        ) : (
+        ) : null}
+
+        {!loading && !loadError && !compact ? (
           <>
             {featured ? (
               <div>
@@ -147,34 +228,50 @@ export function ReportHub() {
                       {featured.channel} · <span>{featured.pattern}</span>
                       {featured.url ? ` · ${featured.url}` : ""}
                     </p>
-                    <p className="lp-featured__user">{featured.author} · {featured.status} · ▲ {signalCount(featured.id)} signals</p>
+                    <p className="lp-featured__user">
+                      {featured.isOwner ? "YOUR REPORT" : featured.author} · {featured.status} · ▲ {featured.signalScore} signals
+                    </p>
                   </div>
                   <span aria-hidden="true" className="lp-featured__orb">
                     {featured.title.slice(0, 1).toUpperCase()}
                   </span>
                 </button>
                 {expandedId === featured.id ? (
-                  <ReportDetail onChange={refresh} report={featured} role={role} />
+                  <ReportDetail
+                    onChange={refresh}
+                    onDeleted={() => handleDeleted(featured.id)}
+                    onEdit={() => openEditForm(featured)}
+                    report={featured}
+                    role={role}
+                  />
                 ) : null}
               </div>
             ) : null}
 
             {cards.length ? (
               <div className="lp-grid">
-                {cards.map((report, i) => (
+                {cards.map((report, index) => (
                   <div key={report.id}>
                     <button className="lp-card-item lp-card-item--btn" onClick={() => toggleExpand(report.id)} type="button" aria-expanded={expandedId === report.id}>
                       <h3>
-                        {i + 2}. <span>{report.title}</span>
+                        {index + 2}. <span>{report.title}</span>
                       </h3>
-                      <p className="lp-card-item__meta">{report.channel} · ▲ {signalCount(report.id)}</p>
+                      <p className="lp-card-item__meta">{report.channel} · ▲ {report.signalScore}</p>
                       <div className="lp-card-item__foot">
                         <span aria-hidden="true" className="lp-card-item__dot" />
-                        <span>{report.author}</span>
+                        <span className={report.isOwner ? "font-bold text-signal" : undefined}>
+                          {report.isOwner ? "YOUR REPORT" : report.author}
+                        </span>
                       </div>
                     </button>
                     {expandedId === report.id ? (
-                      <ReportDetail onChange={refresh} report={report} role={role} />
+                      <ReportDetail
+                        onChange={refresh}
+                        onDeleted={() => handleDeleted(report.id)}
+                        onEdit={() => openEditForm(report)}
+                        report={report}
+                        role={role}
+                      />
                     ) : null}
                   </div>
                 ))}
@@ -183,22 +280,30 @@ export function ReportHub() {
 
             {rows.length ? (
               <ol className="lp-rows">
-                {rows.map((report, i) => (
+                {rows.map((report, index) => (
                   <li key={report.id}>
                     <button className="lp-row" onClick={() => toggleExpand(report.id)} type="button" aria-expanded={expandedId === report.id}>
-                      <span className="lp-row__no">{String(i + 6).padStart(2, "0")}</span>
+                      <span className="lp-row__no">{String(index + 6).padStart(2, "0")}</span>
                       <span className="lp-row__title">{report.title}</span>
-                      <span className="lp-row__user">{report.author}</span>
+                      <span className={report.isOwner ? "font-bold text-signal" : "lp-row__user"}>
+                        {report.isOwner ? "YOUR REPORT" : report.author}
+                      </span>
                     </button>
                     {expandedId === report.id ? (
-                      <ReportDetail onChange={refresh} report={report} role={role} />
+                      <ReportDetail
+                        onChange={refresh}
+                        onDeleted={() => handleDeleted(report.id)}
+                        onEdit={() => openEditForm(report)}
+                        report={report}
+                        role={role}
+                      />
                     ) : null}
                   </li>
                 ))}
               </ol>
             ) : null}
           </>
-        )}
+        ) : null}
       </section>
 
       <p className="lp-note">Reports are for education and triage only. New reports enter the queue; a developer approves them. Do not include credentials, OTPs, personal messages, or live links.</p>
@@ -210,32 +315,117 @@ function ReportDetail({
   report,
   role,
   onChange,
+  onEdit,
+  onDeleted,
 }: {
   report: LaporanReport;
   role: Role;
   onChange: () => void;
+  onEdit: () => void;
+  onDeleted: () => void;
 }) {
-  const [signaled, setSignaled] = useState(() => hasSignaled(report.id));
-  const [notes, setNotes] = useState<InvestigationNote[]>(() => loadNotes(report.id));
+  const [signaled, setSignaled] = useState(report.hasSignaled);
+  const [signalScore, setSignalScore] = useState(report.signalScore);
+  const [notes, setNotes] = useState<InvestigationNote[]>([]);
   const [draft, setDraft] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const isInvestigator = role === "investigator";
 
-  function flipSignal() {
-    if (!isInvestigator) return;
-    toggleSignal(report.id);
-    setSignaled(hasSignaled(report.id));
-    onChange();
+  useEffect(() => {
+    let active = true;
+    void loadNotes(report.id)
+      .then((nextNotes) => {
+        if (active) setNotes(nextNotes);
+      })
+      .catch((caught: unknown) => {
+        if (active) setError(caught instanceof Error ? caught.message : "Catatan gagal dimuat.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [report.id]);
+
+  async function flipSignal() {
+    if (!isInvestigator || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await toggleReportSignal(report.id);
+      setSignaled(result.active);
+      setSignalScore(result.signalScore);
+      onChange();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Signal gagal diperbarui.");
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function submitNote(event: FormEvent<HTMLFormElement>) {
+  async function removeReport() {
+    if (!report.isOwner || deleting) return;
+    const confirmed = window.confirm(
+      `Delete "${report.title}"? Its report signals and investigation notes will also be removed.`,
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setError(null);
+    try {
+      await deleteUserReport(report.id);
+      onDeleted();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Laporan tidak dapat dihapus.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function submitNote(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!isInvestigator || draft.trim().length < 4) return;
-    setNotes(addNote(report.id, role, draft));
-    setDraft("");
+    if (!isInvestigator || draft.trim().length < 4 || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const note = await addNote(report.id, role, draft);
+      setNotes((current) => [...current, note]);
+      setDraft("");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Catatan gagal disimpan.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
     <div className="lp-detail">
+      {report.isOwner ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border border-signal/30 bg-signal/[.04] p-3">
+          <div>
+            <p className="font-mono text-[10px] font-bold tracking-wider text-signal uppercase">Your report</p>
+            <p className="mt-1 text-xs text-muted">Edit all report content or permanently delete this report.</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              className="border border-signal px-3 py-2 font-mono text-[11px] font-bold text-signal hover:bg-signal hover:text-navy-950"
+              onClick={onEdit}
+              type="button"
+            >
+              EDIT
+            </button>
+            <button
+              className="border border-warning/60 px-3 py-2 font-mono text-[11px] font-bold text-warning hover:bg-warning hover:text-navy-950 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={deleting}
+              onClick={() => void removeReport()}
+              type="button"
+            >
+              {deleting ? "DELETING…" : "DELETE"}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <div className="lp-detail__grid">
         <div>
           <p className="lp-detail__label">EVIDENCE</p>
@@ -257,25 +447,23 @@ function ReportDetail({
       <div className="lp-signal-row">
         <button
           className={`lp-signal ${signaled ? "lp-signal--on" : ""}`}
-          disabled={!isInvestigator}
-          onClick={flipSignal}
+          disabled={!isInvestigator || busy}
+          onClick={() => void flipSignal()}
           title={isInvestigator ? "Confirm this report carries a real signal" : "Investigators only"}
           type="button"
         >
-          ▲ Signal · {signalCount(report.id)}
+          ▲ Signal · {signalScore}
         </button>
-        {!isInvestigator ? (
-          <span className="lp-signal__hint">Students read along — signals unlock with the Investigator role.</span>
-        ) : null}
+        {!isInvestigator ? <span className="lp-signal__hint">Signals unlock with the Investigator role.</span> : null}
       </div>
 
       <div className="lp-notes">
         <p className="lp-detail__label">INVESTIGATION ({notes.length})</p>
         {notes.length ? (
           <ul>
-            {notes.map((n) => (
-              <li key={n.id}>
-                <span className="lp-notes__role">{n.authorRole}</span> {n.text}
+            {notes.map((note) => (
+              <li key={note.id}>
+                <span className="lp-notes__role">{note.authorRole}</span> {note.text}
               </li>
             ))}
           </ul>
@@ -283,35 +471,47 @@ function ReportDetail({
           <p className="lp-detail__text">No investigation notes yet.</p>
         )}
         {isInvestigator ? (
-          <form onSubmit={submitNote}>
+          <form onSubmit={(event) => void submitNote(event)}>
             <label className="lp-field">
               Add investigation note
               <textarea
                 className="report-input"
-                onChange={(e) => setDraft(e.target.value)}
+                onChange={(event) => setDraft(event.target.value)}
                 placeholder="What did you check, and what confirms it?"
                 rows={3}
                 value={draft}
               />
             </label>
-            <button className="lp-submit" type="submit">Investigate</button>
+            <button className="lp-submit" disabled={busy} type="submit">Investigate</button>
           </form>
         ) : null}
+        {error ? <p className="lp-error">{error}</p> : null}
       </div>
     </div>
   );
 }
 
-function ReportForm({ onSaved }: { onSaved: () => void }) {
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<string>(REPORT_CATEGORIES[0]);
-  const [channel, setChannel] = useState<string>(REPORT_CHANNELS[0]);
-  const [pattern, setPattern] = useState<string>(REPORT_PATTERNS[0]);
-  const [evidence, setEvidence] = useState("");
-  const [whyRisky, setWhyRisky] = useState("");
-  const [url, setUrl] = useState("");
-  const [screenshot, setScreenshot] = useState<string | undefined>(undefined);
+function ReportForm({
+  report,
+  onSaved,
+  onCancel,
+}: {
+  report?: LaporanReport;
+  onSaved: () => void;
+  onCancel: () => void;
+}) {
+  const [title, setTitle] = useState(report?.title ?? "");
+  const [category, setCategory] = useState<string>(report?.category ?? REPORT_CATEGORIES[0]);
+  const [channel, setChannel] = useState<string>(report?.channel ?? REPORT_CHANNELS[0]);
+  const [pattern, setPattern] = useState<string>(report?.pattern ?? REPORT_PATTERNS[0]);
+  const [evidence, setEvidence] = useState(report?.evidence ?? "");
+  const [whyRisky, setWhyRisky] = useState(report?.whyRisky ?? "");
+  const [url, setUrl] = useState(report?.url ?? "");
+  const [screenshot, setScreenshot] = useState<string | undefined>(report?.screenshot);
+  const [removeScreenshot, setRemoveScreenshot] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const isEditing = Boolean(report);
 
   async function onFile(file: File | undefined) {
     if (!file) return;
@@ -325,11 +525,13 @@ function ReportForm({ onSaved }: { onSaved: () => void }) {
       return;
     }
     setError(null);
+    setRemoveScreenshot(false);
     setScreenshot(dataUrl);
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy) return;
     if (title.trim().length < 4) {
       setError("Give the report a short title (min 4 characters).");
       return;
@@ -342,17 +544,35 @@ function ReportForm({ onSaved }: { onSaved: () => void }) {
       setError("Explain why it is risky (min 10 characters).");
       return;
     }
-    saveUserReport({ title, category, channel, pattern, evidence, whyRisky, url, screenshot });
-    onSaved();
+
+    setBusy(true);
+    setError(null);
+    try {
+      const input = { title, category, channel, pattern, evidence, whyRisky, url, screenshot };
+      if (report) {
+        await updateUserReport(report.id, { ...input, removeScreenshot });
+      } else {
+        await saveUserReport(input);
+      }
+      onSaved();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Laporan gagal disimpan.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
-    <form className="lp-form" onSubmit={submit}>
-      <p className="lp-form__title">ADD A PRACTICE REPORT</p>
-      <p className="lp-form__hint">Queued for developer review. Stored in your browser, never sent anywhere.</p>
+    <form className="lp-form" onSubmit={(event) => void submit(event)}>
+      <p className="lp-form__title">{isEditing ? "EDIT YOUR REPORT" : "ADD A PRACTICE REPORT"}</p>
+      <p className="lp-form__hint">
+        {isEditing
+          ? "Update every user-authored field. Review status, author identity, and signal score remain database-managed."
+          : "Queued for developer review and stored in Supabase under your authenticated account."}
+      </p>
       <label className="lp-field">
         Title
-        <input className="report-input" onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Parcel SMS with fee link" value={title} />
+        <input className="report-input" maxLength={160} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Parcel SMS with fee link" value={title} />
       </label>
       <div className="lp-field-row">
         <ReportSelect label="Attack category" onChange={setCategory} options={[...REPORT_CATEGORIES]} value={category} />
@@ -361,15 +581,15 @@ function ReportForm({ onSaved }: { onSaved: () => void }) {
       </div>
       <label className="lp-field">
         Evidence — what did you receive or observe?
-        <textarea className="report-input" onChange={(e) => setEvidence(e.target.value)} placeholder="Sender, message wording, link shape…" rows={3} value={evidence} />
+        <textarea className="report-input" maxLength={5000} onChange={(event) => setEvidence(event.target.value)} placeholder="Sender, message wording, link shape…" rows={3} value={evidence} />
       </label>
       <label className="lp-field">
         Why is it risky?
-        <textarea className="report-input" onChange={(e) => setWhyRisky(e.target.value)} placeholder="Pressure, trust transfer, off-channel route…" rows={3} value={whyRisky} />
+        <textarea className="report-input" maxLength={5000} onChange={(event) => setWhyRisky(event.target.value)} placeholder="Pressure, trust transfer, off-channel route…" rows={3} value={whyRisky} />
       </label>
       <label className="lp-field">
         Optional URL · defanged
-        <input aria-label="Optional defanged URL" className="report-input" onChange={(e) => setUrl(e.target.value)} placeholder="example[.]invalid" value={url} />
+        <input aria-label="Optional defanged URL" className="report-input" maxLength={2048} onChange={(event) => setUrl(event.target.value)} placeholder="example[.]invalid" value={url} />
       </label>
       {url ? <p className="lp-defang">Display: {defang(url)}</p> : null}
       <label className="lp-field">
@@ -377,13 +597,35 @@ function ReportForm({ onSaved }: { onSaved: () => void }) {
         <input
           accept="image/png,image/jpeg,image/webp"
           className="report-input"
-          onChange={(e) => void onFile(e.target.files?.[0])}
+          onChange={(event) => void onFile(event.target.files?.[0])}
           type="file"
         />
       </label>
-      {screenshot ? <img alt="Screenshot preview" className="lp-detail__shot" src={screenshot} /> : null}
+      {screenshot && !removeScreenshot ? (
+        <div>
+          <img alt="Screenshot preview" className="lp-detail__shot" src={screenshot} />
+          <button
+            className="mt-2 border border-warning/50 px-3 py-2 font-mono text-[11px] text-warning"
+            onClick={() => {
+              setRemoveScreenshot(true);
+              setScreenshot(undefined);
+            }}
+            type="button"
+          >
+            REMOVE SCREENSHOT
+          </button>
+        </div>
+      ) : null}
+      {removeScreenshot ? <p className="font-mono text-[11px] text-warning">Existing screenshot will be removed when you save.</p> : null}
       {error ? <p className="lp-error">{error}</p> : null}
-      <button className="lp-submit" type="submit">Queue report</button>
+      <div className="flex flex-wrap gap-3">
+        <button className="lp-submit" disabled={busy} type="submit">
+          {busy ? "Saving…" : isEditing ? "Save changes" : "Queue report"}
+        </button>
+        <button className="border border-navy-700 px-4 py-2 font-mono text-xs text-muted" onClick={onCancel} type="button">
+          Cancel
+        </button>
+      </div>
     </form>
   );
 }
@@ -397,15 +639,13 @@ function ReportSelect({
   label: string;
   options: string[];
   value: string;
-  onChange: (v: string) => void;
+  onChange: (value: string) => void;
 }) {
   return (
     <label className="lp-field">
       {label}
-      <select className="report-input" onChange={(e) => onChange(e.target.value)} value={value}>
-        {options.map((option) => (
-          <option key={option}>{option}</option>
-        ))}
+      <select className="report-input" onChange={(event) => onChange(event.target.value)} value={value}>
+        {options.map((option) => <option key={option}>{option}</option>)}
       </select>
     </label>
   );

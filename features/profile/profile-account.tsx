@@ -26,7 +26,7 @@ export function ProfileAccountPanel() {
   }
 
   return (
-    <section className="container-level-2 mb-8 p-6 sm:p-7" aria-labelledby="profile-account-heading">
+    <section className="container-level-2 p-6 sm:p-7" aria-labelledby="profile-account-heading">
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-navy-700 pb-4">
         <div>
           <p className="font-mono text-[10px] font-bold tracking-widest text-signal uppercase">

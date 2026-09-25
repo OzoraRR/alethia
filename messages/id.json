@@ -651,18 +651,13 @@
     "fileModuleNumber": "MODUL 03",
     "fileTitle": "Malicious Document",
     "fileDescription": "Periksa sumber, konteks, dan ekstensi sebelum membuka berkas.",
-    "futureSmsTitle": "Sinyal lainnya",
-    "futureSmsDescription": "Variasi latihan untuk memperkuat pemeriksaan pengirim dan tautan.",
-    "futureModuleNumber": "02",
-    "openModule": "Buka modul",
-    "soon": "Segera hadir"
+    "openModule": "Buka modul"
   },
   "insights": {
     "eyebrow": "RINGKASAN LATIHAN",
     "title": "Insight Latihan",
     "description": "Lihat kebiasaan yang sedang dilatih, tanpa skor yang menghakimi.",
     "modulesCompleted": "Modul selesai",
-    "modulesCompletedValue": "0",
     "habitsPractised": "Kebiasaan dipraktikkan",
     "habitsPractisedValue": "Belum ada",
     "transferCheck": "Hasil latihan ulang terakhir",

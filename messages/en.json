@@ -646,18 +646,13 @@
     "fileModuleNumber": "MODULE 03",
     "fileTitle": "Malicious Document",
     "fileDescription": "Inspect the source, context, and extension before opening a file.",
-    "futureSmsTitle": "More signals",
-    "futureSmsDescription": "Practice variations to strengthen sender and link inspection.",
-    "futureModuleNumber": "02",
-    "openModule": "Open module",
-    "soon": "Coming soon"
+    "openModule": "Open module"
   },
   "insights": {
     "eyebrow": "PRACTICE INSIGHTS",
     "title": "Practice Insights",
     "description": "See the habits you are practising, without judgemental scores.",
     "modulesCompleted": "Modules completed",
-    "modulesCompletedValue": "0",
     "habitsPractised": "Habits practised",
     "habitsPractisedValue": "Not yet",
     "transferCheck": "Last transfer check",
