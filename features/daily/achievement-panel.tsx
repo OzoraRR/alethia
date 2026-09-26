@@ -2,7 +2,7 @@
 
 import { useDailyActivity } from "./daily-activity-provider";
 
-const achievementDefinitions = [
+export const achievementDefinitions = [
   { code: "first_module", title: "Module First", description: "Selesaikan modul latihan pertamamu." },
   { code: "all_modules", title: "Catalog Master", description: "Selesaikan seluruh modul aktif yang tersedia." },
   { code: "streak_7", title: "Seven-Day Signal", description: "Aktif selama tujuh hari berturut-turut." },

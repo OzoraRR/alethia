@@ -37,9 +37,10 @@ export function ProfileAccountPanel() {
           </h2>
         </div>
         {isAuthenticated ? (
-          <span className="font-mono text-[10px] font-bold tracking-widest text-signal uppercase">
-            ● AUTHENTICATED
-          </span>
+          <div className="flex items-center gap-3">
+            <Link className="font-mono text-[10px] text-signal hover:underline" href="/profile/edit">EDIT PROFILE</Link>
+            <span className="font-mono text-[10px] font-bold tracking-widest text-signal uppercase">● AUTHENTICATED</span>
+          </div>
         ) : null}
       </div>
 

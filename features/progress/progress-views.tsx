@@ -126,11 +126,8 @@ export function ProfileProgress() {
   const { profile, progress: progressCopy, training } = messages;
   const progress = useLocalProgress();
   const operator = getOperatorLevel(progress, profile);
-  const { avatarUrl, error, isSaving, save } = useProfileAvatar();
-  const [saveSucceeded, setSaveSucceeded] = useState(false);
+  const { avatarUrl } = useProfileAvatar();
   const [callsign] = useState(() => getCallsign());
-
-  const avatarMessage = error === "no_session" ? profile.avatarNoSession : error === "invalid_file" ? profile.avatarInvalid : error === "upload_failed" ? profile.avatarFailed : saveSucceeded ? profile.avatarSaved : null;
 
   const activity = useMemo(() => buildActivityGrid(progress), [progress]);
   const reports = useMemo(
@@ -178,25 +175,6 @@ export function ProfileProgress() {
                   <li key={pill}>{pill}</li>
                 ))}
               </ul>
-              <div className="profile-avatar-control">
-                <input
-                  accept="image/png,image/jpeg,image/webp"
-                  className="sr-only"
-                  disabled={isSaving}
-                  id="avatar-file"
-                  onChange={async (event) => {
-                    const file = event.target.files?.[0];
-                    if (!file) return;
-                    const result = await save(file);
-                    setSaveSucceeded(!result.error && Boolean(result.avatarUrl));
-                    event.target.value = "";
-                  }}
-                  type="file"
-                />
-                <label className="profile-avatar-control__label" htmlFor="avatar-file">{isSaving ? "…" : profile.avatarUpload}</label>
-                <span>{profile.avatarHelp}</span>
-              </div>
-              {avatarMessage ? <p aria-live="polite" className="profile-avatar-control__message">{avatarMessage}</p> : null}
             </div>
           </div>
           <div className="pf-badges">

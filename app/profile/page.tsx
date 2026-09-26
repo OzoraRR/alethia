@@ -2,6 +2,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { AchievementPanel } from "@/features/daily/achievement-panel";
 import { ProfileProgress } from "@/features/progress/progress-views";
 import { ProfileAccountPanel } from "@/features/profile/profile-account";
+import { SelectedBadges } from "@/features/profile/selected-badges";
 import { getMessages } from "@/lib/i18n";
 
 export default function ProfilePage() {
@@ -27,6 +28,7 @@ export default function ProfilePage() {
           <ProfileAccountPanel />
           <ProfileProgress />
           <AchievementPanel />
+          <SelectedBadges />
         </div>
       </div>
     </AppShell>
